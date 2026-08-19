@@ -68,63 +68,52 @@ function mapRoster(state) {
         }));
 }
 
+function mapShotHistory(history, teamIdValue, playerIdValue, prefix) {
+    return (history || []).map((shot, index) => ({
+        id: `${prefix}:${playerIdValue || 'team'}:${index}:${shot.time ?? 0}`,
+        matchId: null,
+        period: inferPeriodFromTime(shot.time, 30),
+        gameTime: Number(shot.time || 0),
+        teamId: teamIdValue,
+        playerId: playerIdValue,
+        type: 'shot',
+        metadata: {
+            shot: {
+                shooterId: playerIdValue,
+                zone: shot.zone ?? null,
+                type: shot.type ?? null,
+                outcome: mapOutcome(shot.outcome),
+                x: toNumberOrNull(shot.coords?.x),
+                y: toNumberOrNull(shot.coords?.y),
+                sevenMeter: isSevenMeter(shot.zone),
+                xg: null
+            },
+            source: 'andebol-stats-legacy'
+        }
+    }));
+}
+
 function mapShots(state) {
-    const events = [];
     const players = state.gameData?.A?.players || [];
     const teamAId = teamId(state.teamAName, 'A');
     const teamBId = teamId(state.teamBName, 'B');
+    const events = [];
 
     players.forEach(player => {
-        (player.history || []).forEach((shot, index) => {
-            events.push({
-                id: `legacy-shot:A:${playerId(player)}:${index}:${shot.time ?? 0}`,
-                matchId: null,
-                period: inferPeriod(state, shot.time),
-                gameTime: Number(shot.time || 0),
-                teamId: teamAId,
-                playerId: playerId(player),
-                type: 'shot',
-                metadata: {
-                    shot: {
-                        shooterId: playerId(player),
-                        zone: shot.zone ?? null,
-                        type: shot.type ?? null,
-                        outcome: mapOutcome(shot.outcome),
-                        x: toNumberOrNull(shot.coords?.x),
-                        y: toNumberOrNull(shot.coords?.y),
-                        sevenMeter: isSevenMeter(shot.zone),
-                        xg: null
-                    },
-                    source: 'andebol-stats-legacy'
-                }
-            });
-        });
+        events.push(...mapShotHistory(
+            player.history,
+            teamAId,
+            playerId(player),
+            'legacy-shot:A'
+        ));
     });
 
-    (state.gameData?.B?.history || []).forEach((shot, index) => {
-        events.push({
-            id: `legacy-shot:B:${index}:${shot.time ?? 0}`,
-            matchId: null,
-            period: inferPeriod(state, shot.time),
-            gameTime: Number(shot.time || 0),
-            teamId: teamBId,
-            playerId: null,
-            type: 'shot',
-            metadata: {
-                shot: {
-                    shooterId: null,
-                    zone: shot.zone ?? null,
-                    type: shot.type ?? null,
-                    outcome: mapOutcome(shot.outcome),
-                    x: toNumberOrNull(shot.coords?.x),
-                    y: toNumberOrNull(shot.coords?.y),
-                    sevenMeter: isSevenMeter(shot.zone),
-                    xg: null
-                },
-                source: 'andebol-stats-legacy'
-            }
-        });
-    });
+    events.push(...mapShotHistory(
+        state.gameData?.B?.history,
+        teamBId,
+        null,
+        'legacy-shot:B'
+    ));
 
     return events;
 }
@@ -133,24 +122,29 @@ function mapGenericEvents(state) {
     const teamAId = teamId(state.teamAName, 'A');
     const teamBId = teamId(state.teamBName, 'B');
 
-    return (state.gameEvents || []).map((event, index) => {
-        const teamIdValue = event.team === 'B' ? teamBId : teamAId;
-        const details = String(event.details || '');
+    // Shot actions are deliberately excluded here because the current app
+    // stores their full detail in player.history / B.history. Importing the
+    // generic timeline "shot" as well would create duplicate shot events.
+    return (state.gameEvents || [])
+        .filter(event => normalizeEventType(event.type) !== 'shot')
+        .map((event, index) => {
+            const teamIdValue = event.team === 'B' ? teamBId : teamAId;
+            const details = String(event.details || '');
 
-        return {
-            id: `legacy-event:${index}:${event.time ?? 0}`,
-            matchId: null,
-            period: inferPeriod(state, event.time),
-            gameTime: Number(event.time || 0),
-            teamId: teamIdValue,
-            playerId: findPlayerIdFromDetails(state, details),
-            type: normalizeEventType(event.type),
-            metadata: {
-                details,
-                source: 'andebol-stats-legacy'
-            }
-        };
-    });
+            return {
+                id: `legacy-event:${index}:${event.time ?? 0}`,
+                matchId: null,
+                period: inferPeriod(state, event.time),
+                gameTime: Number(event.time || 0),
+                teamId: teamIdValue,
+                playerId: findPlayerIdFromDetails(state, details),
+                type: normalizeEventType(event.type),
+                metadata: {
+                    details,
+                    source: 'andebol-stats-legacy'
+                }
+            };
+        });
 }
 
 function findPlayerIdFromDetails(state, details) {
@@ -181,9 +175,13 @@ function normalizeEventType(type) {
     return aliases[value] || value || 'unknown';
 }
 
-function inferPeriod(state, seconds) {
-    const duration = Number(state.halfDuration || 30) * 60;
+function inferPeriodFromTime(seconds, halfDurationMinutes) {
+    const duration = Number(halfDurationMinutes || 30) * 60;
     return Number(seconds || 0) >= duration ? 2 : 1;
+}
+
+function inferPeriod(state, seconds) {
+    return inferPeriodFromTime(seconds, state.halfDuration || 30);
 }
 
 function toNumberOrNull(value) {
@@ -275,7 +273,7 @@ export function createCanonicalMatch(state, options = {}) {
             teamB: state.gameData.B
         },
         metadata: {
-            adapterVersion: '1.0.0',
+            adapterVersion: '1.0.1',
             createdAt: new Date().toISOString()
         }
     };
@@ -292,6 +290,26 @@ export function validateCanonicalMatch(payload) {
     if (!Array.isArray(payload?.roster)) errors.push('roster deve ser um array');
     if (!Array.isArray(payload?.events)) errors.push('events deve ser um array');
     if (!Array.isArray(payload?.situations)) errors.push('situations deve ser um array');
+
+    const eventIds = new Set();
+    (payload?.events || []).forEach((event, index) => {
+        if (!event?.id) errors.push(`events[${index}].id em falta`);
+        else if (eventIds.has(event.id)) errors.push(`ID de evento duplicado: ${event.id}`);
+        else eventIds.add(event.id);
+
+        if (!event?.type) errors.push(`events[${index}].type em falta`);
+        if (!event?.teamId) errors.push(`events[${index}].teamId em falta`);
+        if (!Number.isFinite(Number(event?.gameTime))) {
+            errors.push(`events[${index}].gameTime inválido`);
+        }
+    });
+
+    const playerIds = new Set();
+    (payload?.players || []).forEach((player, index) => {
+        if (!player?.id) errors.push(`players[${index}].id em falta`);
+        else if (playerIds.has(player.id)) errors.push(`ID de jogador duplicado: ${player.id}`);
+        else playerIds.add(player.id);
+    });
 
     return {
         valid: errors.length === 0,
