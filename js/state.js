@@ -14,12 +14,10 @@ export class GameStore {
                     players: [], 
                     officials: [], 
                     fileLoaded: false, 
-                    teamYellowCards: 0, // Contador Global Amarelos Jogadores
-                    officialsStats: { yellow: 0, twoMin: 0, red: 0 }, // Contador Global Oficiais
-                    
-                    isTeamSuspended: false, // Flag genérica para redução de equipa (ex: banco)
+                    teamYellowCards: 0,
+                    officialsStats: { yellow: 0, twoMin: 0, red: 0 },
+                    isTeamSuspended: false,
                     teamSuspensionTimer: 0, 
-                    
                     timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
                 },
                 B: { 
@@ -60,7 +58,7 @@ export class GameStore {
     update(updaterFunction) {
         this.snapshot(); 
         updaterFunction(this.state); 
-        this.saveToSessionStorage(); 
+        this.saveToSessionStorage();
     }
 
     loadPlayers(players, officials = []) {
@@ -83,12 +81,9 @@ export class GameStore {
         if (saved) {
             try {
                 this.state = JSON.parse(saved);
-                
-                // Migração de dados para evitar erros se a estrutura mudou
                 if(!this.state.gameData.A.officialsStats) {
                     this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
                 }
-
                 return true;
             } catch (e) {
                 console.error("Erro ao ler dados guardados, a reiniciar...", e);
@@ -104,3 +99,9 @@ export class GameStore {
 }
 
 export const store = new GameStore();
+
+// Carrega o bridge de exportação sem alterar o fluxo LIVE existente.
+// O dynamic import evita acoplamento circular entre state.js e canonicalExport.js.
+import('./canonicalExport.js').catch(error => {
+    console.warn('[Canonical Match] Export bridge indisponível:', error);
+});
