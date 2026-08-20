@@ -14,7 +14,17 @@ function normalizePlayer(player) {
 
 function normalizeEvent(event) {
     const shot = event?.metadata?.shot || {};
-    return { ...event, id: String(event.id), matchId: String(event.matchId), period: event.period === 2 ? 2 : 1, gameTime: Number(event.gameTime || 0), teamId: event.teamId ? String(event.teamId) : null, playerId: event.playerId ? String(event.playerId) : null, type: String(event.type || 'unknown'), metadata: { ...(event.metadata || {}), shot: event.type === 'shot' ? { shooterId: shot.shooterId ? String(shot.shooterId) : event.playerId ? String(event.playerId) : null, position: normalizePosition(shot.position), zone: shot.zone ?? null, distance: shot.distance ?? null, type: shot.type ?? null, outcome: shot.outcome ?? null, xg: Number.isFinite(Number(shot.xg)) ? Number(shot.xg) : null } : undefined } };
+    return {
+        ...event,
+        id: String(event.id),
+        matchId: String(event.matchId),
+        period: event.period === 2 ? 2 : 1,
+        gameTime: Number(event.gameTime || 0),
+        teamId: event.teamId ? String(event.teamId) : null,
+        playerId: event.playerId ? String(event.playerId) : null,
+        type: String(event.type || 'unknown'),
+        metadata: { ...(event.metadata || {}), shot: event.type === 'shot' ? { shooterId: shot.shooterId ? String(shot.shooterId) : event.playerId ? String(event.playerId) : null, position: normalizePosition(shot.position), zone: shot.zone ?? null, distance: shot.distance ?? null, type: shot.type ?? null, outcome: shot.outcome ?? null, xg: Number.isFinite(Number(shot.xg)) ? Number(shot.xg) : null } : undefined }
+    };
 }
 
 export function validateLivePackage(pkg) {
@@ -22,24 +32,55 @@ export function validateLivePackage(pkg) {
     if (!pkg || typeof pkg !== 'object') errors.push('Pacote inválido.');
     if (!SUPPORTED_LIVE_PACKAGE_SCHEMAS.has(String(pkg?.schemaVersion ?? ''))) errors.push(`Schema não suportado: ${pkg?.schemaVersion ?? 'desconhecido'}. Suportados: ${[...SUPPORTED_LIVE_PACKAGE_SCHEMAS].join(', ')}.`);
     if (!pkg?.match?.id) errors.push('Falta match.id.');
-    if (!pkg?.teams?.home?.id && !pkg?.match?.homeTeamId) errors.push('Falta equipa da casa.');
-    if (!pkg?.teams?.away?.id && !pkg?.match?.awayTeamId) errors.push('Falta equipa visitante.');
+    if (!pkg?.match?.ownTeamId && !pkg?.match?.homeTeamId) errors.push('Falta equipa da nossa equipa.');
+    if (!pkg?.match?.awayTeamId && !pkg?.teams?.away?.id) errors.push('Falta equipa adversária.');
     if (!Array.isArray(pkg?.players)) errors.push('Falta a lista de jogadores.');
-    if (Array.isArray(pkg?.players)) { const ids = pkg.players.map(p => String(p.id)); if (new Set(ids).size !== ids.length) errors.push('Existem jogadores duplicados no pacote.'); }
-    if (Array.isArray(pkg?.events)) { const ids = pkg.events.map(event => String(event?.id ?? '')).filter(Boolean); if (new Set(ids).size !== ids.length) errors.push('Existem eventos duplicados no pacote.'); }
+    if (Array.isArray(pkg?.players)) {
+        const ids = pkg.players.map(p => String(p.id));
+        if (new Set(ids).size !== ids.length) errors.push('Existem jogadores duplicados no pacote.');
+    }
+    if (Array.isArray(pkg?.events)) {
+        const ids = pkg.events.map(event => String(event?.id ?? '')).filter(Boolean);
+        if (new Set(ids).size !== ids.length) errors.push('Existem eventos duplicados no pacote.');
+    }
     return { valid: errors.length === 0, errors };
 }
 
 export function importLivePackage(pkg) {
     const validation = validateLivePackage(pkg);
     if (!validation.valid) throw new Error(validation.errors.join(' '));
-    const home = { id: String(pkg.teams?.home?.id || pkg.match.homeTeamId), name: pkg.teams?.home?.name || pkg.match.homeTeamName || 'Casa' };
-    const away = { id: String(pkg.teams?.away?.id || pkg.match.awayTeamId), name: pkg.teams?.away?.name || pkg.match.awayTeamName || 'Fora' };
+
+    const ownId = String(pkg.match.ownTeamId || pkg.teams?.home?.id || pkg.match.homeTeamId);
+    const opponentId = String(pkg.match.homeAway === 'AWAY' ? pkg.match.homeTeamId : pkg.match.awayTeamId || pkg.teams?.away?.id);
+    const ownName = pkg.match.ownTeamName || (pkg.match.homeAway === 'AWAY' ? pkg.match.awayTeamName : pkg.match.homeTeamName) || 'Minha Equipa';
+    const opponentName = pkg.match.homeAway === 'AWAY' ? pkg.match.homeTeamName : pkg.match.awayTeamName || 'Adversário';
+    const home = { id: ownId, name: ownName };
+    const away = { id: opponentId, name: opponentName };
     const players = pkg.players.map(normalizePlayer);
     const roster = Array.isArray(pkg.roster) ? pkg.roster : [];
     const rosterByPlayer = new Map(roster.map(r => [String(r.playerId), r]));
     const events = Array.isArray(pkg.events) ? pkg.events.map(normalizeEvent) : [];
-    return { matchId: String(pkg.match.id), teamA: home, teamB: away, teamAName: home.name, teamBName: away.name, players: players.map(player => ({ ...player, ...(rosterByPlayer.get(player.id) || {}), Numero: rosterByPlayer.get(player.id)?.shirtNumber ?? player.Numero, Posicao: normalizePosition(rosterByPlayer.get(player.id)?.position ?? player.Posicao), onCourt: Boolean(rosterByPlayer.get(player.id)?.starter), history: [], positiveActions: [], negativeActions: [], sanctions: { yellow: 0, twoMin: 0, red: 0 } })), events, metadata: { schemaVersion: String(pkg.schemaVersion), seasonId: pkg.match.seasonId || null, competitionId: pkg.match.competitionId || null, date: pkg.match.date || null, venue: pkg.match.venue || null, homeAway: pkg.match.homeAway || null, source: pkg.source || 'handball-performance-os' } };
+
+    return {
+        matchId: String(pkg.match.id),
+        teamA: home,
+        teamB: away,
+        teamAId: ownId,
+        teamBId: opponentId,
+        teamAName: home.name,
+        teamBName: away.name,
+        players: players.map(player => ({ ...player, ...(rosterByPlayer.get(player.id) || {}), Numero: rosterByPlayer.get(player.id)?.shirtNumber ?? player.Numero, Posicao: normalizePosition(rosterByPlayer.get(player.id)?.position ?? player.Posicao), onCourt: Boolean(rosterByPlayer.get(player.id)?.starter), history: [], positiveActions: [], negativeActions: [], sanctions: { yellow: 0, twoMin: 0, red: 0 } })),
+        events,
+        metadata: {
+            schemaVersion: String(pkg.schemaVersion),
+            seasonId: pkg.match.seasonId || null,
+            competitionId: pkg.match.competitionId || null,
+            date: pkg.match.date || null,
+            venue: pkg.match.venue || null,
+            homeAway: pkg.match.homeAway || 'HOME',
+            source: pkg.source || 'handball-performance-os',
+        }
+    };
 }
 
 export function loadLivePackageFromFile(file, onSuccess, onError) {
