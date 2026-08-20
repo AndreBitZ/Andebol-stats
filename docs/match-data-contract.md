@@ -1,76 +1,81 @@
 # Match Data Contract — Andebol Ecosystem
 
-Version: 1.0
+Version: 1.1
 
-## Objetivo
+## Source of truth
 
-Este contrato define o formato canónico usado para transportar dados entre `Andebol-stats` (recolha live) e o futuro `Handball Performance OS` (sistema central).
+**Performance OS is the master of identity and match setup. Andebol-stats is the specialist live-statistics client.**
 
-## Princípios
+The intended workflow is:
 
-1. `Andebol-stats` é um cliente de recolha live, não a fonte permanente de identidade dos atletas.
-2. Eventos são a unidade fundamental da análise.
-3. Estatísticas agregadas são derivadas/compatíveis com os eventos, não substituem os eventos.
-4. O jogo deve funcionar offline; sincronização é uma camada posterior.
-5. `schemaVersion` permite evolução sem quebrar importações antigas.
-6. IDs `legacy-*` criados pelo adapter são temporários. O Performance OS deverá associar os dados a IDs permanentes.
+`Performance OS → export LIVE package → Andebol-stats → live coding/statistics → export canonical result → Performance OS`
 
-## Entidades
+Performance OS creates the match, teams, players, season and competition context first. Andebol-stats must never create a second identity for a player that already has a permanent Performance OS `playerId`.
 
-- `Player`: identidade do atleta.
-- `Team`: identidade da equipa.
-- `Season`: época desportiva.
-- `Competition`: competição.
-- `Match`: jogo.
-- `MatchRoster`: relação jogador ↔ jogo, incluindo número da camisola e disponibilidade.
-- `MatchEvent`: acontecimento cronológico.
-- `Shot`: detalhe de um remate dentro de um evento.
-- `GoalkeeperAction`: ação do guarda-redes relacionada com um remate.
-- `Sanction`: sanção disciplinar.
-- `Timeout`: pedido de tempo.
-- `Substitution`: entrada/saída.
-- `GameSituation`: contexto numérico da situação de jogo.
+## Principles
 
-## Evento
+1. Performance OS owns permanent club, team, season, competition and player identities.
+2. Andebol-stats owns fast live event collection and live statistical interaction.
+3. Events are the fundamental analytical unit.
+4. Aggregated statistics are derived from events whenever possible.
+5. The game must work offline.
+6. `schemaVersion` allows controlled evolution.
+7. IDs supplied by Performance OS are preserved end-to-end.
+8. Legacy IDs are supported only for old games that predate the integration.
+9. Importing a result into Performance OS must merge by permanent IDs rather than create duplicate players/teams.
+10. Visual presentation can evolve independently from the data contract.
 
-O formato base é:
+## Canonical package
+
+The current contract version is `1.1.0`.
+
+Required top-level sections:
+
+- `schemaVersion`
+- `source`
+- `match`
+- `players`
+- `roster`
+- `events`
+- `situations`
+- `statistics`
+- `metadata`
+
+A remate uses `events[].metadata.shot`:
 
 ```json
 {
-  "id": "evt_001",
-  "matchId": "match_001",
-  "period": 1,
-  "gameTime": 532,
-  "teamId": "team_001",
-  "playerId": "player_001",
-  "type": "shot",
-  "metadata": {}
+  "shooterId": "player_001",
+  "position": "LE",
+  "zone": "Z3",
+  "distance": "6-9m",
+  "type": "jump_shot",
+  "outcome": "goal",
+  "xg": 0.42
 }
 ```
 
-Para um remate, `metadata.shot` contém zona, tipo, resultado e coordenadas.
+## Compatibility
 
-## Compatibilidade com a app atual
+Andebol-stats accepts `1.0.0`, `1.0.1` and `1.1.0` packages. New Performance OS exports use `1.1.0`.
 
-A versão atual guarda:
+The importer preserves permanent player IDs and imports the canonical event stream, including shot context and xG where available. fileciteturn223file0
 
-- `gameData.A/B.stats`
-- `gameData.A.players`
-- `gameData.A.officials`
-- `gameEvents`
-- `gameSituationLog`
-- `player.history`
-- `gameData.B.history`
+The existing canonical exporter already validates the package before download. fileciteturn222file0
 
-O adapter `js/matchAdapter.js` transforma estes dados no formato canónico sem alterar a lógica ou a interface da app.
+## Performance OS integration
 
-## Limitações conhecidas da versão 1.0
+Performance OS should provide, at minimum:
 
-- A app atual não possui IDs permanentes de jogadores.
-- Data, competição e local não são atualmente obrigatórios no `GameStore`.
-- Eventos antigos guardam uma descrição textual (`details`), pelo que nem todos os atributos podem ser recuperados de forma estruturada.
-- Algumas ações rápidas do adversário não têm jogador associado.
-- xG ainda não é calculado.
-- O estado atual calcula tempo de jogo por atleta, mas não regista todas as substituições como eventos explícitos.
+- match ID;
+- home/away team IDs and names;
+- season/competition IDs;
+- permanent player IDs;
+- squad/roster;
+- match date and venue.
 
-Estas limitações serão resolvidas nas próximas fases, sem quebrar o formato 1.0.
+After the live analysis, Andebol-stats returns the same match ID and permanent player IDs together with the event stream. Performance OS then imports the result and updates the existing match instead of creating a new match/player identity.
+
+## Evolution rules
+
+A breaking change requires a new major contract version. Additive fields should remain optional whenever possible. Both applications must reject unsupported versions clearly instead of silently importing malformed data.
