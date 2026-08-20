@@ -1,9 +1,8 @@
 // js/matchAdapter.js
 // Canonical data adapter for the Andebol ecosystem.
-// Converts the current Andebol-stats GameStore shape into a versioned Match payload.
-// This module is intentionally side-effect free: it does NOT change the live app yet.
+// Converts the current Andebol-stats GameStore shape into the versioned Match payload.
 
-const SCHEMA_VERSION = '1.0';
+const SCHEMA_VERSION = '1.1.0';
 
 function normalizeId(value, fallback = 'unknown') {
     return String(value ?? fallback)
@@ -16,14 +15,11 @@ function normalizeId(value, fallback = 'unknown') {
 }
 
 function playerId(player) {
-    // Temporary legacy identity. The Performance OS will eventually provide
-    // the permanent playerId. Keeping this deterministic prevents duplicates
-    // while importing the same legacy roster repeatedly.
-    return `legacy-player:${normalizeId(player?.Nome, `number-${player?.Numero ?? 'unknown'}`)}`;
+    return String(player?.sourceId || player?.id || `legacy-player:${normalizeId(player?.Nome, `number-${player?.Numero ?? 'unknown'}`)}`);
 }
 
-function teamId(name, side) {
-    return `legacy-team:${side}:${normalizeId(name, side)}`;
+function teamId(team, side) {
+    return String(team?.id || `legacy-team:${side}:${normalizeId(team?.name, side)}`);
 }
 
 function mapOutcome(outcome) {
@@ -50,22 +46,18 @@ function mapPlayer(player, teamIdValue) {
     };
 }
 
-function mapRoster(state) {
-    const teamAId = teamId(state.teamAName, 'A');
+function mapRoster(state, teamAId) {
     const players = state.gameData?.A?.players || [];
-
-    return players
-        .filter(Boolean)
-        .map(player => ({
-            id: `legacy-roster:${playerId(player)}`,
-            playerId: playerId(player),
-            teamId: teamAId,
-            shirtNumber: player?.Numero ?? null,
-            position: mapPosition(player?.Posicao),
-            starter: Boolean(player?.onCourt),
-            available: !Boolean(player?.disqualified),
-            timeOnCourt: Number(player?.timeOnCourt || 0)
-        }));
+    return players.filter(Boolean).map(player => ({
+        id: `roster:${playerId(player)}`,
+        playerId: playerId(player),
+        teamId: teamAId,
+        shirtNumber: player?.Numero ?? null,
+        position: mapPosition(player?.Posicao),
+        starter: Boolean(player?.onCourt),
+        available: !Boolean(player?.disqualified),
+        timeOnCourt: Number(player?.timeOnCourt || 0)
+    }));
 }
 
 function mapShotHistory(history, teamIdValue, playerIdValue, prefix) {
@@ -80,69 +72,44 @@ function mapShotHistory(history, teamIdValue, playerIdValue, prefix) {
         metadata: {
             shot: {
                 shooterId: playerIdValue,
+                position: shot.position ?? null,
                 zone: shot.zone ?? null,
+                distance: shot.distance ?? null,
                 type: shot.type ?? null,
                 outcome: mapOutcome(shot.outcome),
                 x: toNumberOrNull(shot.coords?.x),
                 y: toNumberOrNull(shot.coords?.y),
                 sevenMeter: isSevenMeter(shot.zone),
-                xg: null
+                xg: toNumberOrNull(shot.xg)
             },
-            source: 'andebol-stats-legacy'
+            source: 'andebol-stats'
         }
     }));
 }
 
-function mapShots(state) {
+function mapShots(state, teamAId, teamBId) {
     const players = state.gameData?.A?.players || [];
-    const teamAId = teamId(state.teamAName, 'A');
-    const teamBId = teamId(state.teamBName, 'B');
     const events = [];
-
-    players.forEach(player => {
-        events.push(...mapShotHistory(
-            player.history,
-            teamAId,
-            playerId(player),
-            'legacy-shot:A'
-        ));
-    });
-
-    events.push(...mapShotHistory(
-        state.gameData?.B?.history,
-        teamBId,
-        null,
-        'legacy-shot:B'
-    ));
-
+    players.forEach(player => events.push(...mapShotHistory(player.history, teamAId, playerId(player), 'shot:A')));
+    events.push(...mapShotHistory(state.gameData?.B?.history, teamBId, null, 'shot:B'));
     return events;
 }
 
-function mapGenericEvents(state) {
-    const teamAId = teamId(state.teamAName, 'A');
-    const teamBId = teamId(state.teamBName, 'B');
-
-    // Shot actions are deliberately excluded here because the current app
-    // stores their full detail in player.history / B.history. Importing the
-    // generic timeline "shot" as well would create duplicate shot events.
+function mapGenericEvents(state, teamAId, teamBId) {
     return (state.gameEvents || [])
         .filter(event => normalizeEventType(event.type) !== 'shot')
         .map((event, index) => {
             const teamIdValue = event.team === 'B' ? teamBId : teamAId;
             const details = String(event.details || '');
-
             return {
-                id: `legacy-event:${index}:${event.time ?? 0}`,
+                id: `event:${index}:${event.time ?? 0}`,
                 matchId: null,
                 period: inferPeriod(state, event.time),
                 gameTime: Number(event.time || 0),
                 teamId: teamIdValue,
                 playerId: findPlayerIdFromDetails(state, details),
                 type: normalizeEventType(event.type),
-                metadata: {
-                    details,
-                    source: 'andebol-stats-legacy'
-                }
+                metadata: { details, source: 'andebol-stats' }
             };
         });
 }
@@ -196,7 +163,6 @@ function isSevenMeter(zone) {
 function mapStats(state) {
     const teamA = state.gameData?.A?.stats || {};
     const teamB = state.gameData?.B?.stats || {};
-
     return {
         A: {
             goals: Number(teamA.goals || 0),
@@ -221,7 +187,7 @@ function mapStats(state) {
 
 function mapSituations(state) {
     return (state.gameSituationLog || []).map((situation, index) => ({
-        id: `legacy-situation:${index}:${situation.startTime ?? 0}`,
+        id: `situation:${index}:${situation.startTime ?? 0}`,
         startTime: Number(situation.startTime || 0),
         endTime: situation.endTime == null ? null : Number(situation.endTime),
         teamASituation: situation.situationA || 'equality',
@@ -230,62 +196,62 @@ function mapSituations(state) {
 }
 
 export function createCanonicalMatch(state, options = {}) {
-    if (!state || !state.gameData) {
-        throw new Error('Estado de jogo inválido.');
-    }
+    if (!state || !state.gameData) throw new Error('Estado de jogo inválido.');
 
-    const matchId = options.matchId || `legacy-match:${Date.now()}`;
-    const homeTeamId = teamId(state.teamAName, 'A');
-    const awayTeamId = teamId(state.teamBName, 'B');
+    const matchId = options.matchId || state.matchId || `legacy-match:${Date.now()}`;
+    const teamAId = teamId(state.teamA, 'A');
+    const teamBId = teamId(state.teamB, 'B');
+    const homeAway = state.metadata?.homeAway === 'AWAY' ? 'AWAY' : state.metadata?.homeAway === 'NEUTRAL' ? 'NEUTRAL' : 'HOME';
+    const homeTeamId = homeAway === 'AWAY' ? teamBId : teamAId;
+    const awayTeamId = homeAway === 'AWAY' ? teamAId : teamBId;
+    const homeTeamName = homeAway === 'AWAY' ? state.teamBName || 'Adversário' : state.teamAName || 'Minha Equipa';
+    const awayTeamName = homeAway === 'AWAY' ? state.teamAName || 'Minha Equipa' : state.teamBName || 'Adversário';
 
-    const shotEvents = mapShots(state).map(event => ({ ...event, matchId }));
-    const genericEvents = mapGenericEvents(state).map(event => ({ ...event, matchId }));
+    const shotEvents = mapShots(state, teamAId, teamBId).map(event => ({ ...event, matchId }));
+    const genericEvents = mapGenericEvents(state, teamAId, teamBId).map(event => ({ ...event, matchId }));
 
     return {
         schemaVersion: SCHEMA_VERSION,
         source: 'andebol-stats',
         match: {
             id: matchId,
-            seasonId: options.seasonId || null,
-            competitionId: options.competitionId || null,
-            date: options.date || null,
-            venue: options.venue || null,
+            seasonId: options.seasonId || state.metadata?.seasonId || '',
+            competitionId: options.competitionId || state.metadata?.competitionId || null,
+            date: options.date || state.metadata?.date || new Date().toISOString(),
+            venue: options.venue || state.metadata?.venue || null,
             homeTeamId,
             awayTeamId,
-            homeTeamName: state.teamAName || '',
-            awayTeamName: state.teamBName || '',
+            homeTeamName,
+            awayTeamName,
+            ownTeamId: teamAId,
+            ownTeamName: state.teamAName || 'Minha Equipa',
+            homeAway,
             status: state.isRunning ? 'live' : 'finished',
             durationMinutes: Number(state.halfDuration || 30),
-            currentPeriod: Number(state.currentGamePart || 1),
+            currentPeriod: Number(state.currentGamePart || 1) === 2 ? 2 : 1,
             gameTime: Number(state.totalSeconds || 0),
-            homeScore: Number(state.gameData.A.stats?.goals || 0),
-            awayScore: Number(state.gameData.B.stats?.goals || 0)
+            homeScore: homeAway === 'AWAY' ? Number(state.gameData.B.stats?.goals || 0) : Number(state.gameData.A.stats?.goals || 0),
+            awayScore: homeAway === 'AWAY' ? Number(state.gameData.A.stats?.goals || 0) : Number(state.gameData.B.stats?.goals || 0)
         },
-        players: (state.gameData.A.players || []).map(player => mapPlayer(player, homeTeamId)),
-        roster: mapRoster(state),
+        players: (state.gameData.A.players || []).map(player => mapPlayer(player, teamAId)),
+        roster: mapRoster(state, teamAId),
         events: [...shotEvents, ...genericEvents].sort((a, b) => a.gameTime - b.gameTime),
         situations: mapSituations(state),
         statistics: mapStats(state),
-        legacy: {
-            totalSeconds: Number(state.totalSeconds || 0),
-            halfDuration: Number(state.halfDuration || 30),
-            teamA: state.gameData.A,
-            teamB: state.gameData.B
-        },
-        metadata: {
-            adapterVersion: '1.0.1',
-            createdAt: new Date().toISOString()
-        }
+        legacy: { totalSeconds: Number(state.totalSeconds || 0), halfDuration: Number(state.halfDuration || 30) },
+        metadata: { adapterVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString() }
     };
 }
 
 export function validateCanonicalMatch(payload) {
     const errors = [];
-
-    if (!payload?.schemaVersion) errors.push('schemaVersion em falta');
+    if (payload?.schemaVersion !== SCHEMA_VERSION) errors.push(`schemaVersion inválido: ${payload?.schemaVersion || 'em falta'}`);
+    if (!payload?.source) errors.push('source em falta');
     if (!payload?.match?.id) errors.push('match.id em falta');
     if (!payload?.match?.homeTeamId) errors.push('match.homeTeamId em falta');
     if (!payload?.match?.awayTeamId) errors.push('match.awayTeamId em falta');
+    if (!payload?.match?.ownTeamId) errors.push('match.ownTeamId em falta');
+    if (!payload?.match?.homeAway) errors.push('match.homeAway em falta');
     if (!Array.isArray(payload?.players)) errors.push('players deve ser um array');
     if (!Array.isArray(payload?.roster)) errors.push('roster deve ser um array');
     if (!Array.isArray(payload?.events)) errors.push('events deve ser um array');
@@ -296,12 +262,9 @@ export function validateCanonicalMatch(payload) {
         if (!event?.id) errors.push(`events[${index}].id em falta`);
         else if (eventIds.has(event.id)) errors.push(`ID de evento duplicado: ${event.id}`);
         else eventIds.add(event.id);
-
         if (!event?.type) errors.push(`events[${index}].type em falta`);
         if (!event?.teamId) errors.push(`events[${index}].teamId em falta`);
-        if (!Number.isFinite(Number(event?.gameTime))) {
-            errors.push(`events[${index}].gameTime inválido`);
-        }
+        if (!Number.isFinite(Number(event?.gameTime))) errors.push(`events[${index}].gameTime inválido`);
     });
 
     const playerIds = new Set();
@@ -311,10 +274,7 @@ export function validateCanonicalMatch(payload) {
         else playerIds.add(player.id);
     });
 
-    return {
-        valid: errors.length === 0,
-        errors
-    };
+    return { valid: errors.length === 0, errors };
 }
 
 export { SCHEMA_VERSION };
