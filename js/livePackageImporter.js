@@ -69,7 +69,21 @@ export function importLivePackage(pkg) {
         teamBId: opponentId,
         teamAName: home.name,
         teamBName: away.name,
-        players: players.map(player => ({ ...player, ...(rosterByPlayer.get(player.id) || {}), Numero: rosterByPlayer.get(player.id)?.shirtNumber ?? player.Numero, Posicao: normalizePosition(rosterByPlayer.get(player.id)?.position ?? player.Posicao), onCourt: Boolean(rosterByPlayer.get(player.id)?.starter), history: [], positiveActions: [], negativeActions: [], sanctions: { yellow: 0, twoMin: 0, red: 0 } })),
+        players: players.map(player => {
+            const rosterEntry = rosterByPlayer.get(player.id);
+            return {
+                ...player,
+                Numero: rosterEntry?.shirtNumber ?? player.Numero,
+                Nome: player.Nome,
+                Posicao: normalizePosition(rosterEntry?.position ?? player.Posicao),
+                onCourt: Boolean(rosterEntry?.starter),
+                available: rosterEntry?.available !== false,
+                history: [],
+                positiveActions: [],
+                negativeActions: [],
+                sanctions: { yellow: 0, twoMin: 0, red: 0 }
+            };
+        }),
         events,
         metadata: {
             schemaVersion: String(pkg.schemaVersion),
