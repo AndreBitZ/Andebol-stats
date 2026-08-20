@@ -2,29 +2,29 @@
 export class GameStore {
     constructor() {
         this.state = this.getInitialState();
-        this.history = []; 
-        this.maxHistory = 20; 
+        this.history = [];
+        this.maxHistory = 20;
     }
 
     getInitialState() {
         return {
             gameData: {
-                A: { 
-                    stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 }, 
-                    players: [], 
-                    officials: [], 
-                    fileLoaded: false, 
+                A: {
+                    stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 },
+                    players: [],
+                    officials: [],
+                    fileLoaded: false,
                     teamYellowCards: 0,
                     officialsStats: { yellow: 0, twoMin: 0, red: 0 },
                     isTeamSuspended: false,
-                    teamSuspensionTimer: 0, 
+                    teamSuspensionTimer: 0,
                     timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
                 },
-                B: { 
-                    stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 }, 
-                    isSuspended: false, 
-                    suspensionTimer: 0, 
-                    timeouts: { total: 3, part1: 0, part2: 0, taken: [] } 
+                B: {
+                    stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 },
+                    isSuspended: false,
+                    suspensionTimer: 0,
+                    timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
                 }
             },
             totalSeconds: 0,
@@ -56,8 +56,8 @@ export class GameStore {
     }
 
     update(updaterFunction) {
-        this.snapshot(); 
-        updaterFunction(this.state); 
+        this.snapshot();
+        updaterFunction(this.state);
         this.saveToSessionStorage();
     }
 
@@ -86,7 +86,7 @@ export class GameStore {
                 }
                 return true;
             } catch (e) {
-                console.error("Erro ao ler dados guardados, a reiniciar...", e);
+                console.error("Erro a ler dados guardados, a reiniciar...", e);
                 return false;
             }
         }
@@ -100,8 +100,10 @@ export class GameStore {
 
 export const store = new GameStore();
 
-// Carrega o bridge de exportação sem alterar o fluxo LIVE existente.
-// O dynamic import evita acoplamento circular entre state.js e canonicalExport.js.
+// Carrega os bridges de integração sem alterar o fluxo LIVE existente.
 import('./canonicalExport.js').catch(error => {
     console.warn('[Canonical Match] Export bridge indisponível:', error);
+});
+import('./canonicalImport.js').catch(error => {
+    console.warn('[Canonical Match] Import bridge indisponível:', error);
 });
