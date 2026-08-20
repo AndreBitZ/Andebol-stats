@@ -86,11 +86,12 @@ function installImportUI() {
             nextState.gameData.B.stats.technical_faults = 0;
             nextState.gameData.B.history = [];
 
-            sessionStorage.setItem('handballGameSession', JSON.stringify(nextState));
-
             const orientation = payload.match.homeAway === 'AWAY' ? 'Fora' : payload.match.homeAway === 'NEUTRAL' ? 'Neutro' : 'Casa';
-            const confirmed = confirm(`Jogo preparado para importação:\n\n${imported.teamAName} vs ${imported.teamBName}\nLocalização: ${orientation}\nJogadores: ${nextState.gameData.A.players.length}\nDuração: ${nextState.halfDuration} min\n\nAbrir este jogo agora?`);
-            if (confirmed) window.location.reload();
+            const confirmed = confirm(`PRÉ-VISUALIZAÇÃO DO JOGO\n\n${imported.teamAName} vs ${imported.teamBName}\nLocalização: ${orientation}\nJogadores: ${nextState.gameData.A.players.length}\nDuração: ${nextState.halfDuration} min\nEstado inicial: 0-0\nEventos a importar: 0\n\nConfirmar importação?`);
+            if (!confirmed) return;
+
+            sessionStorage.setItem('handballGameSession', JSON.stringify(nextState));
+            window.location.reload();
         } catch (error) {
             console.error('[Canonical Match] Erro na importação:', error);
             alert(`Erro ao importar o Match JSON:\n\n${error instanceof Error ? error.message : 'Ficheiro inválido.'}`);
