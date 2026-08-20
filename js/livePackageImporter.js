@@ -1,4 +1,5 @@
-const LIVE_PACKAGE_SCHEMA = '1.0.0';
+const LIVE_PACKAGE_SCHEMA = '1.0.1';
+const SUPPORTED_LIVE_PACKAGE_SCHEMAS = new Set(['1.0.0', '1.0.1']);
 
 function normalizePosition(position) {
     if (!position) return '';
@@ -20,13 +21,17 @@ function normalizePlayer(player) {
 export function validateLivePackage(pkg) {
     const errors = [];
     if (!pkg || typeof pkg !== 'object') errors.push('Pacote inválido.');
-    if (pkg?.schemaVersion !== LIVE_PACKAGE_SCHEMA) errors.push(`Schema não suportado: ${pkg?.schemaVersion ?? 'desconhecido'}. Esperado ${LIVE_PACKAGE_SCHEMA}.`);
+    if (!SUPPORTED_LIVE_PACKAGE_SCHEMAS.has(String(pkg?.schemaVersion ?? ''))) errors.push(`Schema não suportado: ${pkg?.schemaVersion ?? 'desconhecido'}. Suportados: ${[...SUPPORTED_LIVE_PACKAGE_SCHEMAS].join(', ')}.`);
     if (!pkg?.match?.id) errors.push('Falta match.id.');
     if (!pkg?.teams?.home?.id || !pkg?.teams?.away?.id) errors.push('Faltam as duas equipas.');
     if (!Array.isArray(pkg?.players)) errors.push('Falta a lista de jogadores.');
     if (Array.isArray(pkg?.players)) {
         const ids = pkg.players.map(p => String(p.id));
         if (new Set(ids).size !== ids.length) errors.push('Existem jogadores duplicados no pacote.');
+    }
+    if (Array.isArray(pkg?.events)) {
+        const eventIds = pkg.events.map(event => String(event?.id ?? ''));
+        if (eventIds.some(Boolean) && new Set(eventIds.filter(Boolean)).size !== eventIds.filter(Boolean).length) errors.push('Existem eventos duplicados no pacote.');
     }
     return { valid: errors.length === 0, errors };
 }
@@ -59,6 +64,7 @@ export function importLivePackage(pkg) {
             sanctions: { yellow: 0, twoMin: 0, red: 0 },
         })),
         metadata: {
+            schemaVersion: String(pkg.schemaVersion),
             seasonId: pkg.match.seasonId || null,
             competitionId: pkg.match.competitionId || null,
             date: pkg.match.date || null,
@@ -94,3 +100,4 @@ export function attachLivePackageImporter({ fileInput, onImported, onError }) {
 }
 
 export const LIVE_PACKAGE_IMPORT_SCHEMA = LIVE_PACKAGE_SCHEMA;
+export { SUPPORTED_LIVE_PACKAGE_SCHEMAS };
