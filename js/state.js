@@ -33,6 +33,7 @@ export class GameStore {
             isPassivePlay: false,
             isOpponent7v6: false,
             gameEvents: [],
+            timelineEvents: [],
             gameSituationLog: [{ startTime: 0, endTime: null, situationA: 'equality', situationB: 'equality' }],
             lastKnownSituations: { A: 'equality', B: 'equality' },
             teamAName: "Minha Equipa",
@@ -41,9 +42,7 @@ export class GameStore {
     }
 
     snapshot() {
-        if (this.history.length >= this.maxHistory) {
-            this.history.shift();
-        }
+        if (this.history.length >= this.maxHistory) this.history.shift();
         this.history.push(JSON.stringify(this.state));
     }
 
@@ -72,7 +71,7 @@ export class GameStore {
         try {
             sessionStorage.setItem('handballGameSession', JSON.stringify(this.state));
         } catch (e) {
-            console.error("Erro a guardar no SessionStorage", e);
+            console.error("Erro a guardar dados no SessionStorage", e);
         }
     }
 
@@ -81,9 +80,8 @@ export class GameStore {
         if (saved) {
             try {
                 this.state = JSON.parse(saved);
-                if(!this.state.gameData.A.officialsStats) {
-                    this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
-                }
+                if (!Array.isArray(this.state.timelineEvents)) this.state.timelineEvents = [];
+                if (!this.state.gameData.A.officialsStats) this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
                 return true;
             } catch (e) {
                 console.error("Erro a ler dados guardados, a reiniciar...", e);
@@ -100,10 +98,6 @@ export class GameStore {
 
 export const store = new GameStore();
 
-// Carrega os bridges de integração sem alterar o fluxo LIVE existente.
-import('./canonicalExport.js').catch(error => {
-    console.warn('[Canonical Match] Export bridge indisponível:', error);
-});
-import('./canonicalImport.js').catch(error => {
-    console.warn('[Canonical Match] Import bridge indisponível:', error);
-});
+import('./canonicalExport.js').catch(error => console.warn('[Canonical Match] Export bridge indisponível:', error));
+import('./canonicalImport.js').catch(error => console.warn('[Canonical Match] Import bridge indisponível:', error));
+import('./clockTimelineRuntime.js').catch(error => console.warn('[Clock Timeline] Runtime indisponível:', error));
