@@ -1,6 +1,10 @@
 import { store } from './state.js';
 import { importLivePackage, validateLivePackage } from './livePackageImporter.js';
 
+function removeLegacySpreadsheetRuntime() {
+    document.querySelectorAll('script[src*="xlsx"]').forEach(script => script.remove());
+}
+
 function buildImportedState(payload, imported) {
     const nextState = store.getInitialState();
     nextState.matchId = imported.matchId;
@@ -37,14 +41,10 @@ function buildImportedState(payload, imported) {
 
 async function importMatchFile(file) {
     const payload = JSON.parse(await file.text());
-    if (payload?.source !== 'handball-performance-os') {
-        throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
-    }
+    if (payload?.source !== 'handball-performance-os') throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
     const validation = validateLivePackage(payload);
     if (!validation.valid) throw new Error(validation.errors.join('\n'));
-    if ((payload.events || []).length > 0) {
-        throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
-    }
+    if ((payload.events || []).length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
 
     const imported = importLivePackage(payload);
     const nextState = buildImportedState(payload, imported);
@@ -70,12 +70,8 @@ function createInput() {
         const file = input.files?.[0];
         input.value = '';
         if (!file) return;
-        try {
-            await importMatchFile(file);
-        } catch (error) {
-            console.error('[Performance OS Import] Erro:', error);
-            alert(`Não foi possível importar o jogo.\n\n${error instanceof Error ? error.message : 'Ficheiro inválido.'}`);
-        }
+        try { await importMatchFile(file); }
+        catch (error) { console.error('[Performance OS Import] Erro:', error); alert(`Não foi possível importar o jogo.\n\n${error instanceof Error ? error.message : 'Ficheiro inválido.'}`); }
     });
     return input;
 }
@@ -93,6 +89,7 @@ function addButton(parent, id, text) {
 }
 
 function installWelcomeLoader() {
+    removeLegacySpreadsheetRuntime();
     const modal = document.getElementById('welcomeModal');
     if (!modal) return;
     const input = createInput();
@@ -135,15 +132,12 @@ function installMainLoader() {
 }
 
 function installImportUI() {
+    removeLegacySpreadsheetRuntime();
     installWelcomeLoader();
     installMainLoader();
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', installImportUI, { once: true });
-} else {
-    installImportUI();
-}
-
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installImportUI, { once: true });
+else installImportUI();
 setTimeout(installImportUI, 500);
 setTimeout(installImportUI, 1500);
