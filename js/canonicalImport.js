@@ -29,28 +29,22 @@ function buildImportedState(payload, imported) {
     }));
     nextState.gameData.A.officials = [];
     nextState.gameData.A.fileLoaded = true;
-    nextState.gameData.A.stats.goals = 0;
-    nextState.gameData.A.stats.misses = 0;
-    nextState.gameData.A.stats.savedShots = 0;
-    nextState.gameData.A.stats.turnovers = 0;
-    nextState.gameData.A.stats.gkSaves = 0;
-    nextState.gameData.A.stats.gkGoalsAgainst = 0;
-    nextState.gameData.A.stats.technical_faults = 0;
-    nextState.gameData.B.stats.goals = 0;
-    nextState.gameData.B.stats.misses = 0;
-    nextState.gameData.B.stats.savedShots = 0;
-    nextState.gameData.B.stats.turnovers = 0;
-    nextState.gameData.B.stats.technical_faults = 0;
+    nextState.gameData.A.stats = { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 };
+    nextState.gameData.B.stats = { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 };
     nextState.gameData.B.history = [];
     return nextState;
 }
 
 async function importMatchFile(file) {
     const payload = JSON.parse(await file.text());
+    if (payload?.source !== 'handball-performance-os') {
+        throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
+    }
     const validation = validateLivePackage(payload);
     if (!validation.valid) throw new Error(validation.errors.join('\n'));
-    if (payload.source !== 'handball-performance-os') throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
-    if ((payload.events || []).length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
+    if ((payload.events || []).length > 0) {
+        throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
+    }
 
     const imported = importLivePackage(payload);
     const nextState = buildImportedState(payload, imported);
