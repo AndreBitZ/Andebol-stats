@@ -42,8 +42,27 @@ export function setVideoClockSeconds(seconds) {
     return value;
 }
 export function clearVideoClock() { store.state.videoClockSeconds = null; store.state.videoClockKnown = false; store.saveToSessionStorage(); }
+export function setVideoAnchor(name) {
+    const allowed = ['firstHalfStart', 'firstHalfEnd', 'secondHalfStart', 'secondHalfEnd'];
+    if (!allowed.includes(name)) throw new Error(`Invalid video anchor: ${name}`);
+    const videoTime = currentVideoTime();
+    if (videoTime === null) throw new Error('Video time is unknown. Set the video clock before creating an anchor.');
+    const period = name.startsWith('firstHalf') ? 1 : 2;
+    const isStart = name.endsWith('Start');
+    const gameTime = isStart ? 0 : Number(store.state.halfDuration || 30) * 60;
+    store.state.videoAnchors = { ...(store.state.videoAnchors || {}), [name]: { period, gameTime, videoTime, capturedAt: new Date().toISOString() } };
+    store.saveToSessionStorage();
+    return store.state.videoAnchors[name];
+}
+export function clearVideoAnchor(name) {
+    const allowed = ['firstHalfStart', 'firstHalfEnd', 'secondHalfStart', 'secondHalfEnd'];
+    if (!allowed.includes(name)) throw new Error(`Invalid video anchor: ${name}`);
+    store.state.videoAnchors = { ...(store.state.videoAnchors || {}), [name]: null }; store.saveToSessionStorage();
+}
 window.setAndebolStatsVideoTime = setVideoClockSeconds;
 window.clearAndebolStatsVideoTime = clearVideoClock;
+window.setAndebolStatsVideoAnchor = setVideoAnchor;
+window.clearAndebolStatsVideoAnchor = clearVideoAnchor;
 
 function install() {
     if (document.documentElement.dataset.clockTimelineInstalled === '1') return;
