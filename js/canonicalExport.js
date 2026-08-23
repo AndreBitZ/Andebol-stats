@@ -28,6 +28,7 @@ export function exportCanonicalMatch(options = {}) {
     try {
         const payload = createCanonicalMatch(store.state, options);
         payload.timeline = Array.isArray(store.state.timelineEvents) ? [...store.state.timelineEvents] : [];
+        payload.videoAnchors = store.state.videoAnchors ? JSON.parse(JSON.stringify(store.state.videoAnchors)) : { firstHalfStart: null, firstHalfEnd: null, secondHalfStart: null, secondHalfEnd: null };
         const timelineValidation = validateTimeline(payload.timeline);
         if (!timelineValidation.valid) throw new Error(`Timeline inválida: ${timelineValidation.errors.join('; ')}`);
         const validation = validateCanonicalMatch(payload);
@@ -37,7 +38,7 @@ export function exportCanonicalMatch(options = {}) {
             return null;
         }
         downloadJson(payload, buildFilename(payload.match));
-        console.info('[Canonical Match] Exportação concluída', { schemaVersion: SCHEMA_VERSION, matchId: payload.match.id, events: payload.events.length, timeline: payload.timeline.length, players: payload.players.length });
+        console.info('[Canonical Match] Exportação concluída', { schemaVersion: SCHEMA_VERSION, matchId: payload.match.id, events: payload.events.length, timeline: payload.timeline.length, players: payload.players.length, videoAnchors: payload.videoAnchors });
         return payload;
     } catch (error) {
         console.error('[Canonical Match] Erro na exportação:', error);
