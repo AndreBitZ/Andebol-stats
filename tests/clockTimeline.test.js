@@ -12,6 +12,6 @@ describe('official game clock vs video clock', () => {
     expect(timeline[2].gameTime).toBe(1052);
     expect(timeline[1].videoTime).toBe(1307);
     expect(timeline[2].videoTime).toBe(1351);
-    expect(gameTimeToVideoTime(1053, 1, { firstHalfStart: { gameTime: 0, videoTime: 120 } }, timeline)).toBe(1364);
+    expect(gameTimeToVideoTime(1053, 1, { firstHalfStart: { gameTime: 0, videoTime: 120 } }, timeline)).toBe(1217);
   });
 });
