@@ -7,11 +7,12 @@ export class GameStore {
             preMatchStats: null,
             gameData: {
                 A: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 }, players: [], officials: [], fileLoaded: false, teamYellowCards: 0, officialsStats: { yellow: 0, twoMin: 0, red: 0 }, isTeamSuspended: false, teamSuspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] } },
-                B: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 }, isSuspended: false, suspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] } }
+                B: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 }, isSuspended: false, suspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
             },
             totalSeconds: 0, halfDuration: 30, currentGamePart: 1, isPassivePlay: false, isOpponent7v6: false, isRunning: false,
             videoClockSeconds: null,
             videoClockKnown: false,
+            videoAnchors: { firstHalfStart: null, firstHalfEnd: null, secondHalfStart: null, secondHalfEnd: null },
             gameEvents: [], timelineEvents: [], gameSituationLog: [{ startTime: 0, endTime: null, situationA: 'equality', situationB: 'equality' }], lastKnownSituations: { A: 'equality', B: 'equality' }, teamAName: 'Minha Equipa', teamBName: ''
         };
     }
@@ -30,6 +31,8 @@ export class GameStore {
                 if (!('preMatchStats' in this.state)) this.state.preMatchStats = null;
                 if (!('videoClockSeconds' in this.state)) this.state.videoClockSeconds = null;
                 if (!('videoClockKnown' in this.state)) this.state.videoClockKnown = false;
+                if (!this.state.videoAnchors || typeof this.state.videoAnchors !== 'object') this.state.videoAnchors = { firstHalfStart: null, firstHalfEnd: null, secondHalfStart: null, secondHalfEnd: null };
+                for (const key of ['firstHalfStart', 'firstHalfEnd', 'secondHalfStart', 'secondHalfEnd']) if (!(key in this.state.videoAnchors)) this.state.videoAnchors[key] = null;
                 return true;
             } catch (e) { console.error('Erro a ler dados guardados, a reiniciar...', e); return false; }
         }
