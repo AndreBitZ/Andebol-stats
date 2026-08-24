@@ -7,12 +7,12 @@ export class GameStore {
             preMatchStats: null,
             gameData: {
                 A: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, gkSaves: 0, gkGoalsAgainst: 0, technical_faults: 0 }, players: [], officials: [], fileLoaded: false, teamYellowCards: 0, officialsStats: { yellow: 0, twoMin: 0, red: 0 }, isTeamSuspended: false, teamSuspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] } },
-                B: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 }, isSuspended: false, suspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
+                B: { stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 }, isSuspended: false, suspensionTimer: 0, timeouts: { total: 3, part1: 0, part2: 0, taken: [] } }
             },
             totalSeconds: 0, halfDuration: 30, currentGamePart: 1, isPassivePlay: false, isOpponent7v6: false, isRunning: false,
-            videoClockSeconds: null,
-            videoClockKnown: false,
+            videoClockSeconds: null, videoClockKnown: false,
             videoAnchors: { firstHalfStart: null, firstHalfEnd: null, secondHalfStart: null, secondHalfEnd: null },
+            videoClips: [],
             gameEvents: [], timelineEvents: [], gameSituationLog: [{ startTime: 0, endTime: null, situationA: 'equality', situationB: 'equality' }], lastKnownSituations: { A: 'equality', B: 'equality' }, teamAName: 'Minha Equipa', teamBName: ''
         };
     }
@@ -27,6 +27,7 @@ export class GameStore {
             try {
                 this.state = JSON.parse(saved);
                 if (!Array.isArray(this.state.timelineEvents)) this.state.timelineEvents = [];
+                if (!Array.isArray(this.state.videoClips)) this.state.videoClips = [];
                 if (!this.state.gameData.A.officialsStats) this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
                 if (!('preMatchStats' in this.state)) this.state.preMatchStats = null;
                 if (!('videoClockSeconds' in this.state)) this.state.videoClockSeconds = null;
