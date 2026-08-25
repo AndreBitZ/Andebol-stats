@@ -21,7 +21,8 @@ export function importHpoMatch(payload) {
     const opponentName = String(payload.match.homeAway === 'AWAY' ? payload.match.homeTeamName : payload.match.awayTeamName || 'Adversário');
     const roster = Array.isArray(payload.roster) ? payload.roster : [];
     const rosterByPlayer = new Map(roster.map(item => [String(item.playerId), item]));
-    return { matchId: String(payload.match.id), teamAId: ownId, teamBId: opponentId, teamAName: ownName, teamBName: opponentName, players: payload.players.map(player => normalizePlayer(player, rosterByPlayer)), events: payload.events.map(normalizeEvent), timelineEvents: Array.isArray(payload.timeline) ? payload.timeline : [], videoAnchors: payload.video.anchors || {}, videoClips: payload.video.clips || [], preMatchStats: payload.preMatchStats || null, metadata: payload.metadata, halfDuration: Number(payload.match.durationMinutes || 30), currentGamePart: payload.match.currentPeriod === 2 ? 2 : 1, totalSeconds: Number(payload.match.gameTime || 0) };
+    const statistics = payload.statistics && typeof payload.statistics === 'object' ? payload.statistics : {};
+    return { matchId: String(payload.match.id), teamAId: ownId, teamBId: opponentId, teamAName: ownName, teamBName: opponentName, players: payload.players.map(player => normalizePlayer(player, rosterByPlayer)), events: payload.events.map(normalizeEvent), timelineEvents: Array.isArray(payload.timeline) ? payload.timeline : [], videoAnchors: payload.video.anchors || {}, videoClips: payload.video.clips || [], preMatchStats: payload.preMatchStats ?? statistics.preMatch ?? null, metadata: payload.metadata, halfDuration: Number(payload.match.durationMinutes || 30), currentGamePart: payload.match.currentPeriod === 2 ? 2 : 1, totalSeconds: Number(payload.match.gameTime || 0) };
 }
 export async function loadHpoMatchFile(file) {
     if (!file) throw new Error('Nenhum ficheiro selecionado.');
