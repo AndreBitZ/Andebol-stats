@@ -5,350 +5,66 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Análise de Andebol - Profissional</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Bibliotecas Excel/PDF -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-gray-900 text-white antialiased">
 
-    <!-- Ecrã de Carregamento -->
     <div id="welcomeModal" class="fixed inset-0 bg-gray-900 flex items-center justify-center z-50 p-4">
         <div class="bg-gray-800 rounded-2xl p-8 w-full max-w-md text-center shadow-2xl">
             <h2 class="text-3xl font-bold text-blue-400 mb-4">Preparar Jogo</h2>
-            
             <div class="space-y-4 mb-6">
-                <!-- Seleção de Duração -->
                 <div class="bg-gray-700 p-3 rounded-lg">
                     <p class="text-sm text-gray-300 mb-2 font-semibold">Duração da Parte:</p>
                     <div class="flex justify-center gap-6">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="gameDuration" value="30" class="form-radio text-blue-500 h-5 w-5" checked>
-                            <span class="ml-2 text-white font-bold">30 min</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer">
-                            <input type="radio" name="gameDuration" value="25" class="form-radio text-blue-500 h-5 w-5">
-                            <span class="ml-2 text-white font-bold">25 min</span>
-                        </label>
+                        <label class="inline-flex items-center cursor-pointer"><input type="radio" name="gameDuration" value="30" class="form-radio text-blue-500 h-5 w-5" checked><span class="ml-2 text-white font-bold">30 min</span></label>
+                        <label class="inline-flex items-center cursor-pointer"><input type="radio" name="gameDuration" value="25" class="form-radio text-blue-500 h-5 w-5"><span class="ml-2 text-white font-bold">25 min</span></label>
                     </div>
                 </div>
-
-                <!-- Opções de Carregamento -->
                 <div class="space-y-3">
                     <div>
-                        <input type="file" id="welcome-file-input-A" class="hidden" accept=".xlsx">
-                        <label for="welcome-file-input-A" class="cursor-pointer w-full block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2">
-                            <span>📁</span> Carregar Ficheiro Local (.xlsx)
-                        </label>
+                        <input type="file" id="welcome-file-input-A" class="hidden" accept=".hpo-match.json,.json,application/json">
+                        <label for="welcome-file-input-A" class="cursor-pointer w-full block bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"><span>📁</span> Carregar jogo HPO-MATCH</label>
                     </div>
-                    
                     <p id="file-name-A" class="text-sm text-gray-500 h-5 truncate">Nenhum ficheiro selecionado</p>
                 </div>
-
                 <input type="text" id="welcome-team-b-name" placeholder="Nome do Adversário" class="w-full bg-gray-700 text-white text-center p-3 rounded-lg">
             </div>
-            
             <button id="startGameBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg disabled:opacity-50" disabled>Começar Jogo</button>
         </div>
     </div>
 
-    <!-- Aplicação Principal -->
     <div id="main-app" class="container mx-auto p-4 hidden">
-        <!-- Placar -->
         <div class="bg-gray-800 p-4 rounded-2xl shadow-lg mb-6 text-center">
-            <div class="flex justify-between mb-2">
-                <input type="text" id="teamAName" readonly class="bg-transparent text-blue-400 font-bold text-xl text-center w-1/3">
-                <span class="text-gray-500">vs</span>
-                <input type="text" id="teamBName" class="bg-transparent text-orange-400 font-bold text-xl text-center w-1/3">
-            </div>
-            <div class="flex justify-center items-center gap-8">
-                <div class="text-6xl font-bold" id="scoreA">0</div>
-                <div class="text-4xl text-gray-600">-</div>
-                <div class="text-6xl font-bold" id="scoreB">0</div>
-            </div>
-            <div class="grid grid-cols-4 gap-4 mt-4 text-sm text-gray-400">
-                <div>Eficácia: <span id="effA" class="text-white">0%</span></div>
-                <div>Remates: <span id="shotsA" class="text-white">0</span></div>
-                <div>Defesas GR: <span id="savesA" class="text-white">0</span></div>
-                <div>Faltas Téc: <span id="techFaultsA" class="text-white">0</span></div>
-            </div>
+            <div class="flex justify-between mb-2"><input type="text" id="teamAName" readonly class="bg-transparent text-blue-400 font-bold text-xl text-center w-1/3"><span class="text-gray-500">vs</span><input type="text" id="teamBName" class="bg-transparent text-orange-400 font-bold text-xl text-center w-1/3"></div>
+            <div class="flex justify-center items-center gap-8"><div class="text-6xl font-bold" id="scoreA">0</div><div class="text-4xl text-gray-600">-</div><div class="text-6xl font-bold" id="scoreB">0</div></div>
+            <div class="grid grid-cols-4 gap-4 mt-4 text-sm text-gray-400"><div>Eficácia: <span id="effA" class="text-white">0%</span></div><div>Remates: <span id="shotsA" class="text-white">0</span></div><div>Defesas GR: <span id="savesA" class="text-white">0</span></div><div>Faltas Téc: <span id="techFaultsA" class="text-white">0</span></div></div>
         </div>
-
-        <!-- Cronómetro e Controlos -->
         <div class="bg-gray-800 p-6 rounded-2xl shadow-lg text-center mb-6">
-            <div class="flex justify-center items-center gap-4 mb-4">
-                <div id="timer" class="text-7xl font-mono tracking-widest text-white">00:00</div>
-                <div id="suspension-container" class="flex flex-col gap-1 text-xs"></div>
-            </div>
-            
-            <div class="grid grid-cols-3 gap-4">
-                <button id="startBtn" class="btn-feedback bg-green-600 text-white font-bold py-4 rounded-xl text-lg md:text-xl">Iniciar</button>
-                <button id="pauseBtn" class="btn-feedback bg-yellow-600 text-white font-bold py-4 rounded-xl text-lg md:text-xl">Pausar</button>
-                <button id="editTimerBtn" class="btn-feedback bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg md:text-xl" disabled>Corrigir</button>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-2 mt-4">
-                 <button id="passivePlayBtn" class="btn-feedback bg-gray-700 text-white font-bold py-2 rounded-lg">Jogo Passivo ✋</button>
-                 <button id="opponent7v6Btn" class="btn-feedback bg-gray-700 text-white font-bold py-2 rounded-lg">Adversário 7x6 🏃</button>
-            </div>
-
-            <div class="flex gap-2 mt-4">
-                <button id="undoBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg font-bold">↩ Desfazer</button>
-                <button id="exportExcelBtn" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-2 rounded-lg font-bold">📊 Excel</button>
-                <button id="resetGameBtn" class="flex-1 border border-red-600 text-red-500 hover:bg-red-600 hover:text-white py-2 rounded-lg font-bold">⚠️ Novo Jogo</button>
-            </div>
+            <div class="flex justify-center items-center gap-4 mb-4"><div id="timer" class="text-7xl font-mono tracking-widest text-white">00:00</div><div id="suspension-container" class="flex flex-col gap-1 text-xs"></div></div>
+            <div class="grid grid-cols-3 gap-4"><button id="startBtn" class="btn-feedback bg-green-600 text-white font-bold py-4 rounded-xl text-lg md:text-xl">Iniciar</button><button id="pauseBtn" class="btn-feedback bg-yellow-600 text-white font-bold py-4 rounded-xl text-lg md:text-xl">Pausar</button><button id="editTimerBtn" class="btn-feedback bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl text-lg md:text-xl" disabled>Corrigir</button></div>
+            <div class="grid grid-cols-2 gap-2 mt-4"><button id="passivePlayBtn" class="btn-feedback bg-gray-700 text-white font-bold py-2 rounded-lg">Jogo Passivo ✋</button><button id="opponent7v6Btn" class="btn-feedback bg-gray-700 text-white font-bold py-2 rounded-lg">Adversário 7x6 🏃</button></div>
+            <div class="flex gap-2 mt-4"><button id="undoBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg font-bold">↩ Desfazer</button><button id="exportExcelBtn" class="flex-1 bg-green-700 hover:bg-green-600 text-white py-2 rounded-lg font-bold">📊 Excel</button><button id="resetGameBtn" class="flex-1 border border-red-600 text-red-500 hover:bg-red-600 hover:text-white py-2 rounded-lg font-bold">⚠️ Novo Jogo</button></div>
         </div>
-
-        <!-- MENU DE ABAS -->
-        <div class="flex space-x-2 mb-4 overflow-x-auto pb-2 border-b border-gray-700">
-            <button class="tab-link active flex-1 py-3 px-4 bg-gray-700 hover:bg-gray-600 rounded-t-lg font-bold text-white border-b-4 border-blue-500 transition" data-tab="data">
-                📝 Dados
-            </button>
-            <button class="tab-link flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-t-lg font-bold text-gray-400 hover:text-white transition" data-tab="stats">
-                📈 Estatística
-            </button>
-            <button class="tab-link flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-t-lg font-bold text-gray-400 hover:text-white transition" data-tab="heatmap">
-                🔥 Heatmap
-            </button>
-        </div>
-
-        <!-- ABA 1: DADOS -->
+        <div class="flex space-x-2 mb-4 overflow-x-auto pb-2 border-b border-gray-700"><button class="tab-link active flex-1 py-3 px-4 bg-gray-700 hover:bg-gray-600 rounded-t-lg font-bold text-white border-b-4 border-blue-500 transition" data-tab="data">📝 Dados</button><button class="tab-link flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-t-lg font-bold text-gray-400 hover:text-white transition" data-tab="stats">📈 Estatística</button><button class="tab-link flex-1 py-3 px-4 bg-gray-800 hover:bg-gray-700 rounded-t-lg font-bold text-gray-400 hover:text-white transition" data-tab="heatmap">🔥 Heatmap</button></div>
         <div id="tab-data" class="tab-content block">
-            <div class="grid md:grid-cols-2 gap-4">
-                <!-- Nossa Equipa -->
-                <div class="bg-gray-800 p-4 rounded-2xl">
-                    <h3 class="text-xl font-bold text-blue-400 mb-4 border-b border-gray-700 pb-2">Nossa Equipa</h3>
-                    <div id="goalkeeper-list-A" class="space-y-2 mb-4"></div>
-                    <div id="player-list-A" class="space-y-2"></div>
-                    <h4 class="text-lg font-bold text-gray-400 mt-6 mb-2 border-b border-gray-700 pb-1">Oficiais</h4>
-                    <div id="officials-list-A" class="space-y-2"></div>
-                </div>
-                
-                <!-- Adversário -->
-                <div class="bg-gray-800 p-4 rounded-2xl">
-                    <h3 class="text-xl font-bold text-orange-400 mb-4 border-b border-gray-700 pb-2">Adversário</h3>
-                    
-                    <div class="bg-gray-700 p-4 rounded-xl mb-4 flex flex-col gap-3">
-                        <p class="text-center font-bold text-lg text-white">Registo de Ações</p>
-                        <div class="flex justify-center gap-2">
-                            <button class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('shot', 'OPPONENT')">🎯</button>
-                            <button class="bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('positive', 'OPPONENT')">👍</button>
-                            <button class="bg-red-800 hover:bg-red-700 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('negative', 'OPPONENT')">👎</button>
-                            <button class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('sanction', 'OPPONENT')">⚠️</button>
-                        </div>
-                        <p class="text-center text-xs text-gray-400 mt-1">Remate | Positivo | Negativo | Sanção</p>
-                    </div>
-                    
-                    <h4 class="text-lg font-bold text-gray-400 mt-6 mb-2">Últimos Eventos</h4>
-                    <div id="timeline-list" class="text-xs text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded"></div>
-                </div>
-            </div>
+            <div class="grid md:grid-cols-2 gap-4"><div class="bg-gray-800 p-4 rounded-2xl"><h3 class="text-xl font-bold text-blue-400 mb-4 border-b border-gray-700 pb-2">Nossa Equipa</h3><div id="goalkeeper-list-A" class="space-y-2 mb-4"></div><div id="player-list-A" class="space-y-2"></div><h4 class="text-lg font-bold text-gray-400 mt-6 mb-2 border-b border-gray-700 pb-1">Oficiais</h4><div id="officials-list-A" class="space-y-2"></div></div><div class="bg-gray-800 p-4 rounded-2xl"><h3 class="text-xl font-bold text-orange-400 mb-4 border-b border-gray-700 pb-2">Adversário</h3><div class="bg-gray-700 p-4 rounded-xl mb-4 flex flex-col gap-3"><p class="text-center font-bold text-lg text-white">Registo de Ações</p><div class="flex justify-center gap-2"><button class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('shot', 'OPPONENT')">🎯</button><button class="bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('positive', 'OPPONENT')">👍</button><button class="bg-red-800 hover:bg-red-700 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('negative', 'OPPONENT')">👎</button><button class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-3 rounded-lg text-xl" onclick="window.openModal('sanction', 'OPPONENT')">⚠️</button></div><p class="text-center text-xs text-gray-400 mt-1">Remate | Positivo | Negativo | Sanção</p></div><h4 class="text-lg font-bold text-gray-400 mt-6 mb-2">Últimos Eventos</h4><div id="timeline-list" class="text-xs text-gray-300 space-y-1 h-48 overflow-y-auto bg-gray-900 p-2 rounded"></div></div></div>
         </div>
-
-        <!-- ABA 2: ESTATÍSTICA -->
-        <div id="tab-stats" class="tab-content hidden">
-            <div class="bg-gray-800 p-6 rounded-2xl shadow-lg">
-                <h3 class="text-2xl font-bold text-center mb-6 text-white">Comparativo Direto</h3>
-                <div id="stats-comparison-container" class="space-y-0 divide-y divide-gray-700"></div>
-            </div>
-        </div>
-
-        <!-- ABA 3: HEATMAP -->
-        <div id="tab-heatmap" class="tab-content hidden">
-            <div class="bg-gray-800 p-4 md:p-6 rounded-2xl shadow-lg">
-                <h3 class="text-2xl font-bold text-center mb-6 text-white">Mapa de Remates</h3>
-                
-                <div class="flex justify-center gap-6 text-sm mb-6 bg-gray-900 p-2 rounded-lg">
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> Golo</div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Defesa</div>
-                    <div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> Fora</div>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="flex flex-col items-center">
-                        <h4 class="text-blue-400 font-bold text-lg mb-2">ATAQUE (Nossos Remates)</h4>
-                        <div class="relative w-full aspect-[3/2] bg-gray-900 border-2 border-blue-500/50 rounded-lg">
-                            <svg viewBox="0 0 300 200" class="w-full h-full">
-                                <defs><pattern id="netPatternView1" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#374151" stroke-width="0.5"/></pattern></defs>
-                                <rect x="10" y="10" width="280" height="190" fill="url(#netPatternView1)" />
-                                <rect x="0" y="0" width="300" height="10" fill="#ef4444" /><rect x="40" y="0" width="40" height="10" fill="white" /><rect x="120" y="0" width="40" height="10" fill="white" /><rect x="200" y="0" width="40" height="10" fill="white" />
-                                <rect x="0" y="0" width="10" height="200" fill="#ef4444" /><rect x="0" y="40" width="10" height="40" fill="white" /><rect x="0" y="120" width="10" height="40" fill="white" />
-                                <rect x="290" y="0" width="10" height="200" fill="#ef4444" /><rect x="290" y="40" width="10" height="40" fill="white" /><rect x="290" y="120" width="10" height="40" fill="white" />
-                                <g id="heatmap-points-attack"></g>
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <h4 class="text-orange-400 font-bold text-lg mb-2">DEFESA (Remates Sofridos)</h4>
-                        <div class="relative w-full aspect-[3/2] bg-gray-900 border-2 border-orange-500/50 rounded-lg">
-                            <svg viewBox="0 0 300 200" class="w-full h-full">
-                                <defs><pattern id="netPatternView2" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#374151" stroke-width="0.5"/></pattern></defs>
-                                <rect x="10" y="10" width="280" height="190" fill="url(#netPatternView2)" />
-                                <rect x="0" y="0" width="300" height="10" fill="#ef4444" /><rect x="40" y="0" width="40" height="10" fill="white" /><rect x="120" y="0" width="40" height="10" fill="white" /><rect x="200" y="0" width="40" height="10" fill="white" />
-                                <rect x="0" y="0" width="10" height="200" fill="#ef4444" /><rect x="0" y="40" width="10" height="40" fill="white" /><rect x="0" y="120" width="10" height="40" fill="white" />
-                                <rect x="290" y="0" width="10" height="200" fill="#ef4444" /><rect x="290" y="40" width="10" height="40" fill="white" /><rect x="290" y="120" width="10" height="40" fill="white" />
-                                <g id="heatmap-points-defense"></g>
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="tab-stats" class="tab-content hidden"><div class="bg-gray-800 p-6 rounded-2xl shadow-lg"><h3 class="text-2xl font-bold text-center mb-6 text-white">Comparativo Direto</h3><div id="stats-comparison-container" class="space-y-0 divide-y divide-gray-700"></div></div></div>
+        <div id="tab-heatmap" class="tab-content hidden"><div class="bg-gray-800 p-4 md:p-6 rounded-2xl shadow-lg"><h3 class="text-2xl font-bold text-center mb-6 text-white">Mapa de Remates</h3><div class="flex justify-center gap-6 text-sm mb-6 bg-gray-900 p-2 rounded-lg"><div class="flex items-center"><span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span> Golo</div><div class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-2"></span> Defesa</div><div class="flex items-center"><span class="w-3 h-3 rounded-full bg-red-500 mr-2"></span> Fora</div></div><div class="grid md:grid-cols-2 gap-8"><div class="flex flex-col items-center"><h4 class="text-blue-400 font-bold text-lg mb-2">ATAQUE (Nossos Remates)</h4><div class="relative w-full aspect-[3/2] bg-gray-900 border-2 border-blue-500/50 rounded-lg"><svg viewBox="0 0 300 200" class="w-full h-full"><g id="heatmap-points-attack"></g></svg></div></div><div class="flex flex-col items-center"><h4 class="text-orange-400 font-bold text-lg mb-2">DEFESA (Remates Sofridos)</h4><div class="relative w-full aspect-[3/2] bg-gray-900 border-2 border-orange-500/50 rounded-lg"><svg viewBox="0 0 300 200" class="w-full h-full"><g id="heatmap-points-defense"></g></svg></div></div></div></div></div>
     </div>
 
-    <!-- === MODAIS === -->
-    <!-- Modal Remate (Sequencial) -->
-    <div id="shotModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-md text-center border border-blue-500/30 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-2 text-blue-400" id="shotPlayerName">Jogador</h3>
-            <div id="shotTypeContainer" class="mb-4">
-                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">1. Tipo de Remate</p>
-                <div class="grid grid-cols-3 gap-2">
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Ponta</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">9mt</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">6mt</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">7mt</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Pivot</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Penetração</button>
-                    <button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Contra-Ataque</button>
-                </div>
-            </div>
-            <div id="shotZoneContainer" class="hidden mb-4 border-t border-gray-700 pt-3">
-                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">2. Zona de Remate</p>
-                <div class="grid grid-cols-4 gap-2">
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="1">1</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="2">2</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="3">3</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="4">4</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="5">5</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="6">6</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="7">7</button>
-                    <button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="8">8</button>
-                </div>
-            </div>
-            <div id="shotGoalContainer" class="hidden mb-4 border-t border-gray-700 pt-3">
-                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">3. Local na Baliza (Clique)</p>
-                <div class="relative w-full h-48 bg-gray-900 border border-gray-600 rounded flex items-center justify-center cursor-crosshair group" id="goalSvgWrapper">
-                    <svg id="goalSvg" viewBox="0 0 300 200" class="w-full h-full pointer-events-auto">
-                        <defs><pattern id="netPattern" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#333" stroke-width="0.5"/></pattern></defs>
-                        <rect x="10" y="10" width="280" height="190" fill="url(#netPattern)" stroke="none" />
-                        <rect x="0" y="0" width="300" height="10" fill="#ef4444" /><rect x="40" y="0" width="40" height="10" fill="white" /><rect x="120" y="0" width="40" height="10" fill="white" /><rect x="200" y="0" width="40" height="10" fill="white" />
-                        <rect x="0" y="0" width="10" height="200" fill="#ef4444" /><rect x="0" y="40" width="10" height="40" fill="white" /><rect x="0" y="120" width="10" height="40" fill="white" />
-                        <rect x="290" y="0" width="10" height="200" fill="#ef4444" /><rect x="290" y="40" width="10" height="40" fill="white" /><rect x="290" y="120" width="10" height="40" fill="white" />
-                    </svg>
-                    <div id="shotMarker" class="absolute w-4 h-4 bg-yellow-400 rounded-full border-2 border-white shadow-md hidden transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-                </div>
-                <p class="text-xs text-gray-500 mt-1">Toque onde a bola bateu/entrou</p>
-            </div>
-            <div id="shotOutcomeContainer" class="hidden mb-4 border-t border-gray-700 pt-3">
-                <p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">4. Resultado</p>
-                <div class="grid grid-cols-1 gap-2">
-                    <button data-outcome="goal" class="shot-outcome-btn bg-green-600 hover:bg-green-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">GOLO ⚽</button>
-                    <button data-outcome="saved" class="shot-outcome-btn bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">DEFESA GR 🧤</button>
-                    <button data-outcome="miss" class="shot-outcome-btn bg-red-600 hover:bg-red-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">FORA / POSTE 🥅</button>
-                </div>
-            </div>
-            <button id="closeShotModal" class="mt-4 text-gray-400 w-full py-2 hover:text-white transition">Cancelar</button>
-        </div>
-    </div>
+    <div id="shotModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 p-6 rounded-2xl w-full max-w-md text-center border border-blue-500/30 shadow-2xl relative max-h-[90vh] overflow-y-auto"><h3 class="text-xl font-bold mb-2 text-blue-400" id="shotPlayerName">Jogador</h3><div id="shotTypeContainer" class="mb-4"><p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">1. Tipo de Remate</p><div class="grid grid-cols-3 gap-2"><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Ponta</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">9mt</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">6mt</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">7mt</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Pivot</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Penetração</button><button class="shot-type-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white text-sm transition">Contra-Ataque</button></div></div><div id="shotZoneContainer" class="hidden mb-4 border-t border-gray-700 pt-3"><p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">2. Zona de Remate</p><div class="grid grid-cols-4 gap-2"><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="1">1</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="2">2</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="3">3</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="4">4</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="5">5</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="6">6</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="7">7</button><button class="shot-zone-btn bg-gray-700 hover:bg-gray-600 p-3 rounded text-white font-bold transition" data-zone="8">8</button></div></div><div id="shotGoalContainer" class="hidden mb-4 border-t border-gray-700 pt-3"><p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">3. Local na Baliza (Clique)</p><div class="relative w-full h-48 bg-gray-900 border border-gray-600 rounded flex items-center justify-center cursor-crosshair group" id="goalSvgWrapper"><svg id="goalSvg" viewBox="0 0 300 200" class="w-full h-full pointer-events-auto"><defs><pattern id="netPattern" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="#333" stroke-width="0.5"/></pattern></defs><rect x="10" y="10" width="280" height="190" fill="url(#netPattern)" stroke="none" /><rect x="0" y="0" width="300" height="10" fill="#ef4444" /><rect x="40" y="0" width="40" height="10" fill="white" /><rect x="120" y="0" width="40" height="10" fill="white" /><rect x="200" y="0" width="40" height="10" fill="white" /><rect x="0" y="0" width="10" height="200" fill="#ef4444" /><rect x="0" y="40" width="10" height="40" fill="white" /><rect x="0" y="120" width="10" height="40" fill="white" /><rect x="290" y="0" width="10" height="200" fill="#ef4444" /><rect x="290" y="40" width="10" height="40" fill="white" /><rect x="290" y="120" width="10" height="40" fill="white" /></svg><div id="shotMarker" class="absolute w-4 h-4 bg-yellow-400 rounded-full border-2 border-white shadow-md hidden transform -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div></div><p class="text-xs text-gray-500 mt-1">Toque onde a bola bateu/entrou</p></div><div id="shotOutcomeContainer" class="hidden mb-4 border-t border-gray-700 pt-3"><p class="text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left">4. Resultado</p><div class="grid grid-cols-1 gap-2"><button data-outcome="goal" class="shot-outcome-btn bg-green-600 hover:bg-green-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">GOLO ⚽</button><button data-outcome="saved" class="shot-outcome-btn bg-blue-600 hover:bg-blue-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">DEFESA GR 🧤</button><button data-outcome="miss" class="shot-outcome-btn bg-red-600 hover:bg-red-700 py-3 rounded-lg text-lg font-bold shadow-lg transition">FORA / POSTE 🥅</button></div></div><button id="closeShotModal" class="mt-4 text-gray-400 w-full py-2 hover:text-white transition">Cancelar</button></div></div>
 
-    <!-- Modal Roster -->
-    <div id="rosterModal" class="hidden fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl border border-gray-700">
-            <div class="p-6 border-b border-gray-700 flex justify-between items-center">
-                <h2 class="text-2xl font-bold text-white">Confirmar Plantel</h2>
-                <button id="closeRosterBtn" class="text-gray-400 hover:text-white">&times;</button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-6 space-y-8">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-blue-400">Jogadores</h3>
-                        <button id="addPlayerBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">+ Adicionar</button>
-                    </div>
-                    <div class="bg-gray-900 rounded-lg p-2">
-                        <table class="w-full text-left text-sm text-gray-300">
-                            <thead class="text-xs uppercase bg-gray-800 text-gray-400">
-                                <tr><th class="px-3 py-2 w-16">Nº</th><th class="px-3 py-2">Nome</th><th class="px-3 py-2 w-32">Posição</th><th class="px-3 py-2 w-10"></th></tr>
-                            </thead>
-                            <tbody id="roster-players-body" class="divide-y divide-gray-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-bold text-orange-400">Oficiais</h3>
-                        <button id="addOfficialBtn" class="bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded text-sm font-bold">+ Adicionar</button>
-                    </div>
-                    <div class="bg-gray-900 rounded-lg p-2">
-                        <table class="w-full text-left text-sm text-gray-300">
-                            <thead class="text-xs uppercase bg-gray-800 text-gray-400">
-                                <tr><th class="px-3 py-2 w-16">Letra</th><th class="px-3 py-2">Nome</th><th class="px-3 py-2 w-32">Cargo</th><th class="px-3 py-2 w-10"></th></tr>
-                            </thead>
-                            <tbody id="roster-officials-body" class="divide-y divide-gray-800"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div class="p-6 border-t border-gray-700 flex justify-end gap-4">
-                <button id="cancelRosterBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button>
-                <button id="confirmRosterBtn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-8 rounded-lg text-lg">Confirmar e Guardar</button>
-            </div>
-        </div>
-    </div>
+    <div id="rosterModal" class="hidden fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col shadow-2xl border border-gray-700"><div class="p-6 border-b border-gray-700 flex justify-between items-center"><h2 class="text-2xl font-bold text-white">Confirmar Plantel</h2><button id="closeRosterBtn" class="text-gray-400 hover:text-white">&times;</button></div><div class="flex-1 overflow-y-auto p-6 space-y-8"><div><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-blue-400">Jogadores</h3><button id="addPlayerBtn" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm font-bold">+ Adicionar</button></div><div class="bg-gray-900 rounded-lg p-2"><table class="w-full text-left text-sm text-gray-300"><thead class="text-xs uppercase bg-gray-800 text-gray-400"><tr><th class="px-3 py-2 w-16">Nº</th><th class="px-3 py-2">Nome</th><th class="px-3 py-2 w-32">Posição</th><th class="px-3 py-2 w-10"></th></tr></thead><tbody id="roster-players-body" class="divide-y divide-gray-800"></tbody></table></div></div><div><div class="flex justify-between items-center mb-4"><h3 class="text-xl font-bold text-orange-400">Oficiais</h3><button id="addOfficialBtn" class="bg-orange-600 hover:bg-orange-500 text-white px-3 py-1 rounded text-sm font-bold">+ Adicionar</button></div><div class="bg-gray-900 rounded-lg p-2"><table class="w-full text-left text-sm text-gray-300"><thead class="text-xs uppercase bg-gray-800 text-gray-400"><tr><th class="px-3 py-2 w-16">Letra</th><th class="px-3 py-2">Nome</th><th class="px-3 py-2 w-32">Cargo</th><th class="px-3 py-2 w-10"></th></tr></thead><tbody id="roster-officials-body" class="divide-y divide-gray-800"></tbody></table></div></div></div><div class="p-6 border-t border-gray-700 flex justify-end gap-4"><button id="cancelRosterBtn" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-6 rounded-lg">Cancelar</button><button id="confirmRosterBtn" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 px-8 rounded-lg text-lg">Confirmar e Guardar</button></div></div></div>
 
-    <!-- Outros Modais -->
-    <div id="sanctionsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center">
-            <h3 class="text-xl font-bold mb-4 text-red-500">Sanção Disciplinar</h3>
-            <div class="flex flex-col gap-3">
-                <button data-sanction="yellow" class="sanction-confirm-btn bg-yellow-500 text-black font-bold py-3 rounded-lg">Cartão Amarelo 🟨</button>
-                <button data-sanction="2min" class="sanction-confirm-btn bg-gray-200 text-black font-bold py-3 rounded-lg">2 Minutos ✌️</button>
-                <button data-sanction="red" class="sanction-confirm-btn bg-red-600 text-white font-bold py-3 rounded-lg">Cartão Vermelho 🟥</button>
-            </div>
-            <button id="closeSanctionsModal" class="mt-6 text-gray-400 w-full">Cancelar</button>
-        </div>
-    </div>
-    <div id="positiveActionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center">
-            <h3 class="text-xl font-bold mb-4 text-green-400">Ação Positiva</h3>
-            <div class="flex flex-col gap-3">
-                <button data-action="assist" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">Assistência 🎯</button>
-                <button data-action="steal" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">Roubo de Bola ✋</button>
-                <button data-action="7m_provoked" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">7m Provocado ⚡</button>
-            </div>
-            <button id="closePositiveModal" class="mt-6 text-gray-400 w-full">Cancelar</button>
-        </div>
-    </div>
-    <div id="negativeActionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center">
-            <h3 class="text-xl font-bold mb-4 text-red-400">Ação Negativa</h3>
-            <div class="flex flex-col gap-3">
-                <button data-action="technical_fault" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">Falta Técnica ❌</button>
-                <button data-action="turnover" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">Perda de Bola 📉</button>
-                <button data-action="7m_foul" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">7m Cometido 🛑</button>
-            </div>
-            <button id="closeNegativeModal" class="mt-6 text-gray-400 w-full">Cancelar</button>
-        </div>
-    </div>
-    <div id="correctionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
-        <div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center border border-blue-500">
-            <h3 class="text-xl font-bold mb-6 text-white">Corrigir Tempo</h3>
-            <div class="flex justify-center items-center gap-2 mb-8">
-                <input type="number" id="correctMin" class="w-20 bg-gray-700 text-white text-center text-3xl rounded-lg p-2 font-mono" placeholder="MM">
-                <span class="text-3xl text-white font-bold">:</span>
-                <input type="number" id="correctSec" class="w-20 bg-gray-700 text-white text-center text-3xl rounded-lg p-2 font-mono" placeholder="SS">
-            </div>
-            <div class="flex gap-3">
-                <button id="saveCorrectionBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg">Guardar</button>
-                <button id="closeCorrectionBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">Cancelar</button>
-            </div>
-        </div>
-    </div>
-
+    <div id="sanctionsModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center"><h3 class="text-xl font-bold mb-4 text-red-500">Sanção Disciplinar</h3><div class="flex flex-col gap-3"><button data-sanction="yellow" class="sanction-confirm-btn bg-yellow-500 text-black font-bold py-3 rounded-lg">Cartão Amarelo 🟨</button><button data-sanction="2min" class="sanction-confirm-btn bg-gray-200 text-black font-bold py-3 rounded-lg">2 Minutos ✌️</button><button data-sanction="red" class="sanction-confirm-btn bg-red-600 text-white font-bold py-3 rounded-lg">Cartão Vermelho 🟥</button></div><button id="closeSanctionsModal" class="mt-6 text-gray-400 w-full">Cancelar</button></div></div>
+    <div id="positiveActionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center"><h3 class="text-xl font-bold mb-4 text-green-400">Ação Positiva</h3><div class="flex flex-col gap-3"><button data-action="assist" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">Assistência 🎯</button><button data-action="steal" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">Roubo de Bola ✋</button><button data-action="7m_provoked" class="positive-confirm-btn bg-gray-700 hover:bg-green-900 text-white font-bold py-3 rounded-lg">7m Provocado ⚡</button></div><button id="closePositiveModal" class="mt-6 text-gray-400 w-full">Cancelar</button></div></div>
+    <div id="negativeActionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center"><h3 class="text-xl font-bold mb-4 text-red-400">Ação Negativa</h3><div class="flex flex-col gap-3"><button data-action="technical_fault" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">Falta Técnica ❌</button><button data-action="turnover" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">Perda de Bola 📉</button><button data-action="7m_foul" class="negative-confirm-btn bg-gray-700 hover:bg-red-900 text-white font-bold py-3 rounded-lg">7m Cometido 🛑</button></div><button id="closeNegativeModal" class="mt-6 text-gray-400 w-full">Cancelar</button></div></div>
+    <div id="correctionModal" class="hidden fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4"><div class="bg-gray-800 p-6 rounded-2xl w-full max-w-xs text-center border border-blue-500"><h3 class="text-xl font-bold mb-6 text-white">Corrigir Tempo</h3><div class="flex justify-center items-center gap-2 mb-8"><input type="number" id="correctMin" class="w-20 bg-gray-700 text-white text-center text-3xl rounded-lg p-2 font-mono" placeholder="MM"><span class="text-3xl text-white font-bold">:</span><input type="number" id="correctSec" class="w-20 bg-gray-700 text-white text-center text-3xl rounded-lg p-2 font-mono" placeholder="SS"></div><div class="flex gap-3"><button id="saveCorrectionBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg">Guardar</button><button id="closeCorrectionBtn" class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-lg">Cancelar</button></div></div></div>
     <script type="module" src="js/main.js"></script>
 </body>
 </html>
