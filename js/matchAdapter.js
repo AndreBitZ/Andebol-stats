@@ -2,7 +2,9 @@
 // Canonical data adapter for the Andebol ecosystem.
 // Converts the current Andebol-stats GameStore shape into the versioned Match payload.
 
-const SCHEMA_VERSION = '1.1.0';
+import { calculatePlayerHpi } from './hpi.js';
+
+const SCHEMA_VERSION = '1.2.0';
 
 function normalizeId(value, fallback = 'unknown') {
     return String(value ?? fallback)
@@ -36,13 +38,27 @@ function mapPosition(position) {
 }
 
 function mapPlayer(player, teamIdValue) {
+    const hpi = calculatePlayerHpi(player);
     return {
         id: playerId(player),
         name: player?.Nome || '',
         shirtNumber: player?.Numero ?? null,
         position: mapPosition(player?.Posicao),
         teamId: teamIdValue,
-        active: true
+        active: true,
+        hpi: {
+            score: hpi.score,
+            positivePoints: hpi.positivePoints,
+            negativePoints: hpi.negativePoints,
+            positiveActions: hpi.positiveActions,
+            negativeActions: hpi.negativeActions,
+            shots: hpi.shots,
+            ratePer60: hpi.ratePer60,
+            version: hpi.version,
+            source: 'ANDEBOL_STATS',
+            sampleSize: hpi.sampleSize,
+            updatedAt: new Date().toISOString()
+        }
     };
 }
 
@@ -101,17 +117,27 @@ function mapGenericEvents(state, teamAId, teamBId) {
         .map((event, index) => {
             const teamIdValue = event.team === 'B' ? teamBId : teamAId;
             const details = String(event.details || '');
+            const playerIdValue = findPlayerIdFromDetails(state, details);
             return {
                 id: `event:${index}:${event.time ?? 0}`,
                 matchId: null,
                 period: inferPeriod(state, event.time),
                 gameTime: Number(event.time || 0),
                 teamId: teamIdValue,
-                playerId: findPlayerIdFromDetails(state, details),
+                playerId: playerIdValue,
                 type: normalizeEventType(event.type),
-                metadata: { details, source: 'andebol-stats' }
+                metadata: { details, action: normalizeAction(event.type, details), source: 'andebol-stats' }
             };
         });
+}
+
+function normalizeAction(type, details) {
+    const raw = String(type || '').toLowerCase();
+    if (raw === 'sanction') {
+        const match = String(details || '').match(/:\s*(yellow|2min|red)\b/i);
+        return match ? match[1].toLowerCase() : null;
+    }
+    return ['assist', 'steal', 'technical_fault', 'turnover'].includes(raw) ? raw : null;
 }
 
 function findPlayerIdFromDetails(state, details) {
@@ -237,7 +263,11 @@ export function createCanonicalMatch(state, options = {}) {
         roster: mapRoster(state, teamAId),
         events: [...shotEvents, ...genericEvents].sort((a, b) => a.gameTime - b.gameTime),
         situations: mapSituations(state),
-        statistics: mapStats(state),
+        statistics: {
+            A: mapStats(state).A,
+            B: mapStats(state).B,
+            hpi: (state.gameData.A.players || []).map(player => ({ playerId: playerId(player), ...calculatePlayerHpi(player) }))
+        },
         legacy: { totalSeconds: Number(state.totalSeconds || 0), halfDuration: Number(state.halfDuration || 30) },
         metadata: { adapterVersion: SCHEMA_VERSION, exportedAt: new Date().toISOString() }
     };
@@ -256,6 +286,7 @@ export function validateCanonicalMatch(payload) {
     if (!Array.isArray(payload?.roster)) errors.push('roster deve ser um array');
     if (!Array.isArray(payload?.events)) errors.push('events deve ser um array');
     if (!Array.isArray(payload?.situations)) errors.push('situations deve ser um array');
+    if (!Array.isArray(payload?.statistics?.hpi)) errors.push('statistics.hpi deve ser um array');
 
     const eventIds = new Set();
     (payload?.events || []).forEach((event, index) => {
@@ -272,6 +303,7 @@ export function validateCanonicalMatch(payload) {
         if (!player?.id) errors.push(`players[${index}].id em falta`);
         else if (playerIds.has(player.id)) errors.push(`ID de jogador duplicado: ${player.id}`);
         else playerIds.add(player.id);
+        if (!Number.isFinite(Number(player?.hpi?.score))) errors.push(`players[${index}].hpi.score inválido`);
     });
 
     return { valid: errors.length === 0, errors };
