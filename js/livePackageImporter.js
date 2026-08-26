@@ -9,7 +9,14 @@ function normalizePosition(position) {
 }
 
 function normalizePlayer(player) {
-    return { id: String(player.id), Numero: player.shirtNumber ?? '', Nome: player.name || player.displayName || '', Posicao: normalizePosition(player.position), sourceId: String(player.id) };
+    return {
+        id: String(player.id),
+        Numero: player.shirtNumber ?? '',
+        Nome: player.name || player.displayName || '',
+        Posicao: normalizePosition(player.position),
+        sourceId: String(player.id),
+        hpi: player.hpi ?? null
+    };
 }
 
 function normalizeEvent(event) {
@@ -78,6 +85,7 @@ export function importLivePackage(pkg) {
                 Posicao: normalizePosition(rosterEntry?.position ?? player.Posicao),
                 onCourt: Boolean(rosterEntry?.starter),
                 available: rosterEntry?.available !== false,
+                performanceScore: Number(player.hpi?.score || 0),
                 history: [],
                 positiveActions: [],
                 negativeActions: [],
