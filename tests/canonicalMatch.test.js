@@ -18,9 +18,9 @@ function buildState() {
         gameData: {
             A: {
                 fileLoaded: true,
-                players: [{ id: 'player-8', sourceId: 'player-8', Numero: '8', Nome: 'Jogador 8', Posicao: 'Central', onCourt: true, history: [
-                    { type: 'Ataque', zone: '6', coords: { x: 10, y: 20 }, outcome: 'goal', time: 100 }
-                ], positiveActions: [], negativeActions: [], sanctions: { yellow: 0, twoMin: 0, red: 0 } }],
+                players: [{ id: 'player-8', sourceId: 'player-8', Numero: '8', Nome: 'Jogador 8', Posicao: 'Central', onCourt: true, timeOnCourt: 120, history: [
+                    { type: 'Ponta', zone: '1', coords: { x: 10, y: 20 }, outcome: 'goal', time: 100 }
+                ], positiveActions: [{ action: 'assist', time: 110 }], negativeActions: [], sanctions: { yellow: 0, twoMin: 0, red: 0 } }],
                 officials: [],
                 stats: { goals: 1, misses: 0, savedShots: 0, technical_faults: 0, turnovers: 0 },
                 history: []
@@ -44,7 +44,7 @@ const payload = createCanonicalMatch(buildState());
 const validation = validateCanonicalMatch(payload);
 
 assert(validation.valid, `Payload inválido: ${validation.errors.join('; ')}`);
-assert(payload.schemaVersion === '1.1.0', 'Schema version inesperada');
+assert(payload.schemaVersion === '1.2.0', 'Schema version inesperada');
 assert(payload.match.id === 'm1', 'O matchId original não foi preservado');
 assert(payload.match.ownTeamId === 'team-own', 'O ID da nossa equipa não foi preservado');
 assert(payload.match.homeTeamId === 'team-own', 'A equipa da casa está errada');
@@ -53,6 +53,10 @@ assert(payload.events.filter(e => e.type === 'shot').length === 2, 'Esperava exa
 assert(new Set(payload.events.map(e => e.id)).size === payload.events.length, 'Existem IDs de eventos duplicados');
 assert(payload.players.length === 1, 'Esperava 1 jogador');
 assert(payload.players[0].id === 'player-8', 'O ID original do jogador não foi preservado');
+assert(payload.players[0].hpi.score === 10, `HPI inesperado: ${payload.players[0].hpi.score}`);
+assert(payload.players[0].hpi.positivePoints === 10, 'Pontuação positiva do HPI incorreta');
+assert(payload.players[0].hpi.negativePoints === 0, 'Pontuação negativa do HPI incorreta');
+assert(payload.statistics.hpi[0].score === 10, 'Resumo HPI não coincide com a ficha do jogador');
 
 const invalid = structuredClone(payload);
 invalid.events.push(structuredClone(invalid.events[0]));
