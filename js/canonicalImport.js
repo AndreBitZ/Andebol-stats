@@ -4,7 +4,7 @@ import { importLivePackage, validateLivePackage } from './livePackageImporter.js
 const HPO_MATCH_FORMAT = 'HPO-MATCH';
 const HPO_MATCH_VERSION = '1.0';
 
-function isHpoMatch(payload) {
+export function isHpoMatch(payload) {
     return !!payload && typeof payload === 'object'
         && payload.format === HPO_MATCH_FORMAT
         && payload.version === HPO_MATCH_VERSION
@@ -16,7 +16,7 @@ function isHpoMatch(payload) {
         && Array.isArray(payload.events);
 }
 
-function hpoToLivePackage(payload) {
+export function hpoToLivePackage(payload) {
     if (!isHpoMatch(payload)) throw new Error('Formato HPO-MATCH inválido ou direção não suportada.');
     if (payload.events.length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o HPO-MATCH inicial do Performance OS.');
 
