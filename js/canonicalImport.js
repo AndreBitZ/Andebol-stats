@@ -1,6 +1,57 @@
 import { store } from './state.js';
 import { importLivePackage, validateLivePackage } from './livePackageImporter.js';
 
+const HPO_MATCH_FORMAT = 'HPO-MATCH';
+const HPO_MATCH_VERSION = '1.0';
+
+function isHpoMatch(payload) {
+    return !!payload && typeof payload === 'object'
+        && payload.format === HPO_MATCH_FORMAT
+        && payload.version === HPO_MATCH_VERSION
+        && payload.direction === 'PERFORMANCE_OS_TO_ANDEBOL_STATS'
+        && payload.metadata?.source === 'handball-performance-os'
+        && !!payload.match?.id
+        && Array.isArray(payload.players)
+        && Array.isArray(payload.roster)
+        && Array.isArray(payload.events);
+}
+
+function hpoToLivePackage(payload) {
+    if (!isHpoMatch(payload)) throw new Error('Formato HPO-MATCH inválido ou direção não suportada.');
+    if (payload.events.length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o HPO-MATCH inicial do Performance OS.');
+
+    const match = payload.match;
+    const ownId = String(match.ownTeamId || match.homeTeamId || 'own-team');
+    const opponentId = String(match.homeAway === 'AWAY' ? match.homeTeamId : match.awayTeamId || 'opponent-team');
+    const ownName = String(match.ownTeamName || (match.homeAway === 'AWAY' ? match.awayTeamName : match.homeTeamName) || 'Minha Equipa');
+    const opponentName = String(match.homeAway === 'AWAY' ? match.homeTeamName : match.awayTeamName || 'Adversário');
+
+    return {
+        schemaVersion: '1.1.0',
+        source: 'handball-performance-os',
+        match: {
+            ...match,
+            ownTeamId: ownId,
+            homeTeamId: String(match.homeTeamId || ownId),
+            awayTeamId: String(match.awayTeamId || opponentId)
+        },
+        teams: {
+            home: { id: String(match.homeTeamId || ownId), name: String(match.homeTeamName || ownName) },
+            away: { id: String(match.awayTeamId || opponentId), name: String(match.awayTeamName || opponentName) }
+        },
+        players: payload.players.map(player => ({
+            id: String(player.id),
+            name: player.name || '',
+            displayName: player.name || '',
+            shirtNumber: player.shirtNumber ?? '',
+            position: player.position || '',
+            hpi: player.hpi ?? null
+        })),
+        roster: payload.roster,
+        events: []
+    };
+}
+
 function buildImportedState(payload, imported) {
     const nextState = store.getInitialState();
     nextState.matchId = imported.matchId;
@@ -47,12 +98,21 @@ function buildImportedState(payload, imported) {
 
 async function importMatchFile(file) {
     const payload = JSON.parse(await file.text());
-    const validation = validateLivePackage(payload);
-    if (!validation.valid) throw new Error(validation.errors.join('\n'));
-    if (payload.source !== 'handball-performance-os') throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
-    if ((payload.events || []).length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
+    let sourcePayload = payload;
+    let validation;
 
-    const imported = importLivePackage(payload);
+    if (isHpoMatch(payload)) {
+        sourcePayload = hpoToLivePackage(payload);
+        validation = validateLivePackage(sourcePayload);
+    } else {
+        validation = validateLivePackage(payload);
+        if (payload.source !== 'handball-performance-os') throw new Error('Ficheiro recusado: o jogo tem de ser exportado pelo Handball Performance OS.');
+        if ((payload.events || []).length > 0) throw new Error('Este ficheiro já contém eventos. Para preparar um jogo novo, importa apenas o Match JSON inicial do Performance OS.');
+    }
+
+    if (!validation.valid) throw new Error(validation.errors.join('\n'));
+
+    const imported = importLivePackage(sourcePayload);
     const nextState = buildImportedState(payload, imported);
     const orientation = payload.match.homeAway === 'AWAY' ? 'Fora' : payload.match.homeAway === 'NEUTRAL' ? 'Neutro' : 'Casa';
     const confirmed = confirm(`JOGO DO PERFORMANCE OS\n\n${imported.teamAName} vs ${imported.teamBName}\nLocalização: ${orientation}\nJogadores: ${nextState.gameData.A.players.length}\nDuração: ${nextState.halfDuration} min\nEstado inicial: 0-0\n\nConfirmar importação?`);
@@ -122,7 +182,7 @@ function installWelcomeLoader() {
         const subtitle = document.createElement('p');
         subtitle.id = 'performanceOSImportHint';
         subtitle.className = 'text-sm text-gray-300 mb-4';
-        subtitle.textContent = 'O jogo é criado no Performance OS. O Andebol-Stats recebe apenas o Match JSON preparado por essa aplicação.';
+        subtitle.textContent = 'O jogo é criado no Performance OS. O Andebol-Stats recebe apenas o ficheiro HPO-MATCH preparado por essa aplicação.';
         container.prepend(subtitle);
     }
     const button = addButton(container, 'importPerformanceOSBtn', '📥 Importar jogo do Performance OS');
