@@ -1,5 +1,9 @@
 // Domínio canónico do jogo. Mantemos JavaScript ES Modules para não quebrar a app atual,
 // mas usamos contratos explícitos e funções puras para preparar uma migração gradual para TypeScript.
+import './events.js';
+import './stints.js';
+import './analytics.js';
+import '../ui/awayRosterUI.js';
 
 export const TEAM_SIDE = Object.freeze({ HOME: 'HOME', AWAY: 'AWAY' });
 
