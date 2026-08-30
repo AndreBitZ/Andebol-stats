@@ -22,6 +22,9 @@ export class GameStore {
                 },
                 B: {
                     stats: { goals: 0, misses: 0, savedShots: 0, turnovers: 0, technical_faults: 0, transition_goals: 0, gkSaves: 0, gkGoalsAgainst: 0 },
+                    players: [],
+                    officials: [],
+                    fileLoaded: false,
                     isSuspended: false,
                     suspensionTimer: 0,
                     timeouts: { total: 3, part1: 0, part2: 0, taken: [] }
@@ -41,9 +44,7 @@ export class GameStore {
     }
 
     snapshot() {
-        if (this.history.length >= this.maxHistory) {
-            this.history.shift();
-        }
+        if (this.history.length >= this.maxHistory) this.history.shift();
         this.history.push(JSON.stringify(this.state));
     }
 
@@ -69,11 +70,8 @@ export class GameStore {
     }
 
     saveToSessionStorage() {
-        try {
-            sessionStorage.setItem('handballGameSession', JSON.stringify(this.state));
-        } catch (e) {
-            console.error("Erro a guardar no SessionStorage", e);
-        }
+        try { sessionStorage.setItem('handballGameSession', JSON.stringify(this.state)); }
+        catch (e) { console.error("Erro a guardar no SessionStorage", e); }
     }
 
     loadFromLocalStorage() {
@@ -81,9 +79,10 @@ export class GameStore {
         if (saved) {
             try {
                 this.state = JSON.parse(saved);
-                if(!this.state.gameData.A.officialsStats) {
-                    this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
-                }
+                if (!this.state.gameData.A.officialsStats) this.state.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
+                if (!Array.isArray(this.state.gameData.A.players)) this.state.gameData.A.players = [];
+                if (!Array.isArray(this.state.gameData.B.players)) this.state.gameData.B.players = [];
+                if (!Array.isArray(this.state.gameData.B.officials)) this.state.gameData.B.officials = [];
                 return true;
             } catch (e) {
                 console.error("Erro a ler dados guardados, a reiniciar...", e);
@@ -93,17 +92,14 @@ export class GameStore {
         return false;
     }
 
-    clearStorage() {
-        sessionStorage.removeItem('handballGameSession');
-    }
+    clearStorage() { sessionStorage.removeItem('handballGameSession'); }
 }
 
 export const store = new GameStore();
 
-// Carrega os bridges de integração sem alterar o fluxo LIVE existente.
-import('./canonicalExport.js').catch(error => {
-    console.warn('[Canonical Match] Export bridge indisponível:', error);
-});
-import('./canonicalImport.js').catch(error => {
-    console.warn('[Canonical Match] Import bridge indisponível:', error);
-});
+import('./canonicalExport.js').catch(error => console.warn('[Canonical Match] Export bridge indisponível:', error));
+import('./canonicalImport.js').catch(error => console.warn('[Canonical Match] Import bridge indisponível:', error));
+import('./domain/events.js').catch(error => console.warn('[Domain] events indisponível:', error));
+import('./domain/stints.js').catch(error => console.warn('[Domain] stints indisponível:', error));
+import('./domain/analytics.js').catch(error => console.warn('[Domain] analytics indisponível:', error));
+import('./ui/awayRosterUI.js').catch(error => console.warn('[UI] plantel adversário indisponível:', error));
