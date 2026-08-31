@@ -15,13 +15,25 @@ function ensureContainer() {
   host.id = 'away-roster-live';
   host.className = 'mb-4';
   host.innerHTML = `
-    <h4 class="text-lg font-bold text-gray-400 mt-6 mb-2 border-b border-gray-700 pb-1">Plantel do Adversário</h4>
+    <h4 class="text-lg font-bold text-gray-400 mt-6 mb-2 border-b border-gray-700 pb-1">Equipa B</h4>
     <div id="away-goalkeeper-list" class="space-y-2 mb-3"></div>
     <div id="away-player-list" class="space-y-2"></div>
   `;
   const timeline = document.getElementById('timeline-list');
   timeline?.parentElement?.insertBefore(host, timeline);
   return host;
+}
+
+function actionButtons(p) {
+  const disabled = p.disqualified ? 'disabled' : '';
+  const cls = p.disqualified ? 'opacity-30 cursor-not-allowed' : '';
+  const id = esc(p.id ?? p.Numero);
+  return `<div class="flex items-center gap-1 shrink-0">
+    <button ${disabled} class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded ${cls}" onclick="window.openModal('shot', 'B:${id}')">🎯</button>
+    <button ${disabled} class="bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded ${cls}" onclick="window.openModal('positive', 'B:${id}')">👍</button>
+    <button ${disabled} class="bg-red-800 hover:bg-red-700 text-white px-2 py-1 rounded ${cls}" onclick="window.openModal('negative', 'B:${id}')">👎</button>
+    <button ${disabled} class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded ${cls}" onclick="window.openModal('sanction', 'B:${id}')">⚠️</button>
+  </div>`;
 }
 
 function render() {
@@ -42,25 +54,13 @@ function render() {
         <span class="truncate font-medium">${esc(p.Nome)}</span>
         ${p.Posicao ? `<span class="text-xs text-gray-400">${esc(p.Posicao)}</span>` : ''}
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="text-xs font-mono text-gray-300">${formatTime(p.timeOnCourt)}</span>
-        <span class="text-xs font-mono text-yellow-500">PTS:${Number(p.performanceScore || 0)}</span>
-        ${suspended ? `<span class="text-xs text-red-300">${formatTime(p.suspensionTimer)}</span>` : ''}
-        ${disqualified ? '<span class="text-xs text-red-400 font-bold">FORA</span>' : ''}
-      </div>
+      ${actionButtons(p)}
     </div>`;
   };
 
   gk.innerHTML = players.filter(p => String(p.Posicao || '').includes('GR')).map(card).join('');
   field.innerHTML = players.filter(p => !String(p.Posicao || '').includes('GR')).map(card).join('');
-  if (!players.length) {
-    field.innerHTML = '<div class="text-sm text-gray-500 py-2">Nenhum atleta confirmado para esta equipa.</div>';
-  }
-}
-
-function formatTime(sec = 0) {
-  const n = Math.max(0, Number(sec) || 0);
-  return `${Math.floor(n / 60).toString().padStart(2,'0')}:${Math.floor(n % 60).toString().padStart(2,'0')}`;
+  if (!players.length) field.innerHTML = '<div class="text-sm text-gray-500 py-2">Nenhum atleta confirmado para esta equipa.</div>';
 }
 
 function install() {
