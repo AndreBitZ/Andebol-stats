@@ -1,5 +1,6 @@
 // Match clock domain: single source of truth for official elapsed match time.
 // UI/timer adapters can call tick() while the GameTimer is running.
+import { store } from '../state.js';
 
 export const HALF_DURATION = 30 * 60;
 
@@ -49,9 +50,7 @@ function installBilateralStartGuard() {
     const button = event.target?.closest?.('#startBtn');
     if (!button) return;
 
-    const state = window.__handballStore?.state;
-    if (!state) return;
-
+    const state = store.state;
     const resultA = validateStartingFormation(state, 'A');
     const resultB = validateStartingFormation(state, 'B');
 
