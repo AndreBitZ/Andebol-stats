@@ -1,18 +1,38 @@
 import { store } from '../state.js';
 
-const ACTIONS=[['shot','🎯','Remate','bg-blue-600'],['positive','👍','Positivo','bg-teal-600'],['negative','👎','Negativo','bg-red-800'],['sanction','⚠️','Sanção','bg-yellow-600']];
-function team(side){return side==='A'?store.state.gameData.A:store.state.gameData.B;}
-function name(side){return side==='A'?store.state.teamAName:store.state.teamBName;}
-function selected(){return store.state.selectedPlayerForAction||null;}
-function selectPlayer(side,id){store.update(s=>s.selectedPlayerForAction={team:side,id:String(id)});render();}
-function addHandlers(host,side){host?.querySelectorAll(':scope > div').forEach(card=>{if(card.dataset.unifiedBound)return;let id=card.dataset.player;if(side==='A'&&!id){const b=[...card.querySelectorAll('button')].find(x=>x.getAttribute('onclick')?.includes("openModal('shot'"));const m=b?.getAttribute('onclick')?.match(/openModal\('shot',\s*'([^']+)'/);id=m?.[1];}if(!id)return;card.dataset.team=side;card.dataset.player=id;card.dataset.teamPlayer=`${side}:${id}`;card.dataset.unifiedBound='1';card.style.cursor='pointer';card.addEventListener('click',e=>{if(e.target.closest('button'))return;selectPlayer(side,id);});});}
-function ensurePanel(){const timeline=document.getElementById('timeline-list');if(!timeline)return null;let p=document.getElementById('unified-action-panel');if(p)return p;p=document.createElement('div');p.id='unified-action-panel';p.className='bg-gray-700 p-4 rounded-xl mb-4';p.innerHTML='<div class="flex items-center justify-between gap-2 mb-3"><div><p class="text-xs text-gray-400">Atleta selecionado</p><p id="selected-action-player" class="font-bold text-white">Nenhum</p></div><button id="clear-action-player" type="button" class="text-xs px-3 py-2 rounded bg-gray-600">Limpar</button></div><div id="unified-action-buttons" class="grid grid-cols-4 gap-2"></div>';timeline.parentElement.insertBefore(p,timeline);p.querySelector('#clear-action-player').onclick=()=>{store.update(s=>s.selectedPlayerForAction=null);render();};return p;}
-function renderPanel(){const p=ensurePanel();if(!p)return;const sel=selected(),label=p.querySelector('#selected-action-player'),buttons=p.querySelector('#unified-action-buttons');if(!sel){label.textContent='Nenhum';buttons.innerHTML='<div class="col-span-4 text-center text-sm text-gray-400 py-2">Selecione um atleta da Equipa A ou Equipa B.</div>';return;}const pl=(team(sel.team).players||[]).find(x=>String(x.id??x.Numero)===String(sel.id)||String(x.Numero)===String(sel.id));label.textContent=pl?`${name(sel.team)} · #${pl.Numero} ${pl.Nome}`:'Atleta não encontrado';buttons.innerHTML=ACTIONS.map(([t,i,x,c])=>`<button type="button" data-action="${t}" class="${c} text-white px-2 py-3 rounded-lg font-bold">${i}<span class="block text-[10px] mt-1">${x}</span></button>`).join('');buttons.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>dispatch(sel,b.dataset.action));}
-function dispatch(sel,type){if(sel.team==='A'){const legacy=window.__legacyOpenModal;if(legacy)legacy(type,sel.id);else if(typeof window.openModal==='function')window.openModal(type,sel.id);return;}openAwayAction(sel.id,type);}
-function openAwayAction(id,type){const p=(store.state.gameData.B.players||[]).find(x=>String(x.id??x.Numero)===String(id)||String(x.Numero)===String(id));if(!p)return;if(type==='shot'){const o=prompt(`Remate de #${p.Numero} ${p.Nome}\n\nGOAL, SAVED, MISSED, POST ou BLOCKED`,'GOAL');if(o)recordAwayEvent(p,o.trim().toUpperCase(),'shot');}else if(type==='positive'){const a=prompt('Ação positiva: ASSIST, PRE_ASSIST, STEAL, INTERCEPTION, RECOVERY, DEFENSIVE_BLOCK, SEVEN_METER_WON','STEAL');if(a)recordAwayEvent(p,a.trim().toUpperCase(),'positive');}else if(type==='negative'){const a=prompt('Ação negativa: TURNOVER, RECEPTION_ERROR, OFFENSIVE_FOUL, MISSED_SHOT, BLOCKED_SHOT','TURNOVER');if(a)recordAwayEvent(p,a.trim().toUpperCase(),'negative');}else{const a=prompt('Sanção: YELLOW, 2MIN ou RED','2MIN');if(a)recordAwayEvent(p,a.trim().toUpperCase(),'sanction');}}
-function recordAwayEvent(p,action,kind){store.update(s=>{const b=s.gameData.B,a=s.gameData.A;if(kind==='shot'){b.stats.shots=(b.stats.shots||0)+1;if(action==='GOAL'){b.stats.goals++;a.stats.gkGoalsAgainst=(a.stats.gkGoalsAgainst||0)+1;p.goals=(p.goals||0)+1;}else if(action==='SAVED'){b.stats.savedShots++;a.stats.gkSaves=(a.stats.gkSaves||0)+1;}else if(action==='MISSED'||action==='POST')b.stats.misses++;else if(action==='BLOCKED')b.stats.blocked=(b.stats.blocked||0)+1;}else if(kind==='positive'){p.positiveActions=p.positiveActions||[];p.positiveActions.push({action,time:s.totalSeconds});}else if(kind==='negative'){p.negativeActions=p.negativeActions||[];p.negativeActions.push({action,time:s.totalSeconds});if(action==='TURNOVER')b.stats.turnovers=(b.stats.turnovers||0)+1;}else{p.sanctions=p.sanctions||{yellow:0,twoMin:0,red:0};if(action==='YELLOW')p.sanctions.yellow++;if(action==='2MIN'){p.sanctions.twoMin++;p.isSuspended=true;p.suspensionTimer=120;p.onCourt=false;}if(action==='RED'){p.sanctions.red++;p.disqualified=true;p.onCourt=false;}}s.gameEvents.push({event_id:crypto.randomUUID(),match_id:s.matchId||null,timestamp_seconds:s.totalSeconds,team:'B',team_id:s.teamBId||null,player_id:p.id,event_type:kind==='shot'?'SHOT':action,details:`${p.Nome}: ${action}`});});render();}
-function hideLegacy(){['goalOpponentBtn','saveOpponentBtn','missOpponentBtn','twoMinOpponentBtn','opponent7v6Btn'].forEach(id=>document.getElementById(id)?.classList.add('hidden'));document.querySelectorAll('#tab-data .bg-gray-700').forEach(box=>{const t=box.textContent||'';if(t.includes('Registo de Ações')&&t.includes('Remate'))box.classList.add('hidden');});document.querySelectorAll('#tab-data h3').forEach(h=>{if(h.textContent?.trim()==='Nossa Equipa')h.textContent=name('A')||'Equipa A';if(h.textContent?.trim()==='Adversário')h.textContent=name('B')||'Equipa B';});}
-function mark(){const sel=selected();document.querySelectorAll('[data-unified-bound="1"]').forEach(c=>{const on=sel&&c.dataset.team===sel.team&&String(c.dataset.player)===String(sel.id);c.classList.toggle('ring-2',!!on);c.classList.toggle('ring-blue-400',!!on);});}
-function render(){hideLegacy();addHandlers(document.getElementById('player-list-A'),'A');addHandlers(document.getElementById('goalkeeper-list-A'),'A');addHandlers(document.getElementById('away-player-list'),'B');addHandlers(document.getElementById('away-goalkeeper-list'),'B');renderPanel();mark();}
-function install(){if(typeof window.openModal==='function'&&!window.__legacyOpenModal)window.__legacyOpenModal=window.openModal;render();[300,1000,2500,5000].forEach(ms=>setTimeout(render,ms));}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();setInterval(render,1500);
+function hideLegacy() {
+  ['goalOpponentBtn','saveOpponentBtn','missOpponentBtn','twoMinOpponentBtn','opponent7v6Btn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+  document.querySelectorAll('#tab-data .bg-gray-700').forEach(box => {
+    const text = box.textContent || '';
+    if (text.includes('Registo de Ações') && text.includes('Remate')) box.classList.add('hidden');
+  });
+}
+
+function markIdentity() {
+  document.querySelectorAll('[data-team-player]').forEach(card => {
+    if (card.dataset.unifiedIdentityBound) return;
+    const team = card.dataset.team;
+    const player = card.dataset.player;
+    if (!team || !player) return;
+    card.dataset.teamPlayer = `${team}:${player}`;
+    card.dataset.unifiedIdentityBound = '1';
+  });
+}
+
+function render() {
+  hideLegacy();
+  markIdentity();
+}
+
+function install() {
+  render();
+  window.addEventListener('handball:state-updated', render);
+  [250, 750, 1500, 3000].forEach(ms => setTimeout(render, ms));
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', install, { once: true });
+  else install();
+}
+
+setInterval(render, 1000);
