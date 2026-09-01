@@ -11,13 +11,38 @@ function closePlayerPopup() {
   if(popup){ popup.classList.add('hidden'); popup.classList.remove('flex'); popup._selection=null; }
 }
 
+function ensureShotPopup() {
+  let popup=document.getElementById('bilateral-shot-popup');
+  if(popup)return popup;
+  popup=document.createElement('div');
+  popup.id='bilateral-shot-popup';
+  popup.className='fixed inset-0 z-[10000] hidden items-center justify-center bg-black/70 p-4';
+  popup.innerHTML=`<div class="w-full max-w-md rounded-2xl bg-gray-800 border border-gray-600 shadow-2xl p-5" role="dialog" aria-modal="true"><div class="flex items-center justify-between gap-3 mb-5"><div><div class="text-xs text-gray-400">Registo de remate</div><div id="bilateral-shot-player" class="font-bold text-white text-lg"></div></div><button id="bilateral-shot-close" type="button" class="px-3 py-2 rounded-lg bg-gray-700 text-white">✕</button></div><div class="grid grid-cols-2 gap-3"><button type="button" data-shot-result="GOAL" class="bg-green-600 hover:bg-green-500 text-white p-4 rounded-xl font-bold">🎯<span class="block text-sm mt-1">GOAL</span></button><button type="button" data-shot-result="SAVED" class="bg-blue-600 hover:bg-blue-500 text-white p-4 rounded-xl font-bold">🧤<span class="block text-sm mt-1">SAVED</span></button><button type="button" data-shot-result="MISSED" class="bg-red-700 hover:bg-red-600 text-white p-4 rounded-xl font-bold">❌<span class="block text-sm mt-1">MISSED</span></button><button type="button" data-shot-result="POST" class="bg-yellow-600 hover:bg-yellow-500 text-white p-4 rounded-xl font-bold">🥅<span class="block text-sm mt-1">POST</span></button><button type="button" data-shot-result="BLOCKED" class="bg-purple-700 hover:bg-purple-600 text-white p-4 rounded-xl font-bold col-span-2">🧱<span class="block text-sm mt-1">BLOCKED</span></button></div></div>`;
+  document.body.appendChild(popup);
+  const close=()=>{popup.classList.add('hidden');popup.classList.remove('flex');selected=null;};
+  popup.querySelector('#bilateral-shot-close').onclick=close;
+  popup.addEventListener('click',e=>{if(e.target===popup)close();});
+  popup.querySelectorAll('[data-shot-result]').forEach(btn=>btn.onclick=()=>{
+    if(!selected)return;
+    const result=btn.dataset.shotResult;
+    try {
+      const goalkeeper=currentDefendingGoalkeeper(selected.side);
+      recordAction({side:selected.side,playerId:selected.playerId,action:'SHOT',shotResult:result,goalkeeperId:goalkeeper?.id??goalkeeper?.Numero??null});
+      close();
+      window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result,side:selected.side,playerId:selected.playerId}}));
+    } catch(err) { console.error(err); alert(err.message||'Não foi possível registar o remate.'); }
+  });
+  return popup;
+}
+
 function openShot(side, playerId) {
-  selected={side,playerId:String(playerId)};
   const p=findPlayer(side,playerId); if(!p)return;
+  selected={side,playerId:String(playerId)};
   closePlayerPopup();
-  const title=document.getElementById('shotPlayerName');
-  if(title)title.textContent=`${teamName(side)} · #${p.Numero} ${p.Nome}`;
-  document.getElementById('shotModal')?.classList.remove('hidden');
+  const popup=ensureShotPopup();
+  popup.querySelector('#bilateral-shot-player').textContent=`${teamName(side)} · #${p.Numero} ${p.Nome}`;
+  popup.classList.remove('hidden');
+  popup.classList.add('flex');
 }
 
 function install() {
@@ -29,26 +54,6 @@ function install() {
     card.dataset.bilateralBound='1';
     card.addEventListener('click',e=>{if(e.target.closest('button'))return;selected={side:parts[0],playerId:parts[1]};});
   });
-
-  document.querySelectorAll('.shot-outcome-btn').forEach(button=>{
-    if(button.dataset.bilateralBound)return;
-    button.dataset.bilateralBound='1';
-    button.addEventListener('click',()=>{
-      if(!selected)return;
-      const resultMap={goal:'GOAL',saved:'SAVED',missed:'MISSED',post:'POST',blocked:'BLOCKED'};
-      const result=resultMap[button.dataset.outcome]; if(!result)return;
-      try {
-        const goalkeeper=currentDefendingGoalkeeper(selected.side);
-        recordAction({side:selected.side,playerId:selected.playerId,action:'SHOT',shotResult:result,goalkeeperId:goalkeeper?.id??goalkeeper?.Numero??null});
-        selected=null;
-        document.getElementById('shotModal')?.classList.add('hidden');
-        window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result}}));
-      } catch(err) {
-        console.error(err); alert(err.message||'Não foi possível registar o remate.');
-      }
-    });
-  });
-
   window.openBilateralShot=openShot;
   window.getOpposingGoalkeeper=side=>currentDefendingGoalkeeper(side);
 }
