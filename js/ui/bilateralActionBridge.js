@@ -6,16 +6,22 @@ function storeRef() { return window.store || null; }
 function teamName(side) { const s=storeRef()?.state; return side==='A' ? (s?.teamAName||'Equipa A') : (s?.teamBName||'Equipa B'); }
 function findPlayer(side,id) { const s=storeRef()?.state; return (s?.gameData?.[side]?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
 
+function closePlayerPopup() {
+  const popup=document.getElementById('bilateral-action-popup');
+  if(popup){ popup.classList.add('hidden'); popup.classList.remove('flex'); popup._selection=null; }
+}
+
 function openShot(side, playerId) {
   selected={side,playerId:String(playerId)};
   const p=findPlayer(side,playerId); if(!p)return;
+  closePlayerPopup();
   const title=document.getElementById('shotPlayerName');
   if(title)title.textContent=`${teamName(side)} · #${p.Numero} ${p.Nome}`;
   document.getElementById('shotModal')?.classList.remove('hidden');
 }
 
 function install() {
-  const s=storeRef(); if(!s)return;
+  if(!storeRef())return;
   document.querySelectorAll('[data-team-player]').forEach(card=>{
     if(card.dataset.bilateralBound)return;
     const parts=(card.dataset.teamPlayer||'').split(':');
