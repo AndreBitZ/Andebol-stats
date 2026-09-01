@@ -17,6 +17,61 @@ export function canRecordLiveAction(state, side, playerId) {
   return { ok: true, player };
 }
 
+export function getRequiredPlayers(state, side) {
+  const duration = Number(state?.halfDuration) || 30;
+  const baseRequired = duration === 25 ? 6 : 7;
+  const team = state?.gameData?.[side];
+  const players = team?.players || [];
+  const suspendedCount = players.filter(p => p.isSuspended).length;
+  const teamSuspensionActive = team?.isTeamSuspended ? 1 : 0;
+  return Math.max(0, baseRequired - suspendedCount - teamSuspensionActive);
+}
+
+export function validateStartingFormation(state, side) {
+  const team = state?.gameData?.[side];
+  const players = team?.players || [];
+  const onCourt = players.filter(p => p.onCourt).length;
+  const required = getRequiredPlayers(state, side);
+  return {
+    ok: onCourt === required,
+    side,
+    onCourt,
+    required
+  };
+}
+
+// The existing UI start handler lives in main.js. This capture-phase guard keeps
+// the start decision bilateral without duplicating or replacing that handler.
+function installBilateralStartGuard() {
+  if (typeof document === 'undefined') return;
+
+  const guard = (event) => {
+    const button = event.target?.closest?.('#startBtn');
+    if (!button) return;
+
+    const state = window.__handballStore?.state;
+    if (!state) return;
+
+    const resultA = validateStartingFormation(state, 'A');
+    const resultB = validateStartingFormation(state, 'B');
+
+    if (resultA.ok && resultB.ok) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    const messages = [];
+    if (!resultA.ok) messages.push(`Equipa A: ${resultA.onCourt}/${resultA.required} jogadores em campo.`);
+    if (!resultB.ok) messages.push(`Equipa B: ${resultB.onCourt}/${resultB.required} jogadores em campo.`);
+
+    alert(`⚠️ Não é possível iniciar o jogo.\n\n${messages.join('\n')}`);
+  };
+
+  document.addEventListener('click', guard, true);
+}
+
+installBilateralStartGuard();
+
 export function syncOpenStints(state) {
   const time = Number(state.totalSeconds) || 0;
   state.stints = Array.isArray(state.stints) ? state.stints : [];
