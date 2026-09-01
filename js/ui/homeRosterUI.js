@@ -3,7 +3,6 @@ import { store } from '../state.js';
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch])); }
 function formatTime(seconds) { const s=Math.max(0,Number(seconds)||0); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 function findPlayer(side,id){ return (store.state.gameData?.[side]?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
-
 function ensurePopup(){
   let popup=document.getElementById('bilateral-action-popup'); if(popup)return popup;
   popup=document.createElement('div'); popup.id='bilateral-action-popup'; popup.className='fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 p-4';
@@ -17,7 +16,7 @@ function ensurePopup(){
     if(action==='shot'&&typeof window.openBilateralShot==='function'){
       closePopup();
       window.openBilateralShot(sel.side,sel.playerId);
-    } else if(typeof window.openModal==='function){
+    } else if(typeof window.openModal==='function'){
       window.openModal(action,`${sel.side}:${sel.playerId}`);
       closePopup();
     }
@@ -28,15 +27,13 @@ function closePopup(){const p=document.getElementById('bilateral-action-popup');
 function openPopup(side,id){const p=findPlayer(side,id);if(!p||p.disqualified||p.isSuspended)return;const popup=ensurePopup();popup._selection={side,playerId:String(id)};popup.querySelector('#bilateral-popup-player').textContent=`${side==='A'?(store.state.teamAName||'Equipa A'):(store.state.teamBName||'Equipa B')} · #${p.Numero} ${p.Nome}`;popup.style.display='flex';popup.classList.remove('hidden');popup.classList.add('flex');}
 window.openBilateralPlayerPopup=openPopup;
 window.closeBilateralPlayerPopup=closePopup;
-
 function playerRow(player){
   const num=escapeHtml(player.Numero||'-'),name=escapeHtml(player.Nome||'Atleta sem nome'),pos=escapeHtml(player.Posicao||''),id=escapeHtml(String(player.id??player.Numero??''));
   const classes=player.onCourt?'bg-green-900/60 border-green-500':'bg-gray-700 border-gray-600';
   const disabled=player.disqualified||player.isSuspended?'opacity-50 cursor-not-allowed':'cursor-pointer hover:bg-gray-600';
-  const status=player.disqualified?' 🔴':player.isSuspended?` ⏱️ ${formatTime(player.suspensionTimer||0)`:'';
+  const status=player.disqualified?' 🔴':player.isSuspended?` ⏱️ ${formatTime(player.suspensionTimer||0)}`:'';
   return `<div data-team="A" data-player="${id}" data-team-player="A:${id}" data-player-popup="1" class="w-full flex items-center justify-between gap-2 p-3 rounded-lg border ${classes} ${disabled}"><div class="flex-1 flex items-center justify-between gap-2 text-left min-w-0"><span class="font-bold w-8">#${num}</span><span class="font-semibold flex-1 truncate">${name}${status}</span><span class="text-xs text-gray-400 w-10 text-center">${pos}</span><span id="time-p-${num}" class="font-mono text-sm">${formatTime(player.timeOnCourt||0)}</span></div></div>`;
 }
-
 export function renderHomeRoster(){
   const players=Array.isArray(store.state.gameData?.A?.players)?store.state.gameData.A.players:[];
   const goalkeeperList=document.getElementById('goalkeeper-list-A'),playerList=document.getElementById('player-list-A'); if(!goalkeeperList&&!playerList)return;
