@@ -3,6 +3,14 @@ import { store } from '../state.js';
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>\"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[ch])); }
 function formatTime(seconds) { const s=Math.max(0,Number(seconds)||0); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 function findPlayer(side,id){ return (store.state.gameData?.[side]?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
+function togglePlayerOnCourt(side,id){
+  const player=findPlayer(side,id);
+  if(!player || player.disqualified || player.isSuspended) return;
+  store.update(s=>{
+    const p=(s.gameData?.[side]?.players||[]).find(x=>String(x.id??x.Numero)===String(id)||String(x.Numero)===String(id));
+    if(p) p.onCourt=!Boolean(p.onCourt);
+  });
+}
 function ensurePopup(){
   let popup=document.getElementById('bilateral-action-popup'); if(popup)return popup;
   popup=document.createElement('div'); popup.id='bilateral-action-popup'; popup.className='fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 p-4';
@@ -14,11 +22,9 @@ function ensurePopup(){
     const sel=popup._selection;if(!sel)return;
     const action=btn.dataset.action;
     if(action==='shot'&&typeof window.openBilateralShot==='function'){
-      closePopup();
-      window.openBilateralShot(sel.side,sel.playerId);
+      closePopup(); window.openBilateralShot(sel.side,sel.playerId);
     } else if(typeof window.openModal==='function'){
-      window.openModal(action,`${sel.side}:${sel.playerId}`);
-      closePopup();
+      window.openModal(action,`${sel.side}:${sel.playerId}`); closePopup();
     }
   });
   return popup;
@@ -32,14 +38,23 @@ function playerRow(player){
   const classes=player.onCourt?'bg-green-900/60 border-green-500':'bg-gray-700 border-gray-600';
   const disabled=player.disqualified||player.isSuspended?'opacity-50 cursor-not-allowed':'cursor-pointer hover:bg-gray-600';
   const status=player.disqualified?' 🔴':player.isSuspended?` ⏱️ ${formatTime(player.suspensionTimer||0)}`:'';
-  return `<div data-team="A" data-player="${id}" data-team-player="A:${id}" data-player-popup="1" class="w-full flex items-center justify-between gap-2 p-3 rounded-lg border ${classes} ${disabled}"><div class="flex-1 flex items-center justify-between gap-2 text-left min-w-0"><span class="font-bold w-8">#${num}</span><span class="font-semibold flex-1 truncate">${name}${status}</span><span class="text-xs text-gray-400 w-10 text-center">${pos}</span><span id="time-p-${num}" class="font-mono text-sm">${formatTime(player.timeOnCourt||0)}</span></div></div>`;
+  const checked=player.onCourt?'checked':'';
+  return `<div data-team="A" data-player="${id}" data-team-player="A:${id}" data-player-popup="1" class="w-full flex items-center justify-between gap-2 p-3 rounded-lg border ${classes} ${disabled}">
+    <button type="button" data-court-toggle="A:${id}" class="shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/70 hover:bg-gray-700 text-xs font-bold" aria-label="${player.onCourt?'Retirar':'Colocar'} ${name} ${player.onCourt?'de campo':'em campo'}">
+      <input type="checkbox" ${checked} tabindex="-1" class="pointer-events-none w-5 h-5 accent-green-500"><span>${player.onCourt?'EM CAMPO':'BANCO'}</span>
+    </button>
+    <div class="flex-1 flex items-center justify-between gap-2 text-left min-w-0" data-action-area="1"><span class="font-bold w-8">#${num}</span><span class="font-semibold flex-1 truncate">${name}${status}</span><span class="text-xs text-gray-400 w-10 text-center">${pos}</span><span id="time-p-${num}" class="font-mono text-sm">${formatTime(player.timeOnCourt||0)}</span></div>
+  </div>`;
 }
 export function renderHomeRoster(){
   const players=Array.isArray(store.state.gameData?.A?.players)?store.state.gameData.A.players:[];
   const goalkeeperList=document.getElementById('goalkeeper-list-A'),playerList=document.getElementById('player-list-A'); if(!goalkeeperList&&!playerList)return;
   const gks=players.filter(p=>String(p.Posicao||'').toUpperCase()==='GR'),field=players.filter(p=>String(p.Posicao||'').toUpperCase()!=='GR');
   if(goalkeeperList)goalkeeperList.innerHTML=gks.map(playerRow).join(''); if(playerList)playerList.innerHTML=field.map(playerRow).join('');
-  document.querySelectorAll('#player-list-A [data-player-popup], #goalkeeper-list-A [data-player-popup]').forEach(card=>{card.onclick=()=>openPopup('A',card.dataset.player);});
+  document.querySelectorAll('#player-list-A [data-player-popup], #goalkeeper-list-A [data-player-popup]').forEach(card=>{
+    card.onclick=e=>{ if(e.target.closest('[data-court-toggle]')) return; openPopup('A',card.dataset.player); };
+  });
+  document.querySelectorAll('[data-court-toggle^="A:"]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();togglePlayerOnCourt('A',btn.dataset.courtToggle.split(':')[1]);});
 }
 function install(){renderHomeRoster();window.addEventListener('handball:state-updated',renderHomeRoster);setTimeout(renderHomeRoster,100);setTimeout(renderHomeRoster,500);setTimeout(renderHomeRoster,1500);}
 if(typeof document!=='undefined'){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();}
