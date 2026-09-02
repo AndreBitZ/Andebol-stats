@@ -91,10 +91,47 @@ function openGeneric(side,id,category){
   popup.classList.remove('hidden');popup.classList.add('flex');
 }
 
+function installGameControls(){
+  const startBtn=document.getElementById('startBtn');
+  const pauseBtn=document.getElementById('pauseBtn');
+  const exportBtn=document.getElementById('exportExcelBtn');
+  if(!startBtn)return;
+
+  // O botão antigo de pausa deixa de fazer parte da interface; fica disponível
+  // apenas internamente para preservar o motor de pausa existente.
+  if(pauseBtn)pauseBtn.classList.add('hidden');
+  if(exportBtn)exportBtn.remove();
+
+  const updateLabel=()=>{
+    const running=store.state?.isRunning===true;
+    startBtn.textContent=running?'⏸️ Pausar':'▶️ Iniciar';
+    startBtn.setAttribute('aria-label',running?'Pausar jogo':'Iniciar jogo');
+    startBtn.setAttribute('aria-pressed',String(running));
+    startBtn.classList.toggle('bg-green-600',!running);
+    startBtn.classList.toggle('bg-yellow-600',running);
+  };
+
+  // Quando o jogo já está a correr, interceptamos o clique e usamos o motor
+  // de pausa existente. Quando está parado, deixamos o listener original de
+  // main.js executar a validação e o arranque.
+  startBtn.addEventListener('click',(event)=>{
+    if(store.state?.isRunning!==true)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    if(pauseBtn)pauseBtn.click();
+    updateLabel();
+  },true);
+
+  document.addEventListener('handball:state-updated',updateLabel);
+  window.addEventListener('bilateral-action-recorded',updateLabel);
+  updateLabel();
+}
+
 function install(){
   window.openBilateralShot=openShot;
   window.openBilateralAction=openGeneric;
   window.getOpposingGoalkeeper=side=>currentDefendingGoalkeeper(side);
+  installGameControls();
 }
 
 if(typeof document!=='undefined'){
