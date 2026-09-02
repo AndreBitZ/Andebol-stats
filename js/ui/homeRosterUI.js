@@ -28,8 +28,10 @@ function ensurePopup(){
     const action=btn.dataset.action;
     if(action==='shot'&&typeof window.openBilateralShot==='function'){
       closePopup(); window.openBilateralShot(sel.side,sel.playerId);
-    } else if(typeof window.openModal==='function'){
-      window.openModal(action,`${sel.side}:${sel.playerId}`); closePopup();
+    } else if((action==='positive'||action==='negative')&&typeof window.openBilateralAction==='function'){
+      closePopup(); window.openBilateralAction(sel.side,sel.playerId,action);
+    } else if(action==='sanction'&&typeof window.openModal==='function'){
+      closePopup(); window.openModal(action,`${sel.side}:${sel.playerId}`);
     }
   });
   return popup;
