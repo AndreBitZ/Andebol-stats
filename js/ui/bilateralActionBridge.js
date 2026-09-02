@@ -97,10 +97,14 @@ function installGameControls(){
   const exportBtn=document.getElementById('exportExcelBtn');
   if(!startBtn)return;
 
-  // O botão antigo de pausa deixa de fazer parte da interface; fica disponível
-  // apenas internamente para preservar o motor de pausa existente.
   if(pauseBtn)pauseBtn.classList.add('hidden');
   if(exportBtn)exportBtn.remove();
+
+  const controlsGrid=startBtn.parentElement;
+  if(controlsGrid){
+    controlsGrid.classList.remove('grid-cols-3');
+    controlsGrid.classList.add('grid-cols-2');
+  }
 
   const updateLabel=()=>{
     const running=store.state?.isRunning===true;
@@ -111,9 +115,6 @@ function installGameControls(){
     startBtn.classList.toggle('bg-yellow-600',running);
   };
 
-  // Quando o jogo já está a correr, interceptamos o clique e usamos o motor
-  // de pausa existente. Quando está parado, deixamos o listener original de
-  // main.js executar a validação e o arranque.
   startBtn.addEventListener('click',(event)=>{
     if(store.state?.isRunning!==true)return;
     event.preventDefault();
