@@ -47,6 +47,6 @@ function render() {
   host.querySelectorAll('[data-player-popup]').forEach(card=>card.onclick=e=>{if(e.target.closest('[data-court-toggle]'))return;if(card.classList.contains('cursor-not-allowed'))return;if(typeof window.openBilateralPlayerPopup==='function')window.openBilateralPlayerPopup('B',card.dataset.player);});
   host.querySelectorAll('[data-court-toggle^="B:"]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();togglePlayerOnCourt(btn.dataset.courtToggle.split(':')[1]);});
 }
-function install(){render();if(!store.__awayRosterPatched){const originalUpdate=store.update.bind(store);store.update=updater=>{const result=originalUpdate(updater);queueMicrotask(render);return result;};store.__awayRosterPatched=true;}[250,750,1500,3000].forEach(ms=>setTimeout(render,ms);}
+function install(){render();if(!store.__awayRosterPatched){const originalUpdate=store.update.bind(store);store.update=updater=>{const result=originalUpdate(updater);queueMicrotask(render);return result;};store.__awayRosterPatched=true;}[250,750,1500,3000].forEach(ms=>setTimeout(render,ms));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
 setInterval(render,1000);
