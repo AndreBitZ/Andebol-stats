@@ -1,6 +1,7 @@
 import { store } from '../state.js';
 
 function esc(value) { return String(value ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
+function formatTime(seconds) { const s=Math.max(0,Number(seconds)||0); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 function findPlayer(id){ return (store.state.gameData?.B?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
 function togglePlayerOnCourt(id){
   const player=findPlayer(id);
@@ -35,7 +36,7 @@ function render() {
     const suspended=p.isSuspended,disqualified=p.disqualified;
     const status=disqualified?'bg-red-950 opacity-50':suspended?'bg-red-900/50 opacity-75':p.onCourt?'bg-green-900/60 border border-green-500':'bg-gray-700';
     const id=esc(p.id??p.Numero), blocked=disqualified||suspended?'cursor-not-allowed':'cursor-pointer hover:bg-gray-600',checked=p.onCourt?'checked':'';
-    return `<div data-team="B" data-player="${id}" data-team-player="B:${id}" data-player-popup="1" class="flex justify-between items-center gap-2 p-3 mb-1 rounded-lg text-sm ${status} ${blocked}"><button type="button" data-court-toggle="B:${id}" class="shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/70 hover:bg-gray-700 text-xs font-bold"><input type="checkbox" ${checked} tabindex="-1" class="pointer-events-none w-5 h-5 accent-green-500"><span>${p.onCourt?'EM CAMPO':'BANCO'}</span></button><div class="flex items-center gap-2 min-w-0 flex-1"><span class="font-bold text-gray-400 w-7">${esc(p.Numero)}</span><span class="truncate font-medium">${esc(p.Nome)}</span>${p.Posicao?`<span class="text-xs text-gray-400">${esc(p.Posicao)}</span>`:''}</div></div>`;
+    return `<div data-team="B" data-player="${id}" data-team-player="B:${id}" data-player-popup="1" class="flex justify-between items-center gap-2 p-3 mb-1 rounded-lg text-sm ${status} ${blocked}"><button type="button" data-court-toggle="B:${id}" class="shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/70 hover:bg-gray-700 text-xs font-bold"><input type="checkbox" ${checked} tabindex="-1" class="pointer-events-none w-5 h-5 accent-green-500"><span>${p.onCourt?'EM CAMPO':'BANCO'}</span></button><div class="flex items-center gap-2 min-w-0 flex-1"><span class="font-bold text-gray-400 w-7">${esc(p.Numero)}</span><span class="truncate font-medium">${esc(p.Nome)}</span>${p.Posicao?`<span class="text-xs text-gray-400">${esc(p.Posicao)}</span>`:''}</div><span data-court-time="B:${id}" class="font-mono text-sm text-gray-300 w-12 text-right">${formatTime(p.timeOnCourt||0)}</span></div>`;
   };
   gk.innerHTML=players.filter(p=>String(p.Posicao||'').includes('GR')).map(card).join('');
   field.innerHTML=players.filter(p=>!String(p.Posicao||'').includes('GR')).map(card).join('');
