@@ -1,10 +1,15 @@
 import { store } from '../state.js';
 
-function esc(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function esc(value) { return String(value ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
 function findPlayer(id){ return (store.state.gameData?.B?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
 function togglePlayerOnCourt(id){
   const player=findPlayer(id);
   if(!player || player.disqualified || player.isSuspended) return;
+  const currentCount=(store.state.gameData?.B?.players||[]).filter(p=>p.onCourt).length;
+  if(!player.onCourt && currentCount>=7){
+    alert('⚠️ Uma equipa não pode ter mais de 7 jogadores em campo. Retire primeiro um jogador de campo.');
+    return;
+  }
   store.update(s=>{
     const p=(s.gameData?.B?.players||[]).find(x=>String(x.id??x.Numero)===String(id)||String(x.Numero)===String(id));
     if(p) p.onCourt=!Boolean(p.onCourt);
