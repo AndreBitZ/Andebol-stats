@@ -19,6 +19,7 @@ export function registerShot(state, { attackingSide, shooterId, result, goalkeep
   if (!shooter) throw new Error('Atleta rematador não encontrado.');
   const shot = createEvent({
     match_id: state.matchId,
+    timestamp_seconds: state.totalSeconds,
     team_id: attack.teamId ?? (attackSide === 'A' ? state.teamAId : state.teamBId),
     player_id: shooter.id,
     goalkeeper_id: goalkeeper?.id ?? null,
