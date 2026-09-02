@@ -1,10 +1,10 @@
+import { store } from '../state.js';
 import { recordAction, currentDefendingGoalkeeper } from '../domain/actionEngine.js';
 
 let selected = null;
 
-function storeRef(){ return window.store || null; }
-function teamName(side){ const s=storeRef()?.state; return side==='A'?(s?.teamAName||'Equipa A'):(s?.teamBName||'Equipa B'); }
-function findPlayer(side,id){ const s=storeRef()?.state; return (s?.gameData?.[side]?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
+function teamName(side){ const s=store.state; return side==='A'?(s?.teamAName||'Equipa A'):(s?.teamBName||'Equipa B'); }
+function findPlayer(side,id){ const s=store.state; return (s?.gameData?.[side]?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
 function playerLabel(side,id){ const p=findPlayer(side,id); return p?`${teamName(side)} · #${p.Numero} ${p.Nome}`:'Atleta'; }
 
 function closePlayerPopup(){
@@ -14,8 +14,11 @@ function closePlayerPopup(){
 function closeShotPopup(){
   const p=document.getElementById('bilateral-shot-result-popup');
   if(p){ p.classList.add('hidden'); p.classList.remove('flex'); p._selection=null; }
+  selected=null;
 }
 function openShot(side,id){
+  const player=findPlayer(side,id);
+  if(!player) return;
   selected={side,playerId:String(id)};
   closePlayerPopup();
   let popup=document.getElementById('bilateral-shot-result-popup');
@@ -35,7 +38,7 @@ function openShot(side,id){
         const goalkeeper=currentDefendingGoalkeeper(sel.side);
         recordAction({side:sel.side,playerId:sel.playerId,action:'SHOT',shotResult:result,goalkeeperId:goalkeeper?.id??goalkeeper?.Numero??null});
         selected=null; closeShotPopup();
-        window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result}}));
+        window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result,side:sel.side,playerId:sel.playerId}}));
       }catch(err){console.error(err);alert(err.message||'Não foi possível registar o remate.');}
     });
   }
@@ -45,10 +48,11 @@ function openShot(side,id){
 }
 
 function install(){
-  const s=storeRef(); if(!s)return;
   window.openBilateralShot=openShot;
   window.getOpposingGoalkeeper=side=>currentDefendingGoalkeeper(side);
 }
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
-setInterval(install,1000);
+if(typeof document!=='undefined'){
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});
+  else install();
+}
