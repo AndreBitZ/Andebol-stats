@@ -3,16 +3,20 @@ import { store } from './state.js';
 import { syncOpenStints, closeAllOpenStints } from './domain/matchClock.js';
 
 function reconcileSuspensions(state) {
+    const now = Number(state.totalSeconds) || 0;
     for (const side of ['A', 'B']) {
         const players = state.gameData?.[side]?.players || [];
         for (const player of players) {
             if (!player.isSuspended || player.disqualified) continue;
-            const end = Number(player.suspensionEndTime);
-            if (Number.isFinite(end)) {
-                const remaining = Math.max(0, Math.ceil(end - (Number(state.totalSeconds) || 0)));
-                player.suspensionTimer = remaining;
-                if (remaining === 0) player.isSuspended = false;
+            let end = Number(player.suspensionEndTime);
+            if (!Number.isFinite(end)) {
+                const legacyRemaining = Math.max(0, Number(player.suspensionTimer) || 0);
+                end = now + legacyRemaining;
+                player.suspensionEndTime = end;
             }
+            const remaining = Math.max(0, Math.ceil(end - now));
+            player.suspensionTimer = remaining;
+            if (remaining === 0) player.isSuspended = false;
         }
     }
 }
