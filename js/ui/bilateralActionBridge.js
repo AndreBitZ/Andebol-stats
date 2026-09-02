@@ -97,6 +97,8 @@ function installGameControls(){
   const exportBtn=document.getElementById('exportExcelBtn');
   if(!startBtn)return;
 
+  // Mantemos os controlos antigos apenas como infraestrutura interna.
+  // O utilizador vê um único botão Play/Pause.
   if(pauseBtn)pauseBtn.classList.add('hidden');
   if(exportBtn)exportBtn.remove();
 
@@ -111,10 +113,17 @@ function installGameControls(){
     startBtn.textContent=running?'⏸️ Pausar':'▶️ Iniciar';
     startBtn.setAttribute('aria-label',running?'Pausar jogo':'Iniciar jogo');
     startBtn.setAttribute('aria-pressed',String(running));
-    startBtn.classList.toggle('bg-green-600',!running);
-    startBtn.classList.toggle('bg-yellow-600',running);
+
+    startBtn.classList.remove('bg-green-600','bg-yellow-600','hover:bg-green-700','hover:bg-yellow-700');
+    if(running){
+      startBtn.classList.add('bg-yellow-600','hover:bg-yellow-700');
+    }else{
+      startBtn.classList.add('bg-green-600','hover:bg-green-700');
+    }
   };
 
+  // Se o jogo estiver a decorrer, o botão visível deve executar PAUSA,
+  // impedindo que o listener original de INICIAR seja executado.
   startBtn.addEventListener('click',(event)=>{
     if(store.state?.isRunning!==true)return;
     event.preventDefault();
@@ -123,8 +132,14 @@ function installGameControls(){
     updateLabel();
   },true);
 
+  // O estado é atualizado pelo GameStore antes de o evento terminar.
   document.addEventListener('handball:state-updated',updateLabel);
   window.addEventListener('bilateral-action-recorded',updateLabel);
+
+  // Garante a atualização visual imediatamente depois do listener original
+  // de iniciar terminar a operação.
+  startBtn.addEventListener('click',()=>setTimeout(updateLabel,0));
+
   updateLabel();
 }
 
