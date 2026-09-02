@@ -2,23 +2,23 @@
 import { store } from './state.js';
 import { syncOpenStints, closeAllOpenStints } from './domain/matchClock.js';
 
-function tickSuspensions(state) {
-    let changed = false;
+function reconcileSuspensions(state) {
     for (const side of ['A', 'B']) {
         const players = state.gameData?.[side]?.players || [];
         for (const player of players) {
             if (!player.isSuspended || player.disqualified) continue;
-            const current = Math.max(0, Number(player.suspensionTimer) || 0);
-            const remaining = Math.max(0, current - 1);
-            if (remaining !== current) changed = true;
-            player.suspensionTimer = remaining;
-            if (remaining === 0) {
-                player.isSuspended = false;
-                changed = true;
+            const end = Number(player.suspensionEndTime);
+            if (Number.isFinite(end)) {
+                const remaining = Math.max(0, Math.ceil(end - (Number(state.totalSeconds) || 0)));
+                player.suspensionTimer = remaining;
+                if (remaining === 0) player.isSuspended = false;
             }
         }
     }
-    return changed;
+}
+
+function tickSuspensions(state) {
+    reconcileSuspensions(state);
 }
 
 export class GameTimer {
@@ -31,6 +31,7 @@ export class GameTimer {
 
     start() {
         if (this.intervalId) return;
+        reconcileSuspensions(store.state);
         syncOpenStints(store.state);
         this.startTime = Date.now();
         this.intervalId = setInterval(() => {
@@ -51,6 +52,7 @@ export class GameTimer {
         this.intervalId = null;
         this.elapsedPaused = currentTotalTime;
         store.state.totalSeconds = currentTotalTime;
+        reconcileSuspensions(store.state);
         store.notify();
     }
 
@@ -61,6 +63,7 @@ export class GameTimer {
         }
         this.elapsedPaused = currentTotalTime;
         store.state.totalSeconds = currentTotalTime;
+        reconcileSuspensions(store.state);
         closeAllOpenStints(store.state, currentTotalTime);
         store.notify();
     }
@@ -68,4 +71,11 @@ export class GameTimer {
     isRunning() {
         return this.intervalId !== null;
     }
+}
+
+// Qualquer correção manual do relógio também recalcula imediatamente as suspensões.
+if (typeof window !== 'undefined') {
+    window.addEventListener('handball:state-updated', () => {
+        reconcileSuspensions(store.state);
+    });
 }
