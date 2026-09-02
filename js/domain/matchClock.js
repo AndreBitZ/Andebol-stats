@@ -1,5 +1,4 @@
 // Match clock domain: single source of truth for official elapsed match time.
-// UI/timer adapters can call tick() while the GameTimer is running.
 import { store } from '../state.js';
 
 export const HALF_DURATION = 30 * 60;
@@ -33,39 +32,25 @@ export function validateStartingFormation(state, side) {
   const players = team?.players || [];
   const onCourt = players.filter(p => p.onCourt).length;
   const required = getRequiredPlayers(state, side);
-  return {
-    ok: onCourt === required,
-    side,
-    onCourt,
-    required
-  };
+  return { ok: onCourt === required, side, onCourt, required };
 }
 
-// The existing UI start handler lives in main.js. This capture-phase guard keeps
-// the start decision bilateral without duplicating or replacing that handler.
 function installBilateralStartGuard() {
   if (typeof document === 'undefined') return;
-
   const guard = (event) => {
     const button = event.target?.closest?.('#startBtn');
     if (!button) return;
-
     const state = store.state;
     const resultA = validateStartingFormation(state, 'A');
     const resultB = validateStartingFormation(state, 'B');
-
     if (resultA.ok && resultB.ok) return;
-
     event.preventDefault();
     event.stopImmediatePropagation();
-
     const messages = [];
     if (!resultA.ok) messages.push(`Equipa A: ${resultA.onCourt}/${resultA.required} jogadores em campo.`);
     if (!resultB.ok) messages.push(`Equipa B: ${resultB.onCourt}/${resultB.required} jogadores em campo.`);
-
     alert(`⚠️ Não é possível iniciar o jogo.\n\n${messages.join('\n')}`);
   };
-
   document.addEventListener('click', guard, true);
 }
 
@@ -77,9 +62,7 @@ export function syncOpenStints(state) {
   for (const side of ['A', 'B']) {
     for (const player of (state.gameData?.[side]?.players || [])) {
       const open = state.stints.find(s => s.side === side && String(s.playerId) === String(player.id ?? player.Numero) && s.endTime == null);
-      if (player.onCourt && !open) {
-        state.stints.push({ side, playerId: String(player.id ?? player.Numero), startTime: time, endTime: null });
-      }
+      if (player.onCourt && !open) state.stints.push({ side, playerId: String(player.id ?? player.Numero), startTime: time, endTime: null });
       if (!player.onCourt && open) open.endTime = time;
     }
   }
@@ -94,4 +77,39 @@ export function getPlayerSeconds(state, side, playerId) {
   const now = Number(state.totalSeconds) || 0;
   return (state.stints || []).filter(s => s.side === side && String(s.playerId) === String(playerId))
     .reduce((sum, s) => sum + Math.max(0, (s.endTime ?? now) - s.startTime), 0);
+}
+
+// Sanções temporárias são contadas em tempo oficial de jogo.
+// Um vermelho direto mantém o atleta desqualificado, mas a equipa só fica
+// reduzida durante os 2 minutos; terminado esse período, pode repor outro atleta.
+export function syncSuspensions(state) {
+  const now = Number(state?.totalSeconds) || 0;
+  let changed = false;
+  for (const side of ['A', 'B']) {
+    for (const player of (state.gameData?.[side]?.players || [])) {
+      if (!player.isSuspended || player.suspensionEndTime == null) continue;
+      const remaining = Math.max(0, Number(player.suspensionEndTime) - now);
+      if (Number(player.suspensionTimer) !== remaining) {
+        player.suspensionTimer = remaining;
+        changed = true;
+      }
+      if (remaining <= 0) {
+        player.isSuspended = false;
+        player.suspensionTimer = 0;
+        changed = true;
+      }
+    }
+  }
+  return changed;
+}
+
+export function getTeamActiveSuspensions(state, side) {
+  return (state?.gameData?.[side]?.players || []).filter(p => p.isSuspended).length;
+}
+
+export function getNumericSituation(state) {
+  return {
+    A: (state.gameData?.A?.players || []).filter(p => p.onCourt).length,
+    B: (state.gameData?.B?.players || []).filter(p => p.onCourt).length
+  };
 }
