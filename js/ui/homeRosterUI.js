@@ -6,6 +6,11 @@ function findPlayer(side,id){ return (store.state.gameData?.[side]?.players||[])
 function togglePlayerOnCourt(side,id){
   const player=findPlayer(side,id);
   if(!player || player.disqualified || player.isSuspended) return;
+  const currentCount=(store.state.gameData?.[side]?.players||[]).filter(p=>p.onCourt).length;
+  if(!player.onCourt && currentCount>=7){
+    alert('⚠️ Uma equipa não pode ter mais de 7 jogadores em campo. Retire primeiro um jogador de campo.');
+    return;
+  }
   store.update(s=>{
     const p=(s.gameData?.[side]?.players||[]).find(x=>String(x.id??x.Numero)===String(id)||String(x.Numero)===String(id));
     if(p) p.onCourt=!Boolean(p.onCourt);
