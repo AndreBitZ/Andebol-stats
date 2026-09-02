@@ -9,6 +9,7 @@ export const ACTION_TYPES = Object.freeze({
   RECEPTION_ERROR: 'RECEPTION_ERROR', OFFENSIVE_FOUL: 'OFFENSIVE_FOUL', STEAL: 'STEAL',
   INTERCEPTION: 'INTERCEPTION', RECOVERY: 'RECOVERY', DEFENSIVE_BLOCK: 'DEFENSIVE_BLOCK',
   SEVEN_METER_WON: 'SEVEN_METER_WON', SEVEN_METER_CONCEDED: 'SEVEN_METER_CONCEDED',
+  TECHNICAL_FAULT: 'TECHNICAL_FAULT', SEVEN_METER_FOUL: 'SEVEN_METER_FOUL',
   TWO_MIN_RECEIVED: 'TWO_MIN_RECEIVED', TWO_MIN_DRAWN: 'TWO_MIN_DRAWN', PASSIVE_WARNING: 'PASSIVE_WARNING',
   PASSIVE_TURNOVER: 'PASSIVE_TURNOVER', GOALKEEPER_SAVE: 'GOALKEEPER_SAVE',
   GOALKEEPER_DISTRIBUTION_SUCCESS: 'GOALKEEPER_DISTRIBUTION_SUCCESS',
@@ -27,6 +28,7 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
   if (!live.ok) throw new Error(live.reason);
   const p = player(attacking, playerId);
   if (!p) throw new Error('Atleta não encontrado.');
+  if (!Object.values(ACTION_TYPES).includes(action)) throw new Error('Ação inválida.');
 
   if (action === ACTION_TYPES.SHOT) {
     if (!SHOT_RESULTS.includes(shotResult)) throw new Error('Resultado de remate inválido.');
