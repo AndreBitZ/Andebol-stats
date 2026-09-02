@@ -86,6 +86,7 @@ export function recordSanction({ side, playerId, sanction }) {
       player.onCourt = false;
       player.isSuspended = true;
       player.suspensionTimer = 120;
+      player.suspensionEndTime = timestamp + 120;
       closePlayerStint(state, side, actualPlayerId, timestamp);
 
       const third = player.sanctions.twoMin >= 3;
@@ -100,7 +101,7 @@ export function recordSanction({ side, playerId, sanction }) {
         event_type: third ? SANCTION_TYPES.DISQUALIFICATION : SANCTION_TYPES.TWO_MIN,
         score_for_before: scoreFor, score_against_before: scoreAgainst,
         home_away: side === 'A' ? 'HOME' : 'AWAY',
-        metadata: { ...commonMetadata, two_min_number: player.sanctions.twoMin, automatic_disqualification: third }
+        metadata: { ...commonMetadata, two_min_number: player.sanctions.twoMin, automatic_disqualification: third, suspension_end_time: timestamp + 120 }
       });
     } else if (sanction === 'red') {
       player.sanctions.red++;
@@ -108,6 +109,7 @@ export function recordSanction({ side, playerId, sanction }) {
       player.onCourt = false;
       player.isSuspended = true;
       player.suspensionTimer = 120;
+      player.suspensionEndTime = timestamp + 120;
       closePlayerStint(state, side, actualPlayerId, timestamp);
 
       createdEvent = createEvent({
