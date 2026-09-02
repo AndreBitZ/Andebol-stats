@@ -2,6 +2,7 @@
 import { store } from '../state.js';
 import { createEvent, SHOT_RESULTS } from './events.js';
 import { activeGoalkeeper, registerShot } from './shotEngine.js';
+import { canRecordLiveAction } from './matchClock.js';
 
 export const ACTION_TYPES = Object.freeze({
   SHOT: 'SHOT', ASSIST: 'ASSIST', PRE_ASSIST: 'PRE_ASSIST', TURNOVER: 'TURNOVER',
@@ -22,6 +23,8 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
   const s = store.state;
   const attacking = side === 'B' ? 'B' : 'A';
   const defending = attacking === 'A' ? 'B' : 'A';
+  const live = canRecordLiveAction(s, attacking, playerId);
+  if (!live.ok) throw new Error(live.reason);
   const p = player(attacking, playerId);
   if (!p) throw new Error('Atleta não encontrado.');
 
@@ -36,6 +39,7 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
   return store.update(next => {
     const event = createEvent({
       match_id: next.matchId,
+      timestamp_seconds: next.totalSeconds,
       team_id: attacking === 'A' ? next.teamAId : next.teamBId,
       player_id: p.id,
       event_type: action,
