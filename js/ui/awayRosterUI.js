@@ -4,6 +4,11 @@ import { getPlayerSeconds } from '../domain/matchClock.js';
 function esc(value) { return String(value ?? '').replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c])); }
 function formatTime(seconds) { const s=Math.max(0,Number(seconds)||0); return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`; }
 function findPlayer(id){ return (store.state.gameData?.B?.players||[]).find(p=>String(p.id??p.Numero)===String(id)||String(p.Numero)===String(id)); }
+function sanctionBadges(player){
+  const s=player.sanctions||{};
+  const yellow=Number(s.yellow)||0, twoMin=Number(s.twoMin)||0, red=Number(s.red)||0;
+  return `<span class="flex items-center gap-1 text-[11px] font-bold whitespace-nowrap" title="Disciplina: ${yellow} amarelo(s), ${twoMin} exclusão(ões) de 2 min, ${red} vermelho(s)">${yellow>0?'🟨 '+yellow:''}${twoMin>0?` ⏱️ ${twoMin}×2'`:''}${red>0?' 🟥 '+red:''}</span>`;
+}
 function togglePlayerOnCourt(id){
   const player=findPlayer(id);
   if(!player || player.disqualified || player.isSuspended) return;
@@ -39,7 +44,7 @@ function render() {
     const id=esc(p.id??p.Numero), blocked=disqualified||suspended?'cursor-not-allowed':'cursor-pointer hover:bg-gray-600',checked=p.onCourt?'checked':'';
     const liveSeconds=getPlayerSeconds(store.state,'B',p.id??p.Numero);
     const suspensionLabel=disqualified?'🔴 DESQUALIFICADO':suspended?`⏱️ ${formatTime(p.suspensionTimer||0)}`:'';
-    return `<div data-team="B" data-player="${id}" data-team-player="B:${id}" data-player-popup="1" class="flex justify-between items-center gap-2 p-3 mb-1 rounded-lg text-sm ${status} ${blocked}"><button type="button" data-court-toggle="B:${id}" class="shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/70 hover:bg-gray-700 text-xs font-bold"><input type="checkbox" ${checked} tabindex="-1" class="pointer-events-none w-5 h-5 accent-green-500"><span>${p.onCourt?'EM CAMPO':'BANCO'}</span></button><div class="flex items-center gap-2 min-w-0 flex-1"><span class="font-bold text-gray-400 w-7">#${esc(p.Numero)}</span><span class="truncate font-medium">${esc(p.Nome)}</span>${p.Posicao?`<span class="text-xs text-gray-400">${esc(p.Posicao)}</span>`:''}<span class="font-mono text-xs text-yellow-300 whitespace-nowrap">${suspensionLabel}</span></div><span data-court-time="B:${id}" class="font-mono text-sm text-gray-300 w-12 text-right">${formatTime(liveSeconds)}</span></div>`;
+    return `<div data-team="B" data-player="${id}" data-team-player="B:${id}" data-player-popup="1" class="flex justify-between items-center gap-2 p-3 mb-1 rounded-lg text-sm ${status} ${blocked}"><button type="button" data-court-toggle="B:${id}" class="shrink-0 flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/70 hover:bg-gray-700 text-xs font-bold"><input type="checkbox" ${checked} tabindex="-1" class="pointer-events-none w-5 h-5 accent-green-500"><span>${p.onCourt?'EM CAMPO':'BANCO'}</span></button><div class="flex items-center gap-2 min-w-0 flex-1"><span class="font-bold text-gray-400 w-7">#${esc(p.Numero)}</span><span class="truncate font-medium">${esc(p.Nome)}</span>${p.Posicao?`<span class="text-xs text-gray-400">${esc(p.Posicao)}</span>`:''}<span class="flex items-center gap-1 text-[11px] font-bold whitespace-nowrap">${sanctionBadges(p)}</span>${suspensionLabel?`<span class="font-mono text-xs text-yellow-300 whitespace-nowrap">${suspensionLabel}</span>`:''}</div><span data-court-time="B:${id}" class="font-mono text-sm text-gray-300 w-12 text-right">${formatTime(liveSeconds)}</span></div>`;
   };
   gk.innerHTML=players.filter(p=>String(p.Posicao||'').includes('GR')).map(card).join('');
   field.innerHTML=players.filter(p=>!String(p.Posicao||'').includes('GR')).map(card).join('');
