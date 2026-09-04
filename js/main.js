@@ -51,134 +51,62 @@ if (document.readyState === 'loading') {
     startApp();
 }
 
-// ... (initDOMElements mantém-se igual, omitido para poupar espaço) ...
-// CERTIFICA-TE DE MANTER A FUNÇÃO initDOMElements QUE TENS NO TEU FICHEIRO ATUAL
-
 function initDOMElements() {
     const getEl = (id) => document.getElementById(id);
     els = {
-        welcomeModal: getEl('welcomeModal'),
-        mainApp: getEl('main-app'),
-        timerDisplay: getEl('timer'),
-        scoreA: getEl('scoreA'),
-        scoreB: getEl('scoreB'),
-        suspensionContainer: getEl('suspension-container'),
-        timelineList: getEl('timeline-list'),
-        shotModal: getEl('shotModal'),
-        sanctionsModal: getEl('sanctionsModal'),
-        positiveModal: getEl('positiveActionModal'),
-        negativeModal: getEl('negativeActionModal'),
-        effA: getEl('effA'),
-        shotsA: getEl('shotsA'),
-        savesA: getEl('savesA'),
-        techFaultsA: getEl('techFaultsA'),
-        welcomeFileInput: getEl('welcome-file-input-A'),
-        fileNameDisplay: getEl('file-name-A'),
-        welcomeTeamBName: getEl('welcome-team-b-name'),
-        startGameBtn: getEl('startGameBtn'),
-        teamAName: getEl('teamAName'),
-        teamBName: getEl('teamBName'),
-        editTimerBtn: getEl('editTimerBtn'),
-        correctionModal: getEl('correctionModal'),
-        correctMin: getEl('correctMin'),
-        correctSec: getEl('correctSec'),
-        saveCorrectionBtn: getEl('saveCorrectionBtn'),
-        closeCorrectionBtn: getEl('closeCorrectionBtn'),
-        shotZoneContainer: getEl('shotZoneContainer'),
-        shotGoalContainer: getEl('shotGoalContainer'),
-        shotOutcomeContainer: getEl('shotOutcomeContainer'),
-        goalSvg: getEl('goalSvg'),
-        shotMarker: getEl('shotMarker'),
-        tabData: getEl('tab-data'),
-        tabStats: getEl('tab-stats'),
-        tabHeatmap: getEl('tab-heatmap'),
-        statsComparisonContainer: getEl('stats-comparison-container'),
-        heatmapPointsAttack: getEl('heatmap-points-attack'),
-        heatmapPointsDefense: getEl('heatmap-points-defense'),
-        btnHeatmapUs: getEl('btn-heatmap-us'),
-        btnHeatmapThem: getEl('btn-heatmap-them'),
-        rosterModal: getEl('rosterModal'),
-        rosterPlayersBody: getEl('roster-players-body'),
-        rosterOfficialsBody: getEl('roster-officials-body'),
-        addPlayerBtn: getEl('addPlayerBtn'),
-        addOfficialBtn: getEl('addOfficialBtn'),
-        cancelRosterBtn: getEl('cancelRosterBtn'),
-        confirmRosterBtn: getEl('confirmRosterBtn'),
-        closeRosterBtn: getEl('closeRosterBtn'),
-        officialsListA: getEl('officials-list-A'),
-        startBtn: getEl('startBtn'),
-        pauseBtn: getEl('pauseBtn'),
-        undoBtn: getEl('undoBtn'),
-        exportExcelBtn: getEl('exportExcelBtn'),
-        resetGameBtn: getEl('resetGameBtn'),
-        passivePlayBtn: getEl('passivePlayBtn'),
-        opponent7v6Btn: getEl('opponent7v6Btn'),
-        goalOpponentBtn: getEl('goalOpponentBtn'),
-        saveOpponentBtn: getEl('saveOpponentBtn'),
-        missOpponentBtn: getEl('missOpponentBtn'),
-        twoMinOpponentBtn: getEl('twoMinOpponentBtn')
+        welcomeModal: getEl('welcomeModal'), mainApp: getEl('main-app'), timerDisplay: getEl('timer'), scoreA: getEl('scoreA'), scoreB: getEl('scoreB'),
+        suspensionContainer: getEl('suspension-container'), timelineList: getEl('timeline-list'), shotModal: getEl('shotModal'), sanctionsModal: getEl('sanctionsModal'),
+        positiveModal: getEl('positiveActionModal'), negativeModal: getEl('negativeActionModal'), effA: getEl('effA'), shotsA: getEl('shotsA'), savesA: getEl('savesA'),
+        techFaultsA: getEl('techFaultsA'), welcomeFileInput: getEl('welcome-file-input-A'), fileNameDisplay: getEl('file-name-A'), welcomeTeamBName: getEl('welcome-team-b-name'),
+        startGameBtn: getEl('startGameBtn'), teamAName: getEl('teamAName'), teamBName: getEl('teamBName'), editTimerBtn: getEl('editTimerBtn'),
+        correctionModal: getEl('correctionModal'), correctMin: getEl('correctMin'), correctSec: getEl('correctSec'), saveCorrectionBtn: getEl('saveCorrectionBtn'), closeCorrectionBtn: getEl('closeCorrectionBtn'),
+        shotZoneContainer: getEl('shotZoneContainer'), shotGoalContainer: getEl('shotGoalContainer'), shotOutcomeContainer: getEl('shotOutcomeContainer'), goalSvg: getEl('goalSvg'), shotMarker: getEl('shotMarker'),
+        tabData: getEl('tab-data'), tabStats: getEl('tab-stats'), tabHeatmap: getEl('tab-heatmap'), statsComparisonContainer: getEl('stats-comparison-container'),
+        heatmapPointsAttack: getEl('heatmap-points-attack'), heatmapPointsDefense: getEl('heatmap-points-defense'), btnHeatmapUs: getEl('btn-heatmap-us'), btnHeatmapThem: getEl('btn-heatmap-them'),
+        rosterModal: getEl('rosterModal'), rosterPlayersBody: getEl('roster-players-body'), rosterOfficialsBody: getEl('roster-officials-body'), addPlayerBtn: getEl('addPlayerBtn'), addOfficialBtn: getEl('addOfficialBtn'),
+        cancelRosterBtn: getEl('cancelRosterBtn'), confirmRosterBtn: getEl('confirmRosterBtn'), closeRosterBtn: getEl('closeRosterBtn'), officialsListA: getEl('officials-list-A'), startBtn: getEl('startBtn'), pauseBtn: getEl('pauseBtn'),
+        undoBtn: getEl('undoBtn'), exportExcelBtn: getEl('exportExcelBtn'), resetGameBtn: getEl('resetGameBtn'), passivePlayBtn: getEl('passivePlayBtn'), opponent7v6Btn: getEl('opponent7v6Btn'),
+        goalOpponentBtn: getEl('goalOpponentBtn'), saveOpponentBtn: getEl('saveOpponentBtn'), missOpponentBtn: getEl('missOpponentBtn'), twoMinOpponentBtn: getEl('twoMinOpponentBtn'),
+        playerListA: getEl('player-list-A'), goalkeeperListA: getEl('goalkeeper-list-A')
     };
 }
 
-// ... (setupEventListeners e outras funções auxiliares mantêm-se) ...
-// AQUI VOU APRESENTAR APENAS AS FUNÇÕES QUE MUDARAM A LÓGICA DE SANÇÕES
-
 function setupEventListeners() {
-    // ... (mesmo código de listeners de antes) ...
-    // Vou resumir para garantir que o código funciona
     if(els.welcomeFileInput) els.welcomeFileInput.addEventListener('change', handleFileSelect);
     if(els.welcomeTeamBName) els.welcomeTeamBName.addEventListener('input', checkStart);
     if(els.addPlayerBtn) els.addPlayerBtn.addEventListener('click', () => addRosterRow('player'));
     if(els.addOfficialBtn) els.addOfficialBtn.addEventListener('click', () => addRosterRow('official'));
     if(els.cancelRosterBtn) els.cancelRosterBtn.addEventListener('click', () => els.rosterModal.classList.add('hidden'));
     if(els.closeRosterBtn) els.closeRosterBtn.addEventListener('click', () => els.rosterModal.classList.add('hidden'));
-    
-    if(els.confirmRosterBtn) {
-        els.confirmRosterBtn.addEventListener('click', () => {
-            saveRosterFromModal();
-            els.rosterModal.classList.add('hidden');
-            checkStart();
-        });
-    }
+    if(els.confirmRosterBtn) els.confirmRosterBtn.addEventListener('click', () => { saveRosterFromModal(); els.rosterModal.classList.add('hidden'); checkStart(); });
 
-    if(els.startGameBtn) {
-        els.startGameBtn.addEventListener('click', () => {
-            const selectedDuration = document.querySelector('input[name="gameDuration"]:checked').value;
-            store.update(s => { 
-                s.teamBName = els.welcomeTeamBName.value;
-                s.halfDuration = parseInt(selectedDuration);
-                s.gameData.B.history = [];
-                // Inicializa stats de oficiais se não existir
-                if(!s.gameData.A.officialsStats) s.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
-            });
-            initUI();
+    if(els.startGameBtn) els.startGameBtn.addEventListener('click', () => {
+        const selectedDuration = document.querySelector('input[name="gameDuration"]:checked').value;
+        store.update(s => { 
+            s.teamBName = els.welcomeTeamBName.value;
+            s.halfDuration = parseInt(selectedDuration);
+            s.gameData.B.history = [];
+            if(!s.gameData.A.officialsStats) s.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
         });
-    }
+        initUI();
+    });
 
-    // Abas
     document.querySelectorAll('.tab-link').forEach(btn => {
         btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.tab-link').forEach(b => {
-                b.classList.remove('bg-gray-700', 'border-b-4', 'border-blue-500', 'text-white');
-                b.classList.add('bg-gray-800', 'text-gray-400');
-            });
+            document.querySelectorAll('.tab-link').forEach(b => { b.classList.remove('bg-gray-700', 'border-b-4', 'border-blue-500', 'text-white'); b.classList.add('bg-gray-800', 'text-gray-400'); });
             const clicked = e.target.closest('button');
-            clicked.classList.remove('bg-gray-800', 'text-gray-400');
-            clicked.classList.add('bg-gray-700', 'border-b-4', 'border-blue-500', 'text-white');
-
+            clicked.classList.remove('bg-gray-800', 'text-gray-400'); clicked.classList.add('bg-gray-700', 'border-b-4', 'border-blue-500', 'text-white');
             const tabName = clicked.dataset.tab;
             document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-
             if (tabName === 'stats') updateStatsTab();
             if (tabName === 'heatmap') updateHeatmapTab();
         });
     });
 
-    // Controlo Jogo
+    // CONTROLO JOGO — botão único Play/Pause
     if(els.startBtn) els.startBtn.addEventListener('click', () => {
-        // O botão é único: quando o jogo está a decorrer, esta ação é PAUSA.
-        // A pausa nunca deve validar o número de jogadores em campo.
+        // PAUSA: não validar jogadores. Apenas parar o relógio.
         if (store.state.isRunning) {
             timer.pause(store.state.totalSeconds);
             store.update(s => s.isRunning = false);
@@ -186,844 +114,240 @@ function setupEventListeners() {
             return;
         }
 
-        // O jogo está parado: só aqui validamos os jogadores antes de iniciar/retomar.
+        // INICIAR/RETOMAR: validar jogadores antes de arrancar.
         const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
-        const duration = store.state.halfDuration || 30; 
+        const duration = store.state.halfDuration || 30;
         const baseRequired = (duration === 25) ? 6 : 7;
         const suspendedCount = store.state.gameData.A.players.filter(p => p.isSuspended).length;
         const teamSuspensionActive = store.state.gameData.A.isTeamSuspended ? 1 : 0;
-        
         const requiredPlayers = baseRequired - suspendedCount - teamSuspensionActive;
 
         if (playersOnCourt !== requiredPlayers) {
             alert(`⚠️ Atenção: Deve ter ${requiredPlayers} jogadores em campo.\n(Base: ${baseRequired} - Suspensos: ${suspendedCount} - Banco: ${teamSuspensionActive})`);
-            return; 
+            return;
         }
-        timer.start(); 
-        store.update(s => s.isRunning = true); 
+        timer.start();
+        store.update(s => s.isRunning = true);
         if(els.editTimerBtn) els.editTimerBtn.disabled = true;
     });
 
-    if(els.pauseBtn) els.pauseBtn.addEventListener('click', () => { 
-        timer.pause(store.state.totalSeconds); 
-        store.update(s => s.isRunning = false); 
+    if(els.pauseBtn) els.pauseBtn.addEventListener('click', () => {
+        timer.pause(store.state.totalSeconds);
+        store.update(s => s.isRunning = false);
         if(els.editTimerBtn) els.editTimerBtn.disabled = false;
     });
 
-    if(els.editTimerBtn) {
-        els.editTimerBtn.addEventListener('click', () => {
-            if (store.state.isRunning) return;
-            const total = store.state.totalSeconds;
-            if(els.correctMin) els.correctMin.value = Math.floor(total / 60);
-            if(els.correctSec) els.correctSec.value = total % 60;
-            if(els.correctionModal) els.correctionModal.classList.remove('hidden');
-        });
-    }
+    if(els.editTimerBtn) els.editTimerBtn.addEventListener('click', () => {
+        if (store.state.isRunning) return;
+        const total = store.state.totalSeconds;
+        if(els.correctMin) els.correctMin.value = Math.floor(total / 60);
+        if(els.correctSec) els.correctSec.value = total % 60;
+        if(els.correctionModal) els.correctionModal.classList.remove('hidden');
+    });
 
-    if(els.saveCorrectionBtn) {
-        els.saveCorrectionBtn.addEventListener('click', () => {
-            const min = parseInt(els.correctMin.value) || 0;
-            const sec = parseInt(els.correctSec.value) || 0;
-            const newTotalSeconds = (min * 60) + sec;
-            const oldTotalSeconds = store.state.totalSeconds;
-            const diff = newTotalSeconds - oldTotalSeconds;
-
-            if (diff !== 0) {
-                store.update(s => {
-                    s.totalSeconds = newTotalSeconds;
-                    s.gameData.A.players.forEach(p => {
-                        if (p.onCourt) p.timeOnCourt = Math.max(0, p.timeOnCourt + diff);
-                        if (p.isSuspended && p.suspensionTimer > 0) {
-                            p.suspensionTimer = Math.max(0, p.suspensionTimer - diff);
-                            if (p.suspensionTimer === 0) p.isSuspended = false;
-                        }
-                    });
-                    if (s.gameData.A.isTeamSuspended && s.gameData.A.teamSuspensionTimer > 0) {
-                        s.gameData.A.teamSuspensionTimer = Math.max(0, s.gameData.A.teamSuspensionTimer - diff);
-                        if (s.gameData.A.teamSuspensionTimer === 0) s.gameData.A.isTeamSuspended = false;
-                    }
-                    if (s.gameData.B.isSuspended && s.gameData.B.suspensionTimer > 0) {
-                        s.gameData.B.suspensionTimer = Math.max(0, s.gameData.B.suspensionTimer - diff);
-                        if (s.gameData.B.suspensionTimer === 0) s.gameData.B.isSuspended = false;
-                    }
+    if(els.saveCorrectionBtn) els.saveCorrectionBtn.addEventListener('click', () => {
+        const min = parseInt(els.correctMin.value) || 0;
+        const sec = parseInt(els.correctSec.value) || 0;
+        const newTotalSeconds = (min * 60) + sec;
+        const oldTotalSeconds = store.state.totalSeconds;
+        const diff = newTotalSeconds - oldTotalSeconds;
+        if (diff !== 0) {
+            store.update(s => {
+                s.totalSeconds = newTotalSeconds;
+                s.gameData.A.players.forEach(p => {
+                    if (p.onCourt) p.timeOnCourt = Math.max(0, p.timeOnCourt + diff);
+                    if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer = Math.max(0, p.suspensionTimer - diff); if (p.suspensionTimer === 0) p.isSuspended = false; }
                 });
-                if (timer) {
-                    timer.elapsedPaused = newTotalSeconds;
-                    timer.startTime = 0; 
-                }
-            }
-            updateDisplay();
-            updateSuspensionsDisplay();
-            renderPlayers();
-            els.correctionModal.classList.add('hidden');
-        });
-    }
+                if (s.gameData.A.isTeamSuspended && s.gameData.A.teamSuspensionTimer > 0) { s.gameData.A.teamSuspensionTimer = Math.max(0, s.gameData.A.teamSuspensionTimer - diff); if (s.gameData.A.teamSuspensionTimer === 0) s.gameData.A.isTeamSuspended = false; }
+                if (s.gameData.B.isSuspended && s.gameData.B.suspensionTimer > 0) { s.gameData.B.suspensionTimer = Math.max(0, s.gameData.B.suspensionTimer - diff); if (s.gameData.B.suspensionTimer === 0) s.gameData.B.isSuspended = false; }
+            });
+            if (timer) { timer.elapsedPaused = newTotalSeconds; timer.startTime = 0; }
+        }
+        updateDisplay(); updateSuspensionsDisplay(); renderPlayers(); els.correctionModal.classList.add('hidden');
+    });
 
     if(els.closeCorrectionBtn) els.closeCorrectionBtn.addEventListener('click', () => els.correctionModal.classList.add('hidden'));
-
     if(els.undoBtn) els.undoBtn.addEventListener('click', handleUndo);
     if(els.exportExcelBtn) els.exportExcelBtn.addEventListener('click', () => exportToExcel(store.state.gameData, store.state.gameEvents));
     if(els.resetGameBtn) els.resetGameBtn.addEventListener('click', handleReset);
-
-    if(els.passivePlayBtn) els.passivePlayBtn.addEventListener('click', (e) => {
-        store.update(s => s.isPassivePlay = !s.isPassivePlay);
-        e.target.classList.toggle('bg-red-600');
-        e.target.classList.toggle('bg-gray-700');
-    });
-    if(els.opponent7v6Btn) els.opponent7v6Btn.addEventListener('click', (e) => {
-        store.update(s => s.isOpponent7v6 = !s.isOpponent7v6);
-        e.target.classList.toggle('bg-orange-600');
-        e.target.classList.toggle('bg-gray-700');
-    });
-
+    if(els.passivePlayBtn) els.passivePlayBtn.addEventListener('click', (e) => { store.update(s => s.isPassivePlay = !s.isPassivePlay); e.target.classList.toggle('bg-red-600'); e.target.classList.toggle('bg-gray-700'); });
+    if(els.opponent7v6Btn) els.opponent7v6Btn.addEventListener('click', (e) => { store.update(s => s.isOpponent7v6 = !s.isOpponent7v6); e.target.classList.toggle('bg-orange-600'); e.target.classList.toggle('bg-gray-700'); });
     if(els.goalOpponentBtn) els.goalOpponentBtn.addEventListener('click', () => registerOpponentAction('goal'));
     if(els.saveOpponentBtn) els.saveOpponentBtn.addEventListener('click', () => registerOpponentAction('save'));
     if(els.missOpponentBtn) els.missOpponentBtn.addEventListener('click', () => registerOpponentAction('miss'));
     if(els.twoMinOpponentBtn) els.twoMinOpponentBtn.addEventListener('click', () => registerOpponentAction('2min'));
-
     setupModals();
 }
 
-// ... (Funções setupModals e handlers básicos mantidos) ...
 function setupModals() {
-    // ... mesmo código dos listeners de remate ...
-    document.querySelectorAll('.shot-type-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.shot-type-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
-            e.target.classList.replace('bg-gray-700', 'bg-blue-600');
-            currentShotType = e.target.innerText;
-            els.shotZoneContainer.classList.remove('hidden');
-            els.shotGoalContainer.classList.add('hidden');
-            els.shotOutcomeContainer.classList.add('hidden');
-            document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
-            currentShotZone = null;
-            currentShotCoords = null;
-            els.shotMarker.classList.add('hidden');
-        });
+    document.querySelectorAll('.shot-type-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.shot-type-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
+        e.target.classList.replace('bg-gray-700', 'bg-blue-600'); currentShotType = e.target.innerText;
+        els.shotZoneContainer.classList.remove('hidden'); els.shotGoalContainer.classList.add('hidden'); els.shotOutcomeContainer.classList.add('hidden');
+        document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700')); currentShotZone = null; currentShotCoords = null; els.shotMarker.classList.add('hidden');
+    }));
+    document.querySelectorAll('.shot-zone-btn').forEach(btn => btn.addEventListener('click', (e) => {
+        document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700')); e.target.classList.replace('bg-gray-700', 'bg-blue-600'); currentShotZone = e.target.dataset.zone; els.shotGoalContainer.classList.remove('hidden'); els.shotOutcomeContainer.classList.add('hidden');
+    }));
+    if (els.goalSvg) els.goalSvg.addEventListener('click', (e) => {
+        const rect = els.goalSvg.getBoundingClientRect(); const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+        const xPercent = (x / rect.width) * 100; const yPercent = (y / rect.height) * 100;
+        currentShotCoords = { x: xPercent.toFixed(1), y: yPercent.toFixed(1) }; els.shotMarker.style.left = x + 'px'; els.shotMarker.style.top = y + 'px'; els.shotMarker.classList.remove('hidden'); els.shotOutcomeContainer.classList.remove('hidden');
     });
-    document.querySelectorAll('.shot-zone-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
-            e.target.classList.replace('bg-gray-700', 'bg-blue-600');
-            currentShotZone = e.target.dataset.zone;
-            els.shotGoalContainer.classList.remove('hidden');
-            els.shotOutcomeContainer.classList.add('hidden');
-        });
-    });
-    if (els.goalSvg) {
-        els.goalSvg.addEventListener('click', (e) => {
-            const rect = els.goalSvg.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const xPercent = (x / rect.width) * 100;
-            const yPercent = (y / rect.height) * 100;
-            currentShotCoords = { x: xPercent.toFixed(1), y: yPercent.toFixed(1) };
-            els.shotMarker.style.left = x + 'px';
-            els.shotMarker.style.top = y + 'px';
-            els.shotMarker.classList.remove('hidden');
-            els.shotOutcomeContainer.classList.remove('hidden');
-        });
-    }
-
-    document.querySelectorAll('.shot-outcome-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => handleShotOutcome(e.target.dataset.outcome));
-    });
-    document.querySelectorAll('.sanction-confirm-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => handleSanctionOutcome(e.target.dataset.sanction));
-    });
-    document.querySelectorAll('.positive-confirm-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => handleGenericAction(e.target.dataset.action, 'positive'));
-    });
-    document.querySelectorAll('.negative-confirm-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => handleGenericAction(e.target.dataset.action, 'negative'));
-    });
-
-    const closeIds = ['closeShotModal', 'closeSanctionsModal', 'closePositiveModal', 'closeNegativeModal'];
-    closeIds.forEach(id => {
-        const el = document.getElementById(id);
-        if(el) el.onclick = () => {
-            els.shotModal.classList.add('hidden');
-            els.sanctionsModal.classList.add('hidden');
-            els.positiveModal.classList.add('hidden');
-            els.negativeModal.classList.add('hidden');
-        };
-    });
+    document.querySelectorAll('.shot-outcome-btn').forEach(btn => btn.addEventListener('click', (e) => handleShotOutcome(e.target.dataset.outcome)));
+    document.querySelectorAll('.sanction-confirm-btn').forEach(btn => btn.addEventListener('click', (e) => handleSanctionOutcome(e.target.dataset.sanction)));
+    document.querySelectorAll('.positive-confirm-btn').forEach(btn => btn.addEventListener('click', (e) => handleGenericAction(e.target.dataset.action, 'positive')));
+    document.querySelectorAll('.negative-confirm-btn').forEach(btn => btn.addEventListener('click', (e) => handleGenericAction(e.target.dataset.action, 'negative')));
+    ['closeShotModal', 'closeSanctionsModal', 'closePositiveModal', 'closeNegativeModal'].forEach(id => { const el = document.getElementById(id); if(el) el.onclick = () => { els.shotModal.classList.add('hidden'); els.sanctionsModal.classList.add('hidden'); els.positiveModal.classList.add('hidden'); els.negativeModal.classList.add('hidden'); }; });
 }
-
-
-// --- Lógica de Sanções Atualizada ---
 
 function handleSanctionOutcome(type) {
     store.update(s => {
-        // Inicializar stats oficiais se não existir
         if(!s.gameData.A.officialsStats) s.gameData.A.officialsStats = { yellow: 0, twoMin: 0, red: 0 };
-        
-        // 1. Sanção para ADVERSÁRIO
         if (currentPersonForAction === 'OPPONENT') {
-            if (type === '2min') {
-                s.gameData.B.isSuspended = true;
-                s.gameData.B.suspensionTimer = 120;
-            }
+            if (type === '2min') { s.gameData.B.isSuspended = true; s.gameData.B.suspensionTimer = 120; }
             logGameEvent(s, 'B', 'sanction', `Adversário: ${type}`);
-        } 
-        
-        // 2. Sanção para OFICIAL
-        else if (typeof currentPersonForAction === 'string' && currentPersonForAction.startsWith('OFF_')) {
+        } else if (typeof currentPersonForAction === 'string' && currentPersonForAction.startsWith('OFF_')) {
             const officialName = currentPersonForAction.replace('OFF_', '');
-            
-            // Verificar Regras Progressivas para a Equipa Técnica
-            if (type === 'yellow') {
-                if (!Rules.canOfficialsReceive('yellow', s.gameData.A.officialsStats)) {
-                    alert("A equipa técnica já atingiu o limite de cartões amarelos (1).");
-                    return; // Bloqueia
-                }
-                s.gameData.A.officialsStats.yellow++;
-            }
-            else if (type === '2min') {
-                if (!Rules.canOfficialsReceive('2min', s.gameData.A.officialsStats)) {
-                    alert("A equipa técnica já atingiu o limite de exclusões (1).");
-                    return; // Bloqueia
-                }
-                s.gameData.A.officialsStats.twoMin++;
-                triggerTeamReduction(s, `Oficial ${officialName}: 2 Minutos`);
-            }
-            else if (type === 'red') {
-                if (!Rules.canOfficialsReceive('red', s.gameData.A.officialsStats)) {
-                    alert("A equipa técnica já atingiu o limite de cartões vermelhos (1).");
-                    return; // Bloqueia
-                }
-                s.gameData.A.officialsStats.red++;
-                triggerTeamReduction(s, `Oficial ${officialName}: Cartão Vermelho`);
-            }
-            
+            if (type === 'yellow') { if (!Rules.canOfficialsReceive('yellow', s.gameData.A.officialsStats)) { alert("A equipa técnica já atingiu o limite de cartões amarelos (1)."); return; } s.gameData.A.officialsStats.yellow++; }
+            else if (type === '2min') { if (!Rules.canOfficialsReceive('2min', s.gameData.A.officialsStats)) { alert("A equipa técnica já atingiu o limite de exclusões (1)."); return; } s.gameData.A.officialsStats.twoMin++; triggerTeamReduction(s, `Oficial ${officialName}: 2 Minutos`); }
+            else if (type === 'red') { if (!Rules.canOfficialsReceive('red', s.gameData.A.officialsStats)) { alert("A equipa técnica já atingiu o limite de cartões vermelhos (1)."); return; } s.gameData.A.officialsStats.red++; triggerTeamReduction(s, `Oficial ${officialName}: Cartão Vermelho`); }
             logGameEvent(s, 'A', 'sanction', `Oficial ${officialName}: ${type}`);
-        } 
-        
-        // 3. Sanção para JOGADOR
-        else {
-            const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction);
-            if(!p) return;
-
-            // Amarelo
-            if (type === 'yellow') {
-                if (!Rules.canTeamReceiveYellow(s.gameData.A)) {
-                    alert("Atenção: A equipa já tem 3 cartões amarelos! (Regra Oficial).\n                    // Nota: O árbitro pode dar na mesma, por isso não bloqueamos totalmente, apenas avisamos
-                }
-                p.sanctions.yellow++;
-                s.gameData.A.teamYellowCards++;
-            }
-            
-            // Vermelho
-            if (type === 'red') { 
-                p.sanctions.red++; 
-                p.onCourt = false;
-                p.disqualified = true; // Bloqueio Permanente
-                
-                // Vermelho direto implica redução de equipa por 2 min
-                p.isSuspended = true; 
-                p.suspensionTimer = 120;
-            }
-            
-            // Dois Minutos
-            if (type === '2min') {
-                p.sanctions.twoMin++;
-                
-                // Regra do 3.º "2 Minutos" = Expulsão
-                if (p.sanctions.twoMin >= 3) {
-                    alert(`O jogador #${p.Numero} atingiu 3 exclusões e foi desqualificado (Vermelho)!`);
-                    p.sanctions.red++; 
-                    p.disqualified = true; // Bloqueio Permanente
-                }
-                
-                p.onCourt = false;
-                p.isSuspended = true;
-                p.suspensionTimer = 120;
-            }
-            
+        } else {
+            const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction); if(!p) return;
+            if (type === 'yellow') { if (!Rules.canTeamReceiveYellow(s.gameData.A)) alert("Atenção: A equipa já tem 3 cartões amarelos! (Regra Oficial).\nO árbitro pode dar na mesma, por isso não bloqueamos totalmente, apenas avisamos"); p.sanctions.yellow++; s.gameData.A.teamYellowCards++; }
+            if (type === 'red') { p.sanctions.red++; p.onCourt = false; p.disqualified = true; p.isSuspended = true; p.suspensionTimer = 120; }
+            if (type === '2min') { p.sanctions.twoMin++; if (p.sanctions.twoMin >= 3) { alert(`O jogador #${p.Numero} atingiu 3 exclusões e foi desqualificado (Vermelho)!`); p.sanctions.red++; p.disqualified = true; } p.onCourt = false; p.isSuspended = true; p.suspensionTimer = 120; }
             logGameEvent(s, 'A', 'sanction', `${p.Nome}: ${type}`);
         }
     });
-    els.sanctionsModal.classList.add('hidden');
-    refreshUI();
+    els.sanctionsModal.classList.add('hidden'); refreshUI();
 }
 
-// Função Auxiliar para Redução de Equipa (quando Oficial leva 2min/Vermelho)
 function triggerTeamReduction(state, reason) {
     alert(`SANÇÃO AO BANCO (${reason}):\n\nA equipa deve jogar com menos um jogador durante 2 minutos.\nPor favor, retire manualmente um jogador de campo.`);
-    state.gameData.A.isTeamSuspended = true;
-    state.gameData.A.teamSuspensionTimer = 120;
+    state.gameData.A.isTeamSuspended = true; state.gameData.A.teamSuspensionTimer = 120;
 }
-
-// --- Funções UI (Atualizadas para mostrar Bloqueios) ---
 
 window.openModal = (type, num) => {
     currentPersonForAction = num;
-    
-    // Configurar Modal
     if (typeof num === 'string' && num.startsWith('OFF_')) {
         document.getElementById('shotPlayerName').textContent = num.replace('OFF_', 'Oficial: ');
-        
-        // Bloquear botões no modal se o limite foi atingido
         const offStats = store.state.gameData.A.officialsStats || { yellow: 0, twoMin: 0, red: 0 };
-        const yellowBtn = document.querySelector('[data-sanction="yellow"]');
-        const twoMinBtn = document.querySelector('[data-sanction="2min"]');
-        const redBtn = document.querySelector('[data-sanction="red"]');
-        
-        if(yellowBtn) yellowBtn.disabled = !Rules.canOfficialsReceive('yellow', offStats);
-        if(twoMinBtn) twoMinBtn.disabled = !Rules.canOfficialsReceive('2min', offStats);
-        if(redBtn) redBtn.disabled = !Rules.canOfficialsReceive('red', offStats);
-        
-        // Estilo visual para desativados
-        [yellowBtn, twoMinBtn, redBtn].forEach(btn => {
-            if(btn && btn.disabled) btn.classList.add('opacity-50', 'cursor-not-allowed');
-            else if(btn) btn.classList.remove('opacity-50', 'cursor-not-allowed');
-        });
-
-        els.sanctionsModal.classList.remove('hidden');
-        return;
+        const yellowBtn = document.querySelector('[data-sanction="yellow"]'); const twoMinBtn = document.querySelector('[data-sanction="2min"]'); const redBtn = document.querySelector('[data-sanction="red"]');
+        if(yellowBtn) yellowBtn.disabled = !Rules.canOfficialsReceive('yellow', offStats); if(twoMinBtn) twoMinBtn.disabled = !Rules.canOfficialsReceive('2min', offStats); if(redBtn) redBtn.disabled = !Rules.canOfficialsReceive('red', offStats);
+        [yellowBtn, twoMinBtn, redBtn].forEach(btn => { if(btn && btn.disabled) btn.classList.add('opacity-50', 'cursor-not-allowed'); else if(btn) btn.classList.remove('opacity-50', 'cursor-not-allowed'); });
+        els.sanctionsModal.classList.remove('hidden'); return;
     }
-    
-    // ... resto da função openModal para jogadores e adversário (igual ao anterior) ...
-    if (num === 'OPPONENT') {
-        document.getElementById('shotPlayerName').textContent = "Equipa Adversária";
-    } else {
+    if (num === 'OPPONENT') document.getElementById('shotPlayerName').textContent = "Equipa Adversária";
+    else {
         const p = store.state.gameData.A.players.find(pl => pl.Numero == num);
-        if (p && p.disqualified) {
-            alert("Jogador desclassificado. Ações bloqueadas.");
-            return;
-        }
-        const name = p ? p.Nome : '';
-        document.getElementById('shotPlayerName').textContent = name;
-        
-        // Verificar limite de amarelos para jogadores (Aviso Visual)
-        const yellowBtn = document.querySelector('[data-sanction="yellow"]');
-        if(yellowBtn) {
-            if (!Rules.canTeamReceiveYellow(store.state.gameData.A)) {
-                yellowBtn.classList.add('opacity-50'); // Apenas visual, o click valida novamente
-            } else {
-                yellowBtn.classList.remove('opacity-50');
-            }
-        }
+        if (p && p.disqualified) { alert("Jogador desclassificado. Ações bloqueadas."); return; }
+        document.getElementById('shotPlayerName').textContent = p ? p.Nome : '';
+        const yellowBtn = document.querySelector('[data-sanction="yellow"]'); if(yellowBtn) { if (!Rules.canTeamReceiveYellow(store.state.gameData.A)) yellowBtn.classList.add('opacity-50'); else yellowBtn.classList.remove('opacity-50'); }
     }
-
-    // Reset visual
-    document.querySelectorAll('.shot-type-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
-    document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
-    els.shotZoneContainer.classList.add('hidden');
-    els.shotOutcomeContainer.classList.add('hidden');
-    els.shotGoalContainer.classList.add('hidden'); 
-    els.shotMarker.classList.add('hidden'); 
-    
-    currentShotType = null;
-    currentShotZone = null;
-    currentShotCoords = null;
-
-    if(type === 'shot') els.shotModal.classList.remove('hidden');
-    else if(type === 'sanction') els.sanctionsModal.classList.remove('hidden');
-    else if(type === 'positive') els.positiveModal.classList.remove('hidden');
-    else if(type === 'negative') els.negativeModal.classList.remove('hidden');
+    document.querySelectorAll('.shot-type-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700')); document.querySelectorAll('.shot-zone-btn').forEach(b => b.classList.replace('bg-blue-600', 'bg-gray-700'));
+    els.shotZoneContainer.classList.add('hidden'); els.shotOutcomeContainer.classList.add('hidden'); els.shotGoalContainer.classList.add('hidden'); els.shotMarker.classList.add('hidden');
+    currentShotType = null; currentShotZone = null; currentShotCoords = null;
+    if(type === 'shot') els.shotModal.classList.remove('hidden'); else if(type === 'sanction') els.sanctionsModal.classList.remove('hidden'); else if(type === 'positive') els.positiveModal.classList.remove('hidden'); else if(type === 'negative') els.negativeModal.classList.remove('hidden');
 };
 
 function updateSuspensionsDisplay() {
+    if(!els.suspensionContainer) return;
     els.suspensionContainer.innerHTML = '';
-    
-    // Jogadores Suspensos
-    store.state.gameData.A.players.forEach(p => {
-        if (p.isSuspended && p.suspensionTimer > 0) {
-            const div = document.createElement('div');
-            div.className = 'bg-red-900 px-2 py-1 rounded text-white font-bold animate-pulse';
-            div.textContent = `#${p.Numero} - ${formatTime(p.suspensionTimer)}`;
-            els.suspensionContainer.appendChild(div);
-        }
-    });
-
-    // Suspensão da Equipa Técnica (Banco)
-    if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) {
-        const div = document.createElement('div');
-        div.className = 'bg-yellow-700 px-2 py-1 rounded text-white font-bold animate-pulse';
-        div.textContent = `BANCO - ${formatTime(store.state.gameData.A.teamSuspensionTimer)}`;
-        els.suspensionContainer.appendChild(div);
-    }
-
-    // Adversário
-    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) {
-        const div = document.createElement('div');
-        div.className = 'bg-orange-700 px-2 py-1 rounded text-white font-bold animate-pulse';
-        div.textContent = `ADV - ${formatTime(store.state.gameData.B.suspensionTimer)}`;
-        els.suspensionContainer.appendChild(div);
-    }
+    store.state.gameData.A.players.forEach(p => { if (p.isSuspended && p.suspensionTimer > 0) { const div = document.createElement('div'); div.className = 'bg-red-900 px-2 py-1 rounded text-white font-bold animate-pulse'; div.textContent = `#${p.Numero} - ${formatTime(p.suspensionTimer)}`; els.suspensionContainer.appendChild(div); } });
+    if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) { const div = document.createElement('div'); div.className = 'bg-yellow-700 px-2 py-1 rounded text-white font-bold animate-pulse'; div.textContent = `BANCO - ${formatTime(store.state.gameData.A.teamSuspensionTimer)}`; els.suspensionContainer.appendChild(div); }
+    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) { const div = document.createElement('div'); div.className = 'bg-orange-700 px-2 py-1 rounded text-white font-bold animate-pulse'; div.textContent = `ADV - ${formatTime(store.state.gameData.B.suspensionTimer)}`; els.suspensionContainer.appendChild(div); }
 }
 
 function checkTimeEvents(totalSeconds) {
     if (!store.state.isRunning) return;
-    const halfDurationSeconds = store.state.halfDuration * 60; 
-    
-    // ... lógica de fim de parte/jogo igual ...
-    if (store.state.currentGamePart === 1 && totalSeconds >= halfDurationSeconds) {
-        timer.pause(totalSeconds);
-        store.update(s => { s.isRunning = false; s.currentGamePart = 2; });
-        alert("Fim da 1ª Parte!");
-        if(els.editTimerBtn) els.editTimerBtn.disabled = false; 
-        return; 
-    }
-    if (store.state.currentGamePart === 2 && totalSeconds >= halfDurationSeconds * 2) {
-        timer.pause(totalSeconds);
-        store.update(s => { s.isRunning = false; });
-        alert("Fim do Jogo!");
-        if(els.editTimerBtn) els.editTimerBtn.disabled = false; 
-        return;
-    }
-
+    const halfDurationSeconds = store.state.halfDuration * 60;
+    if (store.state.currentGamePart === 1 && totalSeconds >= halfDurationSeconds) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; s.currentGamePart = 2; }); alert("Fim da 1ª Parte!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
+    if (store.state.currentGamePart === 2 && totalSeconds >= halfDurationSeconds * 2) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; }); alert("Fim do Jogo!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
     let needsUpdate = false;
-    
-    // Atualizar tempo de jogadores em campo e suspensões
-    store.state.gameData.A.players.forEach(p => {
-        if (p.isSuspended && p.suspensionTimer > 0) {
-            p.suspensionTimer--;
-            if (p.suspensionTimer <= 0) p.isSuspended = false;
-            needsUpdate = true;
-        }
-        if (p.onCourt) {
-            p.timeOnCourt++;
-            const timeEl = document.getElementById(`time-p-${p.Numero}`);
-            if(timeEl) timeEl.textContent = formatTime(p.timeOnCourt);
-        }
-    });
-
-    // Atualizar suspensão da equipa técnica
-    if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) {
-        store.state.gameData.A.teamSuspensionTimer--;
-        if (store.state.gameData.A.teamSuspensionTimer <= 0) store.state.gameData.A.isTeamSuspended = false;
-        needsUpdate = true;
-    }
-
-    // Atualizar suspensão adversário
-    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) {
-        store.state.gameData.B.suspensionTimer--;
-        if(store.state.gameData.B.suspensionTimer <= 0) store.state.gameData.B.isSuspended = false;
-        needsUpdate = true;
-    }
-
+    store.state.gameData.A.players.forEach(p => { if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer--; if (p.suspensionTimer <= 0) p.isSuspended = false; needsUpdate = true; } if (p.onCourt) { p.timeOnCourt++; const timeEl = document.getElementById(`time-p-${p.Numero}`); if(timeEl) timeEl.textContent = formatTime(p.timeOnCourt); } });
+    if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) { store.state.gameData.A.teamSuspensionTimer--; if (store.state.gameData.A.teamSuspensionTimer <= 0) store.state.gameData.A.isTeamSuspended = false; needsUpdate = true; }
+    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) { store.state.gameData.B.suspensionTimer--; if (store.state.gameData.B.suspensionTimer <= 0) store.state.gameData.B.isSuspended = false; needsUpdate = true; }
     if(needsUpdate) updateSuspensionsDisplay();
 }
 
 window.togglePlayer = (num) => {
-    const duration = store.state.halfDuration || 30; 
-    const baseLimit = (duration === 25) ? 6 : 7;
-    
-    // Contar suspensões ativas (Jogadores + Banco)
-    const playersSuspended = store.state.gameData.A.players.filter(p => p.isSuspended).length;
-    const benchSuspended = store.state.gameData.A.isTeamSuspended ? 1 : 0;
-    
-    const currentLimit = baseLimit - playersSuspended - benchSuspended;
-
+    const duration = store.state.halfDuration || 30; const baseLimit = (duration === 25) ? 6 : 7;
+    const playersSuspended = store.state.gameData.A.players.filter(p => p.isSuspended).length; const benchSuspended = store.state.gameData.A.isTeamSuspended ? 1 : 0; const currentLimit = baseLimit - playersSuspended - benchSuspended;
     const player = store.state.gameData.A.players.find(pl => pl.Numero == num);
-    
     if (player) {
-        if (player.disqualified) {
-            alert(`O jogador #${player.Numero} foi desclassificado e não pode voltar ao jogo.`);
-            return;
-        }
-        if (player.isSuspended) {
-            alert(`O jogador #${player.Numero} está a cumprir castigo (${formatTime(player.suspensionTimer)}) e não pode entrar.`);
-            return;
-        }
-        if (!player.onCourt) {
-            const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
-            if (playersOnCourt >= currentLimit) {
-                alert(`⚠️ Limite atingido!\n\nCapacidade atual: ${currentLimit} jogadores.\n(Base ${baseLimit} - ${playersSuspended} suspensões - ${benchSuspended} banco).`);
-                return;
-            }
-        }
+        if (player.disqualified) { alert(`O jogador #${player.Numero} foi desclassificado e não pode voltar ao jogo.`); return; }
+        if (player.isSuspended) { alert(`O jogador #${player.Numero} está a cumprir castigo (${formatTime(player.suspensionTimer)}) e não pode entrar.`); return; }
+        if (!player.onCourt) { const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length; if (playersOnCourt >= currentLimit) { alert(`⚠️ Limite atingido!\n\nCapacidade atual: ${currentLimit} jogadores.\n(Base ${baseLimit} - ${playersSuspended} suspensões - ${benchSuspended} banco).`); return; } }
     }
-    store.update(s => {
-        const p = s.gameData.A.players.find(pl => pl.Numero == num);
-        if(p && !p.isSuspended && !p.disqualified) p.onCourt = !p.onCourt;
-    });
-    refreshUI();
+    store.update(s => { const p = s.gameData.A.players.find(pl => pl.Numero == num); if(p && !p.isSuspended && !p.disqualified) p.onCourt = !p.onCourt; }); refreshUI();
 };
 
-// ... Resto das funções auxiliares (HandleFileSelect, ProcessWorkbook, RenderRoster, etc) ...
-// CERTIFICA-TE DE COPIAR AS FUNÇÕES DE LEITURA DE FICHEIRO DA RESPOSTA ANTERIOR
-
 function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if(!file) return;
-    
-    if(els.fileNameDisplay) {
-        els.fileNameDisplay.textContent = "A carregar: " + file.name;
-        els.fileNameDisplay.classList.add("text-yellow-400");
-    }
-
-    readExcelFile(file)
-        .then(rosterData => {
-            tempRoster = rosterData;
-            renderRosterEdit();
-            els.rosterModal.classList.remove('hidden');
-            
-            if(els.fileNameDisplay) {
-                els.fileNameDisplay.textContent = file.name;
-                els.fileNameDisplay.classList.remove("text-yellow-400");
-                els.fileNameDisplay.classList.add("text-green-400");
-            }
-        })
-        .catch(err => {
-            console.error("Erro ao ler ficheiro:", err);
-            alert(err.message);
-            if(els.fileNameDisplay) {
-                els.fileNameDisplay.textContent = "Erro no ficheiro";
-                els.fileNameDisplay.classList.add("text-red-500");
-            }
-        })
-        .finally(() => {
-            e.target.value = ''; 
-        });
+    const file = e.target.files[0]; if(!file) return;
+    if(els.fileNameDisplay) { els.fileNameDisplay.textContent = "A carregar: " + file.name; els.fileNameDisplay.classList.add("text-yellow-400"); }
+    readExcelFile(file).then(rosterData => { tempRoster = rosterData; renderRosterEdit(); els.rosterModal.classList.remove('hidden'); if(els.fileNameDisplay) { els.fileNameDisplay.textContent = file.name; els.fileNameDisplay.classList.remove("text-yellow-400"); els.fileNameDisplay.classList.add("text-green-400"); } }).catch(err => { console.error("Erro ao ler ficheiro:", err); alert(err.message); if(els.fileNameDisplay) { els.fileNameDisplay.textContent = "Erro no ficheiro"; els.fileNameDisplay.classList.add("text-red-500"); } }).finally(() => { e.target.value = ''; });
 }
 
 function renderRosterEdit() {
-    if(!els.rosterPlayersBody || !els.rosterOfficialsBody) return;
-    els.rosterPlayersBody.innerHTML = '';
-    els.rosterOfficialsBody.innerHTML = '';
-    tempRoster.players.forEach((p, index) => {
-        els.rosterPlayersBody.innerHTML += `
-            <tr>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Numero}" onchange="updateTempRoster('player', ${index}, 'Numero', this.value)"></td>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${p.Nome}" onchange="updateTempRoster('player', ${index}, 'Nome', this.value)"></td>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Posicao}" onchange="updateTempRoster('player', ${index}, 'Posicao', this.value)"></td>
-                <td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('player', ${index})">&times;</button></td>
-            </tr>`;
-    });
-    tempRoster.officials.forEach((o, index) => {
-        els.rosterOfficialsBody.innerHTML += `
-            <tr>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Numero}" onchange="updateTempRoster('official', ${index}, 'Numero', this.value)"></td>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${o.Nome}" onchange="updateTempRoster('official', ${index}, 'Nome', this.value)"></td>
-                <td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Posicao}" onchange="updateTempRoster('official', ${index}, 'Posicao', this.value)"></td>
-                <td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('official', ${index})">&times;</button></td>
-            </tr>`;
-    });
+    if(!els.rosterPlayersBody || !els.rosterOfficialsBody) return; els.rosterPlayersBody.innerHTML = ''; els.rosterOfficialsBody.innerHTML = '';
+    tempRoster.players.forEach((p, index) => { els.rosterPlayersBody.innerHTML += `<tr><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Numero}" onchange="updateTempRoster('player', ${index}, 'Numero', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${p.Nome}" onchange="updateTempRoster('player', ${index}, 'Nome', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Posicao}" onchange="updateTempRoster('player', ${index}, 'Posicao', this.value)"></td><td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('player', ${index})">&times;</button></td></tr>`; });
+    tempRoster.officials.forEach((o, index) => { els.rosterOfficialsBody.innerHTML += `<tr><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Numero}" onchange="updateTempRoster('official', ${index}, 'Numero', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${o.Nome}" onchange="updateTempRoster('official', ${index}, 'Nome', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Posicao}" onchange="updateTempRoster('official', ${index}, 'Posicao', this.value)"></td><td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('official', ${index})">&times;</button></td></tr>`; });
 }
 
-// Funções Globais para o Modal (Window Scope)
-window.addRosterRow = (type) => {
-    if (type === 'player') tempRoster.players.push({ Numero: '', Nome: '', Posicao: '' });
-    else tempRoster.officials.push({ Numero: '', Nome: '', Posicao: '' });
-    renderRosterEdit();
-};
-window.removeRosterRow = (type, index) => {
-    if (type === 'player') tempRoster.players.splice(index, 1);
-    else tempRoster.officials.splice(index, 1);
-    renderRosterEdit();
-};
-window.updateTempRoster = (type, index, field, value) => {
-    if (type === 'player') tempRoster.players[index][field] = value;
-    else tempRoster.officials[index][field] = value;
-};
+window.addRosterRow = (type) => { if (type === 'player') tempRoster.players.push({ Numero: '', Nome: '', Posicao: '' }); else tempRoster.officials.push({ Numero: '', Nome: '', Posicao: '' }); renderRosterEdit(); };
+window.removeRosterRow = (type, index) => { if (type === 'player') tempRoster.players.splice(index, 1); else tempRoster.officials.splice(index, 1); renderRosterEdit(); };
+window.updateTempRoster = (type, index, field, value) => { if (type === 'player') tempRoster.players[index][field] = value; else tempRoster.officials[index][field] = value; };
 
 function saveRosterFromModal() {
-    const finalPlayers = tempRoster.players.filter(p => p.Numero && p.Nome).map(p => ({
-        ...p,
-        goals: 0, performanceScore: 0, onCourt: false, isSuspended: false, suspensionTimer: 0, timeOnCourt: 0,
-        sanctions: { yellow: 0, twoMin: 0, red: 0 },
-        positiveActions: [], negativeActions: [], disqualified: false
-    }));
-    const finalOfficials = tempRoster.officials.filter(o => o.Nome).map(o => ({
-        ...o,
-        sanctions: { yellow: 0, twoMin: 0, red: 0 }
-    }));
-    store.loadPlayers(finalPlayers, finalOfficials);
+    const finalPlayers = tempRoster.players.filter(p => p.Numero && p.Nome).map(p => ({ ...p, goals: 0, performanceScore: 0, onCourt: false, isSuspended: false, suspensionTimer: 0, timeOnCourt: 0, sanctions: { yellow: 0, twoMin: 0, red: 0 }, positiveActions: [], negativeActions: [], disqualified: false }));
+    const finalOfficials = tempRoster.officials.filter(o => o.Nome).map(o => ({ ...o, sanctions: { yellow: 0, twoMin: 0, red: 0 } })); store.loadPlayers(finalPlayers, finalOfficials);
 }
-
-function checkStart() {
-    const ready = store.state.gameData.A.fileLoaded && els.welcomeTeamBName.value !== "";
-    els.startGameBtn.disabled = !ready;
-    if(ready) els.startGameBtn.classList.remove('opacity-50');
-}
-
-function initUI() {
-    els.welcomeModal.classList.add('hidden');
-    els.mainApp.classList.remove('hidden');
-    els.teamAName.value = store.state.teamAName;
-    els.teamBName.value = store.state.teamBName;
-    timer.elapsedPaused = store.state.totalSeconds;
-    refreshUI();
-}
+function checkStart() { const ready = store.state.gameData.A.fileLoaded && els.welcomeTeamBName.value !== ""; els.startGameBtn.disabled = !ready; if(ready) els.startGameBtn.classList.remove('opacity-50'); }
+function initUI() { els.welcomeModal.classList.add('hidden'); els.mainApp.classList.remove('hidden'); els.teamAName.value = store.state.teamAName; els.teamBName.value = store.state.teamBName; timer.elapsedPaused = store.state.totalSeconds; refreshUI(); }
 
 function renderOfficials() {
-    if (!els.officialsListA) return;
-    els.officialsListA.innerHTML = '';
-    store.state.gameData.A.officials.forEach(off => {
-        const div = document.createElement('div');
-        div.className = 'flex justify-between items-center p-2 mb-1 rounded-lg bg-gray-800 text-sm';
-        div.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span class="font-bold text-gray-400 w-6">${off.Numero || '-'}</span>
-                <span class="font-medium">${off.Nome}</span>
-            </div>
-            <div class="flex gap-1">
-                <button class="bg-yellow-600 px-2 py-1 rounded" onclick="window.openModal('sanction', 'OFF_${off.Nome}')">⚠️</button>
-            </div>
-        `;
-        els.officialsListA.appendChild(div);
-    });
+    if (!els.officialsListA) return; els.officialsListA.innerHTML = '';
+    store.state.gameData.A.officials.forEach(off => { const div = document.createElement('div'); div.className = 'flex justify-between items-center p-2 mb-1 rounded-lg bg-gray-800 text-sm'; div.innerHTML = `<div class="flex items-center gap-2"><span class="font-bold text-gray-400 w-6">${off.Numero || '-'}</span><span class="font-medium">${off.Nome}</span></div><div class="flex gap-1"><button class="bg-yellow-600 px-2 py-1 rounded" onclick="window.openModal('sanction', 'OFF_${off.Nome}')">⚠️</button></div>`; els.officialsListA.appendChild(div); });
 }
 
 function renderPlayers() {
-    if(!els.playerListA || !els.goalkeeperListA) return;
-    els.playerListA.innerHTML = '';
-    els.goalkeeperListA.innerHTML = '';
+    if(!els.playerListA || !els.goalkeeperListA) return; els.playerListA.innerHTML = ''; els.goalkeeperListA.innerHTML = '';
     store.state.gameData.A.players.forEach(p => {
-        const div = document.createElement('div');
-        const isSuspended = p.isSuspended;
-        const isDisqualified = p.disqualified;
-        let statusClass = 'bg-gray-700';
-        if (p.onCourt) statusClass = 'bg-green-900 border-l-4 border-green-500';
-        if (isSuspended) statusClass = 'bg-red-900/50 opacity-75';
-        if (isDisqualified) statusClass = 'bg-red-950 opacity-50 grayscale';
-        div.className = `flex justify-between items-center p-2 mb-1 rounded-lg text-sm ${statusClass}`;
-        const disabledAttr = isDisqualified ? 'disabled' : '';
-        const opacityClass = isDisqualified ? 'opacity-30 cursor-not-allowed' : '';
-        div.innerHTML = `
-            <div class="flex items-center gap-2 w-1/3">
-                <span class="font-bold text-gray-400 w-6">${p.Numero}</span>
-                <span class="truncate font-medium">${p.Nome}</span>
-                ${p.sanctions.yellow > 0 ? '<span class="text-yellow-400">▮</span>' : ''}
-                ${p.sanctions.twoMin > 0 ? `<span class="text-red-400 font-bold">${'✌️'.repeat(p.sanctions.twoMin)}</span>` : ''}
-                ${p.sanctions.red > 0 ? '<span class="text-red-600 text-xl">🟥</span>' : ''}
-            </div>
-            <div class="flex items-center justify-end gap-1 w-2/3">
-                <span id="time-p-${p.Numero}" class="text-xs font-mono text-gray-300 mr-1">${formatTime(p.timeOnCourt)}</span>
-                <span class="text-xs font-mono text-yellow-500 mr-2">PTS:${p.performanceScore || 0}</span>
-                <button class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('shot', '${p.Numero}')">🎯</button>
-                <button class="bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('positive', '${p.Numero}')">👍</button>
-                <button class="bg-red-800 hover:bg-red-700 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('negative', '${p.Numero}')">👎</button>
-                <button class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('sanction', '${p.Numero}')">⚠️</button>
-                ${isDisqualified 
-                    ? `<span class="text-xs px-2 py-1 bg-red-950 text-red-500 font-bold">FORA</span>` 
-                    : `<button class="text-xs px-2 py-1 rounded ${p.onCourt ? 'bg-gray-600' : 'bg-green-600'}" onclick="window.togglePlayer('${p.Numero}')">${p.onCourt ? 'Sai' : 'Entra'}</button>`
-                }
-            </div>
-        `;
-        if(p.Posicao && p.Posicao.includes('GR')) els.goalkeeperListA.appendChild(div);
-        else els.playerListA.appendChild(div);
-    });
-    renderOfficials();
+        const div = document.createElement('div'); const isSuspended = p.isSuspended; const isDisqualified = p.disqualified; let statusClass = 'bg-gray-700'; if (p.onCourt) statusClass = 'bg-green-900 border-l-4 border-green-500'; if (isSuspended) statusClass = 'bg-red-900/50 opacity-75'; if (isDisqualified) statusClass = 'bg-red-950 opacity-50 grayscale'; div.className = `flex justify-between items-center p-2 mb-1 rounded-lg text-sm ${statusClass}`;
+        const disabledAttr = isDisqualified ? 'disabled' : ''; const opacityClass = isDisqualified ? 'opacity-30 cursor-not-allowed' : '';
+        div.innerHTML = `<div class="flex items-center gap-2 w-1/3"><span class="font-bold text-gray-400 w-6">${p.Numero}</span><span class="truncate font-medium">${p.Nome}</span>${p.sanctions.yellow > 0 ? '<span class="text-yellow-400">▮</span>' : ''}${p.sanctions.twoMin > 0 ? `<span class="text-red-400 font-bold">${'✌️'.repeat(p.sanctions.twoMin)}</span>` : ''}${p.sanctions.red > 0 ? '<span class="text-red-600 text-xl">🟥</span>' : ''}</div><div class="flex items-center justify-end gap-1 w-2/3"><span id="time-p-${p.Numero}" class="text-xs font-mono text-gray-300 mr-1">${formatTime(p.timeOnCourt)}</span><span class="text-xs font-mono text-yellow-500 mr-2">PTS:${p.performanceScore || 0}</span><button class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('shot', '${p.Numero}')">🎯</button><button class="bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('positive', '${p.Numero}')">👍</button><button class="bg-red-800 hover:bg-red-700 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('negative', '${p.Numero}')">👎</button><button class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('sanction', '${p.Numero}')">⚠️</button>${isDisqualified ? `<span class="text-xs px-2 py-1 bg-red-950 text-red-500 font-bold">FORA</span>` : `<button class="text-xs px-2 py-1 rounded ${p.onCourt ? 'bg-gray-600' : 'bg-green-600'}" onclick="window.togglePlayer('${p.Numero}')">${p.onCourt ? 'Sai' : 'Entra'}</button>`}</div>`;
+        if(p.Posicao && p.Posicao.includes('GR')) els.goalkeeperListA.appendChild(div); else els.playerListA.appendChild(div);
+    }); renderOfficials();
 }
 
-function handleUndo() {
-    const oldState = store.undo();
-    if (oldState) {
-        timer.pause(oldState.totalSeconds);
-        refreshUI();
-    } else alert("Nada para desfazer.");
-}
-
-function formatTime(sec) {
-    const m = Math.floor(sec / 60).toString().padStart(2, '0');
-    const s = (sec % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-}
-
-function logGameEvent(state, team, type, details) {
-    state.gameEvents.push({ time: state.totalSeconds, team, type, details });
-}
+function handleUndo() { const oldState = store.undo(); if (oldState) { timer.pause(oldState.totalSeconds); refreshUI(); } else alert("Nada para desfazer."); }
+function formatTime(sec) { const m = Math.floor(sec / 60).toString().padStart(2, '0'); const s = (sec % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
+function logGameEvent(state, team, type, details) { state.gameEvents.push({ time: state.totalSeconds, team, type, details }); }
 
 function handleShotOutcome(outcome) {
     store.update(s => {
-        const typeKey = currentShotType || 'Default';
-        const zoneKey = currentShotZone || '0';
-        const coords = currentShotCoords || { x: 0, y: 0 }; 
-        if (currentPersonForAction === 'OPPONENT') {
-            if (outcome === 'goal') {
-                s.gameData.B.stats.goals++;
-                s.gameData.A.stats.gkGoalsAgainst++;
-                logGameEvent(s, 'B', 'shot', `Golo Adversário (${typeKey}, Z${zoneKey})`);
-            } else if (outcome === 'saved') {
-                s.gameData.B.stats.savedShots++;
-                s.gameData.A.stats.gkSaves++;
-                logGameEvent(s, 'B', 'shot', `Defesa GR (${typeKey}, Z${zoneKey})`);
-            } else if (outcome === 'miss') {
-                s.gameData.B.stats.misses++;
-                logGameEvent(s, 'B', 'shot', `Remate Fora Adv (${typeKey}, Z${zoneKey})`);
-            }
-            if (!s.gameData.B.history) s.gameData.B.history = [];
-            s.gameData.B.history.push({ type: typeKey, zone: zoneKey, coords, outcome, time: s.totalSeconds });
-        } else {
-            const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction);
-            if(!p) return;
-            if(outcome === 'goal') { p.goals++; s.gameData.A.stats.goals++; }
-            if(outcome === 'miss') s.gameData.A.stats.misses++;
-            if(outcome === 'saved') s.gameData.A.stats.savedShots++;
-            const outcomeKey = outcome === 'goal' ? 'goal' : 'fail';
-            const points = POINT_SYSTEM.field_player.shot[typeKey]?.[outcomeKey] || 0;
-            p.performanceScore = (p.performanceScore || 0) + points;
-            if (!p.history) p.history = [];
-            p.history.push({ type: typeKey, zone: zoneKey, coords, outcome, time: s.totalSeconds });
-            logGameEvent(s, 'A', 'shot', `${p.Nome}: ${outcome} (${typeKey}, Z${zoneKey})`);
-        }
-    });
-    els.shotModal.classList.add('hidden');
-    refreshUI();
+        const typeKey = currentShotType || 'Default'; const zoneKey = currentShotZone || '0'; const coords = currentShotCoords || { x: 0, y: 0 };
+        if (currentPersonForAction === 'OPPONENT') { if (outcome === 'goal') { s.gameData.B.stats.goals++; s.gameData.A.stats.gkGoalsAgainst++; logGameEvent(s, 'B', 'shot', `Golo Adversário (${typeKey}, Z${zoneKey})`); } else if (outcome === 'saved') { s.gameData.B.stats.savedShots++; s.gameData.A.stats.gkSaves++; logGameEvent(s, 'B', 'shot', `Defesa GR (${typeKey}, Z${zoneKey})`); } else if (outcome === 'miss') { s.gameData.B.stats.misses++; logGameEvent(s, 'B', 'shot', `Remate Fora Adv (${typeKey}, Z${zoneKey})`); } if (!s.gameData.B.history) s.gameData.B.history = []; s.gameData.B.history.push({ type: typeKey, zone: zoneKey, coords, outcome, time: s.totalSeconds }); }
+        else { const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction); if(!p) return; if(outcome === 'goal') { p.goals++; s.gameData.A.stats.goals++; } if(outcome === 'miss') s.gameData.A.stats.misses++; if(outcome === 'saved') s.gameData.A.stats.savedShots++; const outcomeKey = outcome === 'goal' ? 'goal' : 'fail'; const points = POINT_SYSTEM.field_player.shot[typeKey]?.[outcomeKey] || 0; p.performanceScore = (p.performanceScore || 0) + points; if (!p.history) p.history = []; p.history.push({ type: typeKey, zone: zoneKey, coords, outcome, time: s.totalSeconds }); logGameEvent(s, 'A', 'shot', `${p.Nome}: ${outcome} (${typeKey}, Z${zoneKey})`); }
+    }); els.shotModal.classList.add('hidden'); refreshUI();
 }
 
 function handleGenericAction(action, type) {
     store.update(s => {
-        if (currentPersonForAction === 'OPPONENT') {
-            if(type === 'negative') {
-                if(action === 'technical_fault') s.gameData.B.stats.technical_faults++;
-                if(action === 'turnover') s.gameData.B.stats.turnovers++;
-            }
-            logGameEvent(s, 'B', action, `Adversário: ${action}`);
-        } else {
-            const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction);
-            if(!p) return;
-            const points = POINT_SYSTEM.field_player[`${type}_actions`][action] || 0;
-            p.performanceScore = (p.performanceScore || 0) + points;
-            if(type === 'negative') {
-                p.negativeActions.push({ action, time: s.totalSeconds });
-                if(action === 'technical_fault') s.gameData.A.stats.technical_faults++;
-            } else {
-                p.positiveActions.push({ action, time: s.totalSeconds });
-            }
-            logGameEvent(s, 'A', action, `${p.Nome}: ${action}`);
-        }
-    });
-    els.positiveModal.classList.add('hidden');
-    els.negativeModal.classList.add('hidden');
-    refreshUI();
+        if (currentPersonForAction === 'OPPONENT') { if(type === 'negative') { if(action === 'technical_fault') s.gameData.B.stats.technical_faults++; if(action === 'turnover') s.gameData.B.stats.turnovers++; } logGameEvent(s, 'B', action, `Adversário: ${action}`); }
+        else { const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction); if(!p) return; const points = POINT_SYSTEM.field_player[`${type}_actions`][action] || 0; p.performanceScore = (p.performanceScore || 0) + points; if(type === 'negative') { p.negativeActions.push({ action, time: s.totalSeconds }); if(action === 'technical_fault') s.gameData.A.stats.technical_faults++; } else p.positiveActions.push({ action, time: s.totalSeconds }); logGameEvent(s, 'A', action, `${p.Nome}: ${action}`); }
+    }); els.positiveModal.classList.add('hidden'); els.negativeModal.classList.add('hidden'); refreshUI();
 }
+function registerOpponentAction(action) { store.update(s => { if (action === 'goal') { s.gameData.B.stats.goals++; s.gameData.A.stats.gkGoalsAgainst++; } if (action === 'save') { s.gameData.B.stats.gkSaves++; s.gameData.A.stats.savedShots++; } if (action === 'miss') s.gameData.B.stats.misses++; if (action === '2min') { s.gameData.B.isSuspended = true; s.gameData.B.suspensionTimer = 120; } logGameEvent(s, 'B', action, `Adversário: ${action}`); }); refreshUI(); }
 
-function registerOpponentAction(action) {
-    store.update(s => {
-        if (action === 'goal') { s.gameData.B.stats.goals++; s.gameData.A.stats.gkGoalsAgainst++; }
-        if (action === 'save') { s.gameData.B.stats.gkSaves++; s.gameData.A.stats.savedShots++; }
-        if (action === 'miss') { s.gameData.B.stats.misses++; }
-        if (action === '2min') { s.gameData.B.isSuspended = true; s.gameData.B.suspensionTimer = 120; }
-        logGameEvent(s, 'B', action, `Adversário: ${action}`);
-    });
-    refreshUI();
-}
-
-function refreshUI() {
-    updateDisplay();
-    renderPlayers();
-    updateTeamStats();
-    renderTimeline();
-    updateSuspensionsDisplay();
-    if(!els.tabStats.classList.contains('hidden')) updateStatsTab();
-    if(!els.tabHeatmap.classList.contains('hidden')) updateHeatmapTab();
-}
-
-function updateDisplay() {
-    if(els.scoreA) els.scoreA.textContent = store.state.gameData.A.stats.goals;
-    if(els.scoreB) els.scoreB.textContent = store.state.gameData.B.stats.goals;
-    if(els.timerDisplay) els.timerDisplay.textContent = formatTime(store.state.totalSeconds);
-}
-
-function updateTeamStats() {
-    const statsA = store.state.gameData.A.stats;
-    const totalShots = statsA.goals + statsA.misses + statsA.savedShots;
-    const techFaults = store.state.gameData.A.players.reduce((acc, p) => 
-        acc + (p.negativeActions ? p.negativeActions.filter(a => a.action === 'technical_fault').length : 0), 0);
-    if(els.shotsA) els.shotsA.textContent = totalShots;
-    if(els.savesA) els.savesA.textContent = statsA.gkSaves;
-    if(els.techFaultsA) els.techFaultsA.textContent = techFaults;
-    if(els.effA) els.effA.textContent = totalShots > 0 ? Math.round((statsA.goals / totalShots) * 100) + '%' : '0%';
-}
-
-function renderTimeline() {
-    const list = els.timelineList;
-    if(!list) return;
-    list.innerHTML = '';
-    store.state.gameEvents.slice().reverse().slice(0, 10).forEach(e => {
-        const div = document.createElement('div');
-        div.className = `border-l-2 pl-2 ${e.team === 'A' ? 'border-blue-500' : 'border-orange-500'}`;
-        div.innerHTML = `<span class="font-mono text-gray-500">${formatTime(e.time)}</span> ${e.details}`;
-        list.appendChild(div);
-    });
-}
-
-function updateHeatmapTab() {
-    els.heatmapPointsAttack.innerHTML = '';
-    els.heatmapPointsDefense.innerHTML = '';
-    store.state.gameData.A.players.forEach(p => {
-        if (p.history) {
-            p.history.forEach(shot => {
-                drawDot(els.heatmapPointsAttack, shot);
-            });
-        }
-    });
-    if (store.state.gameData.B.history) {
-        store.state.gameData.B.history.forEach(shot => {
-            drawDot(els.heatmapPointsDefense, shot);
-        });
-    }
-}
-
-function drawDot(container, shot) {
-    if (!shot.coords || !shot.coords.x) return;
-    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    circle.setAttribute("cx", (shot.coords.x / 100) * 300);
-    circle.setAttribute("cy", (shot.coords.y / 100) * 200);
-    circle.setAttribute("r", 5);
-    if (shot.outcome === 'goal') circle.setAttribute("fill", "#22c55e");
-    else if (shot.outcome === 'saved') circle.setAttribute("fill", "#3b82f6");
-    else circle.setAttribute("fill", "#ef4444");
-    circle.setAttribute("stroke", "white");
-    circle.setAttribute("stroke-width", "1");
-    circle.setAttribute("opacity", "0.9");
-    container.appendChild(circle);
-}
-
-function updateStatsTab() {
-    const statsA = store.state.gameData.A.stats;
-    const statsB = store.state.gameData.B.stats;
-    const teamA = store.state.teamAName;
-    const teamB = store.state.teamBName;
-    const totalShotsA = statsA.goals + statsA.misses + statsA.savedShots;
-    const totalShotsB = statsB.goals + statsB.misses + statsB.savedShots;
-    const effA = totalShotsA > 0 ? ((statsA.goals / totalShotsA) * 100).toFixed(0) : 0;
-    const effB = totalShotsB > 0 ? ((statsB.goals / totalShotsB) * 100).toFixed(0) : 0;
-    const gkEffA = (statsA.gkSaves + statsA.gkGoalsAgainst) > 0 
-        ? ((statsA.gkSaves / (statsA.gkSaves + statsA.gkGoalsAgainst)) * 100).toFixed(0) : 0;
-    const gkEffB = (statsB.gkSaves + statsB.gkGoalsAgainst) > 0 
-        ? ((statsB.gkSaves / (statsB.gkSaves + statsB.gkGoalsAgainst)) * 100).toFixed(0) : 0;
-    const rows = [
-        { label: "Golos", valA: statsA.goals, valB: statsB.goals },
-        { label: "Eficácia Remate", valA: `${effA}%`, valB: `${effB}%` },
-        { label: "Eficácia GR", valA: `${gkEffA}%`, valB: `${gkEffB}%` },
-        { label: "Faltas Técnicas", valA: store.state.gameData.A.stats.technical_faults, valB: statsB.technical_faults },
-        { label: "Perdas de Bola", valA: statsA.turnovers, valB: statsB.turnovers }
-    ];
-    let html = '';
-    rows.forEach(row => {
-        html += `
-            <div class="grid grid-cols-3 items-center text-center border-b border-gray-700 py-3">
-                <div class="text-xl font-bold text-blue-400">${row.valA}</div>
-                <div class="text-sm text-gray-400 font-medium uppercase tracking-wide">${row.label}</div>
-                <div class="text-xl font-bold text-orange-400">${row.valB}</div>
-            </div>
-        `;
-    });
-    const header = `
-        <div class="grid grid-cols-3 text-center mb-4 border-b border-gray-600 pb-2">
-            <div class="font-bold text-white truncate px-2 text-lg">${teamA}</div>
-            <div></div>
-            <div class="font-bold text-white truncate px-2 text-lg">${teamB}</div>
-        </div>
-    `;
-    els.statsComparisonContainer.innerHTML = header + html;
-}
-
-function handleReset() {
-    const confirmacao = confirm("Tem a certeza que quer iniciar um Novo Jogo?\n\nTodos os dados da sessão atual serão apagados e voltará ao menu inicial.");
-    if (confirmacao) {
-        sessionStorage.clear(); 
-        window.location.reload();
-    }
-}
-
-function showWelcomeScreen() {
-    if(els.welcomeModal) els.welcomeModal.classList.remove('hidden');
-    if(els.mainApp) els.mainApp.classList.add('hidden');
-}
+function refreshUI() { updateDisplay(); renderPlayers(); updateTeamStats(); renderTimeline(); updateSuspensionsDisplay(); if(!els.tabStats.classList.contains('hidden')) updateStatsTab(); if(!els.tabHeatmap.classList.contains('hidden')) updateHeatmapTab(); }
+function updateDisplay() { if(els.scoreA) els.scoreA.textContent = store.state.gameData.A.stats.goals; if(els.scoreB) els.scoreB.textContent = store.state.gameData.B.stats.goals; if(els.timerDisplay) els.timerDisplay.textContent = formatTime(store.state.totalSeconds); }
+function updateTeamStats() { const statsA = store.state.gameData.A.stats; const totalShots = statsA.goals + statsA.misses + statsA.savedShots; const techFaults = store.state.gameData.A.players.reduce((acc, p) => acc + (p.negativeActions ? p.negativeActions.filter(a => a.action === 'technical_fault').length : 0), 0); if(els.shotsA) els.shotsA.textContent = totalShots; if(els.savesA) els.savesA.textContent = statsA.gkSaves; if(els.techFaultsA) els.techFaultsA.textContent = techFaults; if(els.effA) els.effA.textContent = totalShots > 0 ? Math.round((statsA.goals / totalShots) * 100) + '%' : '0%'; }
+function renderTimeline() { const list = els.timelineList; if(!list) return; list.innerHTML = ''; store.state.gameEvents.slice().reverse().slice(0, 10).forEach(e => { const div = document.createElement('div'); div.className = `border-l-2 pl-2 ${e.team === 'A' ? 'border-blue-500' : 'border-orange-500'}`; div.innerHTML = `<span class="font-mono text-gray-500">${formatTime(e.time)}</span> ${e.details}`; list.appendChild(div); }); }
+function updateHeatmapTab() { els.heatmapPointsAttack.innerHTML = ''; els.heatmapPointsDefense.innerHTML = ''; store.state.gameData.A.players.forEach(p => { if (p.history) p.history.forEach(shot => drawDot(els.heatmapPointsAttack, shot)); }); if (store.state.gameData.B.history) store.state.gameData.B.history.forEach(shot => drawDot(els.heatmapPointsDefense, shot)); }
+function drawDot(container, shot) { if (!shot.coords || !shot.coords.x) return; const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute("cx", (shot.coords.x / 100) * 300); circle.setAttribute("cy", (shot.coords.y / 100) * 200); circle.setAttribute("r", 5); if (shot.outcome === 'goal') circle.setAttribute("fill", "#22c55e"); else if (shot.outcome === 'saved') circle.setAttribute("fill", "#3b82f6"); else circle.setAttribute("fill", "#ef4444"); circle.setAttribute("stroke", "white"); circle.setAttribute("stroke-width", "1"); circle.setAttribute("opacity", "0.9"); container.appendChild(circle); }
+function updateStatsTab() { const statsA = store.state.gameData.A.stats; const statsB = store.state.gameData.B.stats; const teamA = store.state.teamAName; const teamB = store.state.teamBName; const totalShotsA = statsA.goals + statsA.misses + statsA.savedShots; const totalShotsB = statsB.goals + statsB.misses + statsB.savedShots; const effA = totalShotsA > 0 ? ((statsA.goals / totalShotsA) * 100).toFixed(0) : 0; const effB = totalShotsB > 0 ? ((statsB.goals / totalShotsB) * 100).toFixed(0) : 0; const gkEffA = (statsA.gkSaves + statsA.gkGoalsAgainst) > 0 ? ((statsA.gkSaves / (statsA.gkSaves + statsA.gkGoalsAgainst)) * 100).toFixed(0) : 0; const gkEffB = (statsB.gkSaves + statsB.gkGoalsAgainst) > 0 ? ((statsB.gkSaves / (statsB.gkSaves + statsB.gkGoalsAgainst)) * 100).toFixed(0) : 0; const rows = [{ label: "Golos", valA: statsA.goals, valB: statsB.goals }, { label: "Eficácia Remate", valA: `${effA}%`, valB: `${effB}%` }, { label: "Eficácia GR", valA: `${gkEffA}%`, valB: `${gkEffB}%` }, { label: "Faltas Técnicas", valA: store.state.gameData.A.stats.technical_faults, valB: statsB.technical_faults }, { label: "Perdas de Bola", valA: statsA.turnovers, valB: statsB.turnovers }]; let html = ''; rows.forEach(row => { html += `<div class="grid grid-cols-3 items-center text-center border-b border-gray-700 py-3"><div class="text-xl font-bold text-blue-400">${row.valA}</div><div class="text-sm text-gray-400 font-medium uppercase tracking-wide">${row.label}</div><div class="text-xl font-bold text-orange-400">${row.valB}</div></div>`; }); const header = `<div class="grid grid-cols-3 text-center mb-4 border-b border-gray-600 pb-2"><div class="font-bold text-white truncate px-2 text-lg">${teamA}</div><div></div><div class="font-bold text-white truncate px-2 text-lg">${teamB}</div></div>`; els.statsComparisonContainer.innerHTML = header + html; }
+function handleReset() { const confirmacao = confirm("Tem a certeza que quer iniciar um Novo Jogo?\n\nTodos os dados da sessão atual serão apagados e voltará ao menu inicial."); if (confirmacao) { sessionStorage.clear(); window.location.reload(); } }
+function showWelcomeScreen() { if(els.welcomeModal) els.welcomeModal.classList.remove('hidden'); if(els.mainApp) els.mainApp.classList.add('hidden'); }
