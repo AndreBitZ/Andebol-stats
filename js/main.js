@@ -4,52 +4,40 @@ import { GameTimer } from './timer.js';
 import { POINT_SYSTEM } from './constants.js';
 import { exportToExcel } from './export.js';
 import { readExcelFile } from './fileLoader.js';
-import { Rules } from './rules.js'; // IMPORTAR REGRAS
+import { Rules } from './rules.js';
 
 let timer;
 let currentPersonForAction = null;
 let currentShotType = null;
 let currentShotZone = null;
-let currentShotCoords = null; 
-let els = {}; 
+let currentShotCoords = null;
+let els = {};
 let tempRoster = { players: [], officials: [] };
 
 function startApp() {
     console.log("Aplicação a iniciar...");
     initDOMElements();
-
     timer = new GameTimer((seconds) => {
         store.state.totalSeconds = seconds;
         updateDisplay();
         checkTimeEvents(seconds);
     });
-
     try {
         if (store.loadFromLocalStorage()) {
             initUI();
-            if (!store.state.isRunning && store.state.totalSeconds > 0) {
-                if(els.editTimerBtn) els.editTimerBtn.disabled = false;
-            }
-            if (timer && !store.state.isRunning) {
-                timer.elapsedPaused = store.state.totalSeconds;
-            }
+            if (!store.state.isRunning && store.state.totalSeconds > 0 && els.editTimerBtn) els.editTimerBtn.disabled = false;
+            if (timer && !store.state.isRunning) timer.elapsedPaused = store.state.totalSeconds;
             if (!store.state.gameData.B.history) store.state.gameData.B.history = [];
-        } else {
-            showWelcomeScreen();
-        }
+        } else showWelcomeScreen();
     } catch (e) {
         console.error("Erro ao carregar estado:", e);
         showWelcomeScreen();
     }
-
     setupEventListeners();
 }
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', startApp);
-} else {
-    startApp();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', startApp);
+else startApp();
 
 function initDOMElements() {
     const getEl = (id) => document.getElementById(id);
@@ -82,7 +70,7 @@ function setupEventListeners() {
 
     if(els.startGameBtn) els.startGameBtn.addEventListener('click', () => {
         const selectedDuration = document.querySelector('input[name="gameDuration"]:checked').value;
-        store.update(s => { 
+        store.update(s => {
             s.teamBName = els.welcomeTeamBName.value;
             s.halfDuration = parseInt(selectedDuration);
             s.gameData.B.history = [];
@@ -104,9 +92,8 @@ function setupEventListeners() {
         });
     });
 
-    // CONTROLO JOGO — botão único Play/Pause
+    // CONTROLO JOGO — só a primeira partida exige a formação inicial de 7.
     if(els.startBtn) els.startBtn.addEventListener('click', () => {
-        // PAUSA: não validar jogadores. Apenas parar o relógio.
         if (store.state.isRunning) {
             timer.pause(store.state.totalSeconds);
             store.update(s => s.isRunning = false);
@@ -114,20 +101,23 @@ function setupEventListeners() {
             return;
         }
 
-        // INICIAR/RETOMAR: validar jogadores antes de arrancar.
-        const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
-        const duration = store.state.halfDuration || 30;
-        const baseRequired = (duration === 25) ? 6 : 7;
-        const suspendedCount = store.state.gameData.A.players.filter(p => p.isSuspended).length;
-        const teamSuspensionActive = store.state.gameData.A.isTeamSuspended ? 1 : 0;
-        const requiredPlayers = baseRequired - suspendedCount - teamSuspensionActive;
+        const alreadyStarted = store.state.matchStarted === true || Number(store.state.totalSeconds) > 0 || store.state.gameEvents.length > 0;
 
-        if (playersOnCourt !== requiredPlayers) {
-            alert(`⚠️ Atenção: Deve ter ${requiredPlayers} jogadores em campo.\n(Base: ${baseRequired} - Suspensos: ${suspendedCount} - Banco: ${teamSuspensionActive})`);
-            return;
+        if (!alreadyStarted) {
+            const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
+            const duration = store.state.halfDuration || 30;
+            const baseRequired = (duration === 25) ? 6 : 7;
+            const suspendedCount = store.state.gameData.A.players.filter(p => p.isSuspended).length;
+            const teamSuspensionActive = store.state.gameData.A.isTeamSuspended ? 1 : 0;
+            const requiredPlayers = Math.max(1, baseRequired - suspendedCount - teamSuspensionActive);
+            if (playersOnCourt !== requiredPlayers) {
+                alert(`⚠️ Atenção: Deve ter ${requiredPlayers} jogadores em campo.\n(Base: ${baseRequired} - Suspensos: ${suspendedCount} - Banco: ${teamSuspensionActive})`);
+                return;
+            }
         }
+
         timer.start();
-        store.update(s => s.isRunning = true);
+        store.update(s => { s.isRunning = true; s.matchStarted = true; });
         if(els.editTimerBtn) els.editTimerBtn.disabled = true;
     });
 
@@ -146,24 +136,42 @@ function setupEventListeners() {
     });
 
     if(els.saveCorrectionBtn) els.saveCorrectionBtn.addEventListener('click', () => {
-        const min = parseInt(els.correctMin.value) || 0;
-        const sec = parseInt(els.correctSec.value) || 0;
+        const min = Math.max(0, parseInt(els.correctMin?.value, 10) || 0);
+        const sec = Math.max(0, Math.min(59, parseInt(els.correctSec?.value, 10) || 0));
         const newTotalSeconds = (min * 60) + sec;
-        const oldTotalSeconds = store.state.totalSeconds;
+        const oldTotalSeconds = Number(store.state.totalSeconds) || 0;
         const diff = newTotalSeconds - oldTotalSeconds;
+
         if (diff !== 0) {
             store.update(s => {
                 s.totalSeconds = newTotalSeconds;
-                s.gameData.A.players.forEach(p => {
-                    if (p.onCourt) p.timeOnCourt = Math.max(0, p.timeOnCourt + diff);
-                    if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer = Math.max(0, p.suspensionTimer - diff); if (p.suspensionTimer === 0) p.isSuspended = false; }
-                });
-                if (s.gameData.A.isTeamSuspended && s.gameData.A.teamSuspensionTimer > 0) { s.gameData.A.teamSuspensionTimer = Math.max(0, s.gameData.A.teamSuspensionTimer - diff); if (s.gameData.A.teamSuspensionTimer === 0) s.gameData.A.isTeamSuspended = false; }
-                if (s.gameData.B.isSuspended && s.gameData.B.suspensionTimer > 0) { s.gameData.B.suspensionTimer = Math.max(0, s.gameData.B.suspensionTimer - diff); if (s.gameData.B.suspensionTimer === 0) s.gameData.B.isSuspended = false; }
+                for (const side of ['A', 'B']) {
+                    const team = s.gameData?.[side];
+                    if (!team) continue;
+                    for (const p of (team.players || [])) {
+                        if (p.onCourt) p.timeOnCourt = Math.max(0, (Number(p.timeOnCourt) || 0) + diff);
+                        if (p.isSuspended) {
+                            p.suspensionTimer = Math.max(0, (Number(p.suspensionTimer) || 0) - diff);
+                            if (p.suspensionTimer === 0 && !p.disqualified) p.isSuspended = false;
+                        }
+                    }
+                    if (team.isTeamSuspended) {
+                        team.teamSuspensionTimer = Math.max(0, (Number(team.teamSuspensionTimer) || 0) - diff);
+                        if (team.teamSuspensionTimer === 0) team.isTeamSuspended = false;
+                    }
+                }
             });
-            if (timer) { timer.elapsedPaused = newTotalSeconds; timer.startTime = 0; }
+            if (timer) {
+                timer.elapsedPaused = newTotalSeconds;
+                timer.startTime = 0;
+            }
         }
-        updateDisplay(); updateSuspensionsDisplay(); renderPlayers(); els.correctionModal.classList.add('hidden');
+
+        // store.update() já atualizou os rosters modernos através de handball:state-updated.
+        // NÃO chamar renderPlayers(): essa função é a UI antiga com os quatro botões/modais.
+        updateDisplay();
+        updateSuspensionsDisplay();
+        if(els.correctionModal) els.correctionModal.classList.add('hidden');
     });
 
     if(els.closeCorrectionBtn) els.closeCorrectionBtn.addEventListener('click', () => els.correctionModal.classList.add('hidden'));
@@ -266,9 +274,9 @@ function checkTimeEvents(totalSeconds) {
     if (store.state.currentGamePart === 1 && totalSeconds >= halfDurationSeconds) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; s.currentGamePart = 2; }); alert("Fim da 1ª Parte!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
     if (store.state.currentGamePart === 2 && totalSeconds >= halfDurationSeconds * 2) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; }); alert("Fim do Jogo!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
     let needsUpdate = false;
-    store.state.gameData.A.players.forEach(p => { if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer--; if (p.suspensionTimer <= 0) p.isSuspended = false; needsUpdate = true; } if (p.onCourt) { p.timeOnCourt++; const timeEl = document.getElementById(`time-p-${p.Numero}`); if(timeEl) timeEl.textContent = formatTime(p.timeOnCourt); } });
+    store.state.gameData.A.players.forEach(p => { if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer--; if (p.suspensionTimer <= 0 && !p.disqualified) p.isSuspended = false; needsUpdate = true; } if (p.onCourt) { p.timeOnCourt++; const timeEl = document.getElementById(`time-p-${p.Numero}`); if(timeEl) timeEl.textContent = formatTime(p.timeOnCourt); } });
     if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) { store.state.gameData.A.teamSuspensionTimer--; if (store.state.gameData.A.teamSuspensionTimer <= 0) store.state.gameData.A.isTeamSuspended = false; needsUpdate = true; }
-    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) { store.state.gameData.B.suspensionTimer--; if (store.state.gameData.B.suspensionTimer <= 0) store.state.gameData.B.isSuspended = false; needsUpdate = true; }
+    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) { store.state.gameData.B.suspensionTimer--; if(store.state.gameData.B.suspensionTimer <= 0 && !store.state.gameData.B.disqualified) store.state.gameData.B.isSuspended = false; needsUpdate = true; }
     if(needsUpdate) updateSuspensionsDisplay();
 }
 
@@ -295,7 +303,6 @@ function renderRosterEdit() {
     tempRoster.players.forEach((p, index) => { els.rosterPlayersBody.innerHTML += `<tr><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Numero}" onchange="updateTempRoster('player', ${index}, 'Numero', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${p.Nome}" onchange="updateTempRoster('player', ${index}, 'Nome', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${p.Posicao}" onchange="updateTempRoster('player', ${index}, 'Posicao', this.value)"></td><td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('player', ${index})">&times;</button></td></tr>`; });
     tempRoster.officials.forEach((o, index) => { els.rosterOfficialsBody.innerHTML += `<tr><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Numero}" onchange="updateTempRoster('official', ${index}, 'Numero', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded" value="${o.Nome}" onchange="updateTempRoster('official', ${index}, 'Nome', this.value)"></td><td class="p-1"><input type="text" class="w-full bg-gray-700 p-1 rounded text-center" value="${o.Posicao}" onchange="updateTempRoster('official', ${index}, 'Posicao', this.value)"></td><td class="p-1 text-center"><button class="text-red-500 font-bold" onclick="removeRosterRow('official', ${index})">&times;</button></td></tr>`; });
 }
-
 window.addRosterRow = (type) => { if (type === 'player') tempRoster.players.push({ Numero: '', Nome: '', Posicao: '' }); else tempRoster.officials.push({ Numero: '', Nome: '', Posicao: '' }); renderRosterEdit(); };
 window.removeRosterRow = (type, index) => { if (type === 'player') tempRoster.players.splice(index, 1); else tempRoster.officials.splice(index, 1); renderRosterEdit(); };
 window.updateTempRoster = (type, index, field, value) => { if (type === 'player') tempRoster.players[index][field] = value; else tempRoster.officials[index][field] = value; };
