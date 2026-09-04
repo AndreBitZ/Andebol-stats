@@ -176,7 +176,17 @@ function setupEventListeners() {
     });
 
     // Controlo Jogo
-    if(els.startBtn) els.startBtn.addEventListener('click', () => { 
+    if(els.startBtn) els.startBtn.addEventListener('click', () => {
+        // O botão é único: quando o jogo está a decorrer, esta ação é PAUSA.
+        // A pausa nunca deve validar o número de jogadores em campo.
+        if (store.state.isRunning) {
+            timer.pause(store.state.totalSeconds);
+            store.update(s => s.isRunning = false);
+            if(els.editTimerBtn) els.editTimerBtn.disabled = false;
+            return;
+        }
+
+        // O jogo está parado: só aqui validamos os jogadores antes de iniciar/retomar.
         const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
         const duration = store.state.halfDuration || 30; 
         const baseRequired = (duration === 25) ? 6 : 7;
@@ -397,8 +407,7 @@ function handleSanctionOutcome(type) {
             // Amarelo
             if (type === 'yellow') {
                 if (!Rules.canTeamReceiveYellow(s.gameData.A)) {
-                    alert("Atenção: A equipa já tem 3 cartões amarelos! (Regra Oficial).");
-                    // Nota: O árbitro pode dar na mesma, por isso não bloqueamos totalmente, apenas avisamos
+                    alert("Atenção: A equipa já tem 3 cartões amarelos! (Regra Oficial).\n                    // Nota: O árbitro pode dar na mesma, por isso não bloqueamos totalmente, apenas avisamos
                 }
                 p.sanctions.yellow++;
                 s.gameData.A.teamYellowCards++;
