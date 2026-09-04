@@ -7,7 +7,7 @@ function reconcileSuspensions(state) {
     for (const side of ['A', 'B']) {
         const players = state.gameData?.[side]?.players || [];
         for (const player of players) {
-            if (!player.isSuspended || player.disqualified) continue;
+            if (!player.isSuspended) continue;
             let end = Number(player.suspensionEndTime);
             if (!Number.isFinite(end)) {
                 const legacyRemaining = Math.max(0, Number(player.suspensionTimer) || 0);
@@ -16,7 +16,12 @@ function reconcileSuspensions(state) {
             }
             const remaining = Math.max(0, Math.ceil(end - now));
             player.suspensionTimer = remaining;
-            if (remaining === 0) player.isSuspended = false;
+            if (remaining === 0) {
+                // Vermelho direto/desqualificação é permanente: o jogador continua fora,
+                // mas deixa de ocupar a vaga de exclusão de 2 minutos.
+                player.isSuspended = false;
+                if (player.disqualified) player.onCourt = false;
+            }
         }
     }
 }
@@ -77,7 +82,6 @@ export class GameTimer {
     }
 }
 
-// Qualquer correção manual do relógio também recalcula imediatamente as suspensões.
 if (typeof window !== 'undefined') {
     window.addEventListener('handball:state-updated', () => {
         reconcileSuspensions(store.state);
