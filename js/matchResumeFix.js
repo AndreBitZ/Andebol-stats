@@ -8,6 +8,8 @@ const originalStart = GameTimer.prototype.start;
 if (!GameTimer.prototype.__handballResumePatched) {
     GameTimer.prototype.start = function (...args) {
         if (typeof window !== 'undefined') window.__handballGameTimer = this;
+        // Só é executado quando o fluxo principal já decidiu iniciar/retomar.
+        store.state.matchStarted = true;
         return originalStart.apply(this, args);
     };
     GameTimer.prototype.__handballResumePatched = true;
@@ -76,18 +78,14 @@ function applyCorrection(event) {
                     if (player.isSuspended) {
                         const current = Math.max(0, Number(player.suspensionTimer) || 0);
                         player.suspensionTimer = Math.max(0, current - diff);
-                        if (player.suspensionTimer === 0) {
-                            player.isSuspended = false;
-                        }
+                        if (player.suspensionTimer === 0) player.isSuspended = false;
                     }
                 }
 
                 if (team.isTeamSuspended) {
                     const current = Math.max(0, Number(team.teamSuspensionTimer) || 0);
                     team.teamSuspensionTimer = Math.max(0, current - diff);
-                    if (team.teamSuspensionTimer === 0) {
-                        team.isTeamSuspended = false;
-                    }
+                    if (team.teamSuspensionTimer === 0) team.isTeamSuspended = false;
                 }
             }
         });
@@ -99,9 +97,7 @@ function applyCorrection(event) {
         }
     }
 
-    // O store.update já dispara handball:state-updated. Os novos rosters
-    // são responsáveis pelo desenho dos jogadores; não chamar renderPlayers().
-    document.getElementById('timer')?.dispatchEvent(new CustomEvent('handball:timer-corrected'));
+    // Não chamar renderPlayers(): isso é precisamente o que reintroduzia a UI antiga.
     modal?.classList.add('hidden');
 }
 
@@ -109,7 +105,7 @@ function install() {
     if (document.__handballStabilityFixInstalled) return;
     document.__handballStabilityFixInstalled = true;
 
-    // Capture no document acontece antes do listener antigo do main.js no botão.
+    // Capture no document acontece antes dos listeners antigos do main.js.
     document.addEventListener('click', resumeStartedGame, true);
     document.addEventListener('click', applyCorrection, true);
 }
