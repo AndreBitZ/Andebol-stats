@@ -36,4 +36,3 @@ import('./ui/awayRosterUI.js').catch(e=>console.warn('[UI] plantel adversário i
 import('./ui/homeRosterUI.js').catch(e=>console.warn('[UI] fluxo unificado indisponível:',e));
 import('./ui/unifiedTeamsUI.js').catch(e=>console.warn('[UI] fluxo unificado indisponível:',e));
 import('./ui/bilateralActionBridge.js').catch(e=>console.warn('[UI] ações bilaterais indisponível:',e));
-import('./matchResumeFix.js').catch(e=>console.warn('[Fix] retoma sem validação de plantel indisponível:',e));
