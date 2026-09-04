@@ -2,8 +2,6 @@
 import { store } from './state.js';
 import { GameTimer } from './timer.js';
 import { POINT_SYSTEM } from './constants.js';
-import { exportToExcel } from './export.js';
-import { readExcelFile } from './fileLoader.js';
 import { Rules } from './rules.js';
 
 let timer;
@@ -45,7 +43,7 @@ function initDOMElements() {
         welcomeModal: getEl('welcomeModal'), mainApp: getEl('main-app'), timerDisplay: getEl('timer'), scoreA: getEl('scoreA'), scoreB: getEl('scoreB'),
         suspensionContainer: getEl('suspension-container'), timelineList: getEl('timeline-list'), shotModal: getEl('shotModal'), sanctionsModal: getEl('sanctionsModal'),
         positiveModal: getEl('positiveActionModal'), negativeModal: getEl('negativeActionModal'), effA: getEl('effA'), shotsA: getEl('shotsA'), savesA: getEl('savesA'),
-        techFaultsA: getEl('techFaultsA'), welcomeFileInput: getEl('welcome-file-input-A'), fileNameDisplay: getEl('file-name-A'), welcomeTeamBName: getEl('welcome-team-b-name'),
+        techFaultsA: getEl('techFaultsA'), welcomeTeamBName: getEl('welcome-team-b-name'),
         startGameBtn: getEl('startGameBtn'), teamAName: getEl('teamAName'), teamBName: getEl('teamBName'), editTimerBtn: getEl('editTimerBtn'),
         correctionModal: getEl('correctionModal'), correctMin: getEl('correctMin'), correctSec: getEl('correctSec'), saveCorrectionBtn: getEl('saveCorrectionBtn'), closeCorrectionBtn: getEl('closeCorrectionBtn'),
         shotZoneContainer: getEl('shotZoneContainer'), shotGoalContainer: getEl('shotGoalContainer'), shotOutcomeContainer: getEl('shotOutcomeContainer'), goalSvg: getEl('goalSvg'), shotMarker: getEl('shotMarker'),
@@ -53,14 +51,13 @@ function initDOMElements() {
         heatmapPointsAttack: getEl('heatmap-points-attack'), heatmapPointsDefense: getEl('heatmap-points-defense'), btnHeatmapUs: getEl('btn-heatmap-us'), btnHeatmapThem: getEl('btn-heatmap-them'),
         rosterModal: getEl('rosterModal'), rosterPlayersBody: getEl('roster-players-body'), rosterOfficialsBody: getEl('roster-officials-body'), addPlayerBtn: getEl('addPlayerBtn'), addOfficialBtn: getEl('addOfficialBtn'),
         cancelRosterBtn: getEl('cancelRosterBtn'), confirmRosterBtn: getEl('confirmRosterBtn'), closeRosterBtn: getEl('closeRosterBtn'), officialsListA: getEl('officials-list-A'), startBtn: getEl('startBtn'), pauseBtn: getEl('pauseBtn'),
-        undoBtn: getEl('undoBtn'), exportExcelBtn: getEl('exportExcelBtn'), resetGameBtn: getEl('resetGameBtn'), passivePlayBtn: getEl('passivePlayBtn'), opponent7v6Btn: getEl('opponent7v6Btn'),
+        undoBtn: getEl('undoBtn'), resetGameBtn: getEl('resetGameBtn'), passivePlayBtn: getEl('passivePlayBtn'), opponent7v6Btn: getEl('opponent7v6Btn'),
         goalOpponentBtn: getEl('goalOpponentBtn'), saveOpponentBtn: getEl('saveOpponentBtn'), missOpponentBtn: getEl('missOpponentBtn'), twoMinOpponentBtn: getEl('twoMinOpponentBtn'),
         playerListA: getEl('player-list-A'), goalkeeperListA: getEl('goalkeeper-list-A')
     };
 }
 
 function setupEventListeners() {
-    if(els.welcomeFileInput) els.welcomeFileInput.addEventListener('change', handleFileSelect);
     if(els.welcomeTeamBName) els.welcomeTeamBName.addEventListener('input', checkStart);
     if(els.addPlayerBtn) els.addPlayerBtn.addEventListener('click', () => addRosterRow('player'));
     if(els.addOfficialBtn) els.addOfficialBtn.addEventListener('click', () => addRosterRow('official'));
@@ -92,7 +89,6 @@ function setupEventListeners() {
         });
     });
 
-    // CONTROLO JOGO — só a primeira partida exige a formação inicial de 7.
     if(els.startBtn) els.startBtn.addEventListener('click', () => {
         if (store.state.isRunning) {
             timer.pause(store.state.totalSeconds);
@@ -100,14 +96,12 @@ function setupEventListeners() {
             if(els.editTimerBtn) els.editTimerBtn.disabled = false;
             return;
         }
-
-        const alreadyStarted = store.state.matchStarted === true || Number(store.state.totalSeconds) > 0 || store.state.gameEvents.length > 0;
-
+        const alreadyStarted = store.state.matchStarted === true || Number(store.state.totalSeconds) > 0 || (Array.isArray(store.state.gameEvents) && store.state.gameEvents.length > 0);
         if (!alreadyStarted) {
             const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length;
             const duration = store.state.halfDuration || 30;
             const baseRequired = (duration === 25) ? 6 : 7;
-            const suspendedCount = store.state.gameData.A.players.filter(p => p.isSuspended).length;
+            const suspendedCount = store.state.gameData.A.players.filter(p => p.isSuspended && !p.disqualified).length;
             const teamSuspensionActive = store.state.gameData.A.isTeamSuspended ? 1 : 0;
             const requiredPlayers = Math.max(1, baseRequired - suspendedCount - teamSuspensionActive);
             if (playersOnCourt !== requiredPlayers) {
@@ -115,7 +109,6 @@ function setupEventListeners() {
                 return;
             }
         }
-
         timer.start();
         store.update(s => { s.isRunning = true; s.matchStarted = true; });
         if(els.editTimerBtn) els.editTimerBtn.disabled = true;
@@ -141,7 +134,6 @@ function setupEventListeners() {
         const newTotalSeconds = (min * 60) + sec;
         const oldTotalSeconds = Number(store.state.totalSeconds) || 0;
         const diff = newTotalSeconds - oldTotalSeconds;
-
         if (diff !== 0) {
             store.update(s => {
                 s.totalSeconds = newTotalSeconds;
@@ -152,7 +144,7 @@ function setupEventListeners() {
                         if (p.onCourt) p.timeOnCourt = Math.max(0, (Number(p.timeOnCourt) || 0) + diff);
                         if (p.isSuspended) {
                             p.suspensionTimer = Math.max(0, (Number(p.suspensionTimer) || 0) - diff);
-                            if (p.suspensionTimer === 0 && !p.disqualified) p.isSuspended = false;
+                            if (p.suspensionTimer === 0) p.isSuspended = false;
                         }
                     }
                     if (team.isTeamSuspended) {
@@ -166,9 +158,6 @@ function setupEventListeners() {
                 timer.startTime = 0;
             }
         }
-
-        // store.update() já atualizou os rosters modernos através de handball:state-updated.
-        // NÃO chamar renderPlayers(): essa função é a UI antiga com os quatro botões/modais.
         updateDisplay();
         updateSuspensionsDisplay();
         if(els.correctionModal) els.correctionModal.classList.add('hidden');
@@ -176,7 +165,6 @@ function setupEventListeners() {
 
     if(els.closeCorrectionBtn) els.closeCorrectionBtn.addEventListener('click', () => els.correctionModal.classList.add('hidden'));
     if(els.undoBtn) els.undoBtn.addEventListener('click', handleUndo);
-    if(els.exportExcelBtn) els.exportExcelBtn.addEventListener('click', () => exportToExcel(store.state.gameData, store.state.gameEvents));
     if(els.resetGameBtn) els.resetGameBtn.addEventListener('click', handleReset);
     if(els.passivePlayBtn) els.passivePlayBtn.addEventListener('click', (e) => { store.update(s => s.isPassivePlay = !s.isPassivePlay); e.target.classList.toggle('bg-red-600'); e.target.classList.toggle('bg-gray-700'); });
     if(els.opponent7v6Btn) els.opponent7v6Btn.addEventListener('click', (e) => { store.update(s => s.isOpponent7v6 = !s.isOpponent7v6); e.target.classList.toggle('bg-orange-600'); e.target.classList.toggle('bg-gray-700'); });
@@ -224,8 +212,8 @@ function handleSanctionOutcome(type) {
         } else {
             const p = s.gameData.A.players.find(pl => pl.Numero == currentPersonForAction); if(!p) return;
             if (type === 'yellow') { if (!Rules.canTeamReceiveYellow(s.gameData.A)) alert("Atenção: A equipa já tem 3 cartões amarelos! (Regra Oficial).\nO árbitro pode dar na mesma, por isso não bloqueamos totalmente, apenas avisamos"); p.sanctions.yellow++; s.gameData.A.teamYellowCards++; }
-            if (type === 'red') { p.sanctions.red++; p.onCourt = false; p.disqualified = true; p.isSuspended = true; p.suspensionTimer = 120; }
-            if (type === '2min') { p.sanctions.twoMin++; if (p.sanctions.twoMin >= 3) { alert(`O jogador #${p.Numero} atingiu 3 exclusões e foi desqualificado (Vermelho)!`); p.sanctions.red++; p.disqualified = true; } p.onCourt = false; p.isSuspended = true; p.suspensionTimer = 120; }
+            if (type === 'red') { p.sanctions.red++; p.onCourt = false; p.disqualified = true; p.isSuspended = true; p.suspensionTimer = 120; p.suspensionEndTime = (Number(s.totalSeconds) || 0) + 120; }
+            if (type === '2min') { p.sanctions.twoMin++; if (p.sanctions.twoMin >= 3) { alert(`O jogador #${p.Numero} atingiu 3 exclusões e foi desqualificado (Vermelho)!`); p.sanctions.red++; p.disqualified = true; } p.onCourt = false; p.isSuspended = true; p.suspensionTimer = 120; p.suspensionEndTime = (Number(s.totalSeconds) || 0) + 120; }
             logGameEvent(s, 'A', 'sanction', `${p.Nome}: ${type}`);
         }
     });
@@ -250,7 +238,7 @@ window.openModal = (type, num) => {
     if (num === 'OPPONENT') document.getElementById('shotPlayerName').textContent = "Equipa Adversária";
     else {
         const p = store.state.gameData.A.players.find(pl => pl.Numero == num);
-        if (p && p.disqualified) { alert("Jogador desclassificado. Ações bloqueadas."); return; }
+        if (p && (p.disqualified || p.isSuspended)) { alert(p.disqualified ? "Jogador desclassificado. Ações bloqueadas." : "Jogador suspenso. Ações bloqueadas."); return; }
         document.getElementById('shotPlayerName').textContent = p ? p.Nome : '';
         const yellowBtn = document.querySelector('[data-sanction="yellow"]'); if(yellowBtn) { if (!Rules.canTeamReceiveYellow(store.state.gameData.A)) yellowBtn.classList.add('opacity-50'); else yellowBtn.classList.remove('opacity-50'); }
     }
@@ -273,30 +261,19 @@ function checkTimeEvents(totalSeconds) {
     const halfDurationSeconds = store.state.halfDuration * 60;
     if (store.state.currentGamePart === 1 && totalSeconds >= halfDurationSeconds) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; s.currentGamePart = 2; }); alert("Fim da 1ª Parte!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
     if (store.state.currentGamePart === 2 && totalSeconds >= halfDurationSeconds * 2) { timer.pause(totalSeconds); store.update(s => { s.isRunning = false; }); alert("Fim do Jogo!"); if(els.editTimerBtn) els.editTimerBtn.disabled = false; return; }
-    let needsUpdate = false;
-    store.state.gameData.A.players.forEach(p => { if (p.isSuspended && p.suspensionTimer > 0) { p.suspensionTimer--; if (p.suspensionTimer <= 0 && !p.disqualified) p.isSuspended = false; needsUpdate = true; } if (p.onCourt) { p.timeOnCourt++; const timeEl = document.getElementById(`time-p-${p.Numero}`); if(timeEl) timeEl.textContent = formatTime(p.timeOnCourt); } });
-    if (store.state.gameData.A.isTeamSuspended && store.state.gameData.A.teamSuspensionTimer > 0) { store.state.gameData.A.teamSuspensionTimer--; if (store.state.gameData.A.teamSuspensionTimer <= 0) store.state.gameData.A.isTeamSuspended = false; needsUpdate = true; }
-    if(store.state.gameData.B.isSuspended && store.state.gameData.B.suspensionTimer > 0) { store.state.gameData.B.suspensionTimer--; if(store.state.gameData.B.suspensionTimer <= 0 && !store.state.gameData.B.disqualified) store.state.gameData.B.isSuspended = false; needsUpdate = true; }
-    if(needsUpdate) updateSuspensionsDisplay();
 }
 
 window.togglePlayer = (num) => {
     const duration = store.state.halfDuration || 30; const baseLimit = (duration === 25) ? 6 : 7;
-    const playersSuspended = store.state.gameData.A.players.filter(p => p.isSuspended).length; const benchSuspended = store.state.gameData.A.isTeamSuspended ? 1 : 0; const currentLimit = baseLimit - playersSuspended - benchSuspended;
+    const playersSuspended = store.state.gameData.A.players.filter(p => p.isSuspended && !p.disqualified).length; const benchSuspended = store.state.gameData.A.isTeamSuspended ? 1 : 0; const currentLimit = baseLimit - playersSuspended - benchSuspended;
     const player = store.state.gameData.A.players.find(pl => pl.Numero == num);
     if (player) {
         if (player.disqualified) { alert(`O jogador #${player.Numero} foi desclassificado e não pode voltar ao jogo.`); return; }
         if (player.isSuspended) { alert(`O jogador #${player.Numero} está a cumprir castigo (${formatTime(player.suspensionTimer)}) e não pode entrar.`); return; }
-        if (!player.onCourt) { const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length; if (playersOnCourt >= currentLimit) { alert(`⚠️ Limite atingido!\n\nCapacidade atual: ${currentLimit} jogadores.\n(Base ${baseLimit} - ${playersSuspended} suspensões - ${benchSuspended} banco).`); return; } }
+        if (!player.onCourt) { const playersOnCourt = store.state.gameData.A.players.filter(p => p.onCourt).length; if (playersOnCourt >= currentLimit) { alert(`⚠️ Limite atingido!\n\nCapacidade atual: ${currentLimit} jogadores.`); return; } }
     }
     store.update(s => { const p = s.gameData.A.players.find(pl => pl.Numero == num); if(p && !p.isSuspended && !p.disqualified) p.onCourt = !p.onCourt; }); refreshUI();
 };
-
-function handleFileSelect(e) {
-    const file = e.target.files[0]; if(!file) return;
-    if(els.fileNameDisplay) { els.fileNameDisplay.textContent = "A carregar: " + file.name; els.fileNameDisplay.classList.add("text-yellow-400"); }
-    readExcelFile(file).then(rosterData => { tempRoster = rosterData; renderRosterEdit(); els.rosterModal.classList.remove('hidden'); if(els.fileNameDisplay) { els.fileNameDisplay.textContent = file.name; els.fileNameDisplay.classList.remove("text-yellow-400"); els.fileNameDisplay.classList.add("text-green-400"); } }).catch(err => { console.error("Erro ao ler ficheiro:", err); alert(err.message); if(els.fileNameDisplay) { els.fileNameDisplay.textContent = "Erro no ficheiro"; els.fileNameDisplay.classList.add("text-red-500"); } }).finally(() => { e.target.value = ''; });
-}
 
 function renderRosterEdit() {
     if(!els.rosterPlayersBody || !els.rosterOfficialsBody) return; els.rosterPlayersBody.innerHTML = ''; els.rosterOfficialsBody.innerHTML = '';
@@ -308,7 +285,7 @@ window.removeRosterRow = (type, index) => { if (type === 'player') tempRoster.pl
 window.updateTempRoster = (type, index, field, value) => { if (type === 'player') tempRoster.players[index][field] = value; else tempRoster.officials[index][field] = value; };
 
 function saveRosterFromModal() {
-    const finalPlayers = tempRoster.players.filter(p => p.Numero && p.Nome).map(p => ({ ...p, goals: 0, performanceScore: 0, onCourt: false, isSuspended: false, suspensionTimer: 0, timeOnCourt: 0, sanctions: { yellow: 0, twoMin: 0, red: 0 }, positiveActions: [], negativeActions: [], disqualified: false }));
+    const finalPlayers = tempRoster.players.filter(p => p.Numero && p.Nome).map(p => ({ ...p, goals: 0, performanceScore: 0, onCourt: false, isSuspended: false, suspensionTimer: 0, suspensionEndTime: null, timeOnCourt: 0, sanctions: { yellow: 0, twoMin: 0, red: 0 }, positiveActions: [], negativeActions: [], disqualified: false }));
     const finalOfficials = tempRoster.officials.filter(o => o.Nome).map(o => ({ ...o, sanctions: { yellow: 0, twoMin: 0, red: 0 } })); store.loadPlayers(finalPlayers, finalOfficials);
 }
 function checkStart() { const ready = store.state.gameData.A.fileLoaded && els.welcomeTeamBName.value !== ""; els.startGameBtn.disabled = !ready; if(ready) els.startGameBtn.classList.remove('opacity-50'); }
@@ -319,15 +296,9 @@ function renderOfficials() {
     store.state.gameData.A.officials.forEach(off => { const div = document.createElement('div'); div.className = 'flex justify-between items-center p-2 mb-1 rounded-lg bg-gray-800 text-sm'; div.innerHTML = `<div class="flex items-center gap-2"><span class="font-bold text-gray-400 w-6">${off.Numero || '-'}</span><span class="font-medium">${off.Nome}</span></div><div class="flex gap-1"><button class="bg-yellow-600 px-2 py-1 rounded" onclick="window.openModal('sanction', 'OFF_${off.Nome}')">⚠️</button></div>`; els.officialsListA.appendChild(div); });
 }
 
-function renderPlayers() {
-    if(!els.playerListA || !els.goalkeeperListA) return; els.playerListA.innerHTML = ''; els.goalkeeperListA.innerHTML = '';
-    store.state.gameData.A.players.forEach(p => {
-        const div = document.createElement('div'); const isSuspended = p.isSuspended; const isDisqualified = p.disqualified; let statusClass = 'bg-gray-700'; if (p.onCourt) statusClass = 'bg-green-900 border-l-4 border-green-500'; if (isSuspended) statusClass = 'bg-red-900/50 opacity-75'; if (isDisqualified) statusClass = 'bg-red-950 opacity-50 grayscale'; div.className = `flex justify-between items-center p-2 mb-1 rounded-lg text-sm ${statusClass}`;
-        const disabledAttr = isDisqualified ? 'disabled' : ''; const opacityClass = isDisqualified ? 'opacity-30 cursor-not-allowed' : '';
-        div.innerHTML = `<div class="flex items-center gap-2 w-1/3"><span class="font-bold text-gray-400 w-6">${p.Numero}</span><span class="truncate font-medium">${p.Nome}</span>${p.sanctions.yellow > 0 ? '<span class="text-yellow-400">▮</span>' : ''}${p.sanctions.twoMin > 0 ? `<span class="text-red-400 font-bold">${'✌️'.repeat(p.sanctions.twoMin)}</span>` : ''}${p.sanctions.red > 0 ? '<span class="text-red-600 text-xl">🟥</span>' : ''}</div><div class="flex items-center justify-end gap-1 w-2/3"><span id="time-p-${p.Numero}" class="text-xs font-mono text-gray-300 mr-1">${formatTime(p.timeOnCourt)}</span><span class="text-xs font-mono text-yellow-500 mr-2">PTS:${p.performanceScore || 0}</span><button class="bg-blue-600 hover:bg-blue-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('shot', '${p.Numero}')">🎯</button><button class="bg-teal-600 hover:bg-teal-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('positive', '${p.Numero}')">👍</button><button class="bg-red-800 hover:bg-red-700 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('negative', '${p.Numero}')">👎</button><button class="bg-yellow-600 hover:bg-yellow-500 text-white px-2 py-1 rounded ${opacityClass}" ${disabledAttr} onclick="window.openModal('sanction', '${p.Numero}')">⚠️</button>${isDisqualified ? `<span class="text-xs px-2 py-1 bg-red-950 text-red-500 font-bold">FORA</span>` : `<button class="text-xs px-2 py-1 rounded ${p.onCourt ? 'bg-gray-600' : 'bg-green-600'}" onclick="window.togglePlayer('${p.Numero}')">${p.onCourt ? 'Sai' : 'Entra'}</button>`}</div>`;
-        if(p.Posicao && p.Posicao.includes('GR')) els.goalkeeperListA.appendChild(div); else els.playerListA.appendChild(div);
-    }); renderOfficials();
-}
+// O plantel é renderizado exclusivamente pelos módulos modernos homeRosterUI/awayRosterUI.
+// Esta função fica como compatibilidade para chamadas antigas e NÃO deve criar os botões/modais antigos.
+function renderPlayers() { return; }
 
 function handleUndo() { const oldState = store.undo(); if (oldState) { timer.pause(oldState.totalSeconds); refreshUI(); } else alert("Nada para desfazer."); }
 function formatTime(sec) { const m = Math.floor(sec / 60).toString().padStart(2, '0'); const s = (sec % 60).toString().padStart(2, '0'); return `${m}:${s}`; }
@@ -349,12 +320,12 @@ function handleGenericAction(action, type) {
 }
 function registerOpponentAction(action) { store.update(s => { if (action === 'goal') { s.gameData.B.stats.goals++; s.gameData.A.stats.gkGoalsAgainst++; } if (action === 'save') { s.gameData.B.stats.gkSaves++; s.gameData.A.stats.savedShots++; } if (action === 'miss') s.gameData.B.stats.misses++; if (action === '2min') { s.gameData.B.isSuspended = true; s.gameData.B.suspensionTimer = 120; } logGameEvent(s, 'B', action, `Adversário: ${action}`); }); refreshUI(); }
 
-function refreshUI() { updateDisplay(); renderPlayers(); updateTeamStats(); renderTimeline(); updateSuspensionsDisplay(); if(!els.tabStats.classList.contains('hidden')) updateStatsTab(); if(!els.tabHeatmap.classList.contains('hidden')) updateHeatmapTab(); }
+function refreshUI() { updateDisplay(); renderPlayers(); updateTeamStats(); renderTimeline(); updateSuspensionsDisplay(); if(els.tabStats && !els.tabStats.classList.contains('hidden')) updateStatsTab(); if(els.tabHeatmap && !els.tabHeatmap.classList.contains('hidden')) updateHeatmapTab(); }
 function updateDisplay() { if(els.scoreA) els.scoreA.textContent = store.state.gameData.A.stats.goals; if(els.scoreB) els.scoreB.textContent = store.state.gameData.B.stats.goals; if(els.timerDisplay) els.timerDisplay.textContent = formatTime(store.state.totalSeconds); }
 function updateTeamStats() { const statsA = store.state.gameData.A.stats; const totalShots = statsA.goals + statsA.misses + statsA.savedShots; const techFaults = store.state.gameData.A.players.reduce((acc, p) => acc + (p.negativeActions ? p.negativeActions.filter(a => a.action === 'technical_fault').length : 0), 0); if(els.shotsA) els.shotsA.textContent = totalShots; if(els.savesA) els.savesA.textContent = statsA.gkSaves; if(els.techFaultsA) els.techFaultsA.textContent = techFaults; if(els.effA) els.effA.textContent = totalShots > 0 ? Math.round((statsA.goals / totalShots) * 100) + '%' : '0%'; }
 function renderTimeline() { const list = els.timelineList; if(!list) return; list.innerHTML = ''; store.state.gameEvents.slice().reverse().slice(0, 10).forEach(e => { const div = document.createElement('div'); div.className = `border-l-2 pl-2 ${e.team === 'A' ? 'border-blue-500' : 'border-orange-500'}`; div.innerHTML = `<span class="font-mono text-gray-500">${formatTime(e.time)}</span> ${e.details}`; list.appendChild(div); }); }
-function updateHeatmapTab() { els.heatmapPointsAttack.innerHTML = ''; els.heatmapPointsDefense.innerHTML = ''; store.state.gameData.A.players.forEach(p => { if (p.history) p.history.forEach(shot => drawDot(els.heatmapPointsAttack, shot)); }); if (store.state.gameData.B.history) store.state.gameData.B.history.forEach(shot => drawDot(els.heatmapPointsDefense, shot)); }
+function updateHeatmapTab() { if(!els.heatmapPointsAttack || !els.heatmapPointsDefense) return; els.heatmapPointsAttack.innerHTML = ''; els.heatmapPointsDefense.innerHTML = ''; store.state.gameData.A.players.forEach(p => { if (p.history) p.history.forEach(shot => drawDot(els.heatmapPointsAttack, shot)); }); if (store.state.gameData.B.history) store.state.gameData.B.history.forEach(shot => drawDot(els.heatmapPointsDefense, shot)); }
 function drawDot(container, shot) { if (!shot.coords || !shot.coords.x) return; const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle"); circle.setAttribute("cx", (shot.coords.x / 100) * 300); circle.setAttribute("cy", (shot.coords.y / 100) * 200); circle.setAttribute("r", 5); if (shot.outcome === 'goal') circle.setAttribute("fill", "#22c55e"); else if (shot.outcome === 'saved') circle.setAttribute("fill", "#3b82f6"); else circle.setAttribute("fill", "#ef4444"); circle.setAttribute("stroke", "white"); circle.setAttribute("stroke-width", "1"); circle.setAttribute("opacity", "0.9"); container.appendChild(circle); }
-function updateStatsTab() { const statsA = store.state.gameData.A.stats; const statsB = store.state.gameData.B.stats; const teamA = store.state.teamAName; const teamB = store.state.teamBName; const totalShotsA = statsA.goals + statsA.misses + statsA.savedShots; const totalShotsB = statsB.goals + statsB.misses + statsB.savedShots; const effA = totalShotsA > 0 ? ((statsA.goals / totalShotsA) * 100).toFixed(0) : 0; const effB = totalShotsB > 0 ? ((statsB.goals / totalShotsB) * 100).toFixed(0) : 0; const gkEffA = (statsA.gkSaves + statsA.gkGoalsAgainst) > 0 ? ((statsA.gkSaves / (statsA.gkSaves + statsA.gkGoalsAgainst)) * 100).toFixed(0) : 0; const gkEffB = (statsB.gkSaves + statsB.gkGoalsAgainst) > 0 ? ((statsB.gkSaves / (statsB.gkSaves + statsB.gkGoalsAgainst)) * 100).toFixed(0) : 0; const rows = [{ label: "Golos", valA: statsA.goals, valB: statsB.goals }, { label: "Eficácia Remate", valA: `${effA}%`, valB: `${effB}%` }, { label: "Eficácia GR", valA: `${gkEffA}%`, valB: `${gkEffB}%` }, { label: "Faltas Técnicas", valA: store.state.gameData.A.stats.technical_faults, valB: statsB.technical_faults }, { label: "Perdas de Bola", valA: statsA.turnovers, valB: statsB.turnovers }]; let html = ''; rows.forEach(row => { html += `<div class="grid grid-cols-3 items-center text-center border-b border-gray-700 py-3"><div class="text-xl font-bold text-blue-400">${row.valA}</div><div class="text-sm text-gray-400 font-medium uppercase tracking-wide">${row.label}</div><div class="text-xl font-bold text-orange-400">${row.valB}</div></div>`; }); const header = `<div class="grid grid-cols-3 text-center mb-4 border-b border-gray-600 pb-2"><div class="font-bold text-white truncate px-2 text-lg">${teamA}</div><div></div><div class="font-bold text-white truncate px-2 text-lg">${teamB}</div></div>`; els.statsComparisonContainer.innerHTML = header + html; }
+function updateStatsTab() { if(!els.statsComparisonContainer) return; const statsA = store.state.gameData.A.stats; const statsB = store.state.gameData.B.stats; const teamA = store.state.teamAName; const teamB = store.state.teamBName; const totalShotsA = statsA.goals + statsA.misses + statsA.savedShots; const totalShotsB = statsB.goals + statsB.misses + statsB.savedShots; const effA = totalShotsA > 0 ? ((statsA.goals / totalShotsA) * 100).toFixed(0) : 0; const effB = totalShotsB > 0 ? ((statsB.goals / totalShotsB) * 100).toFixed(0) : 0; const gkEffA = (statsA.gkSaves + statsA.gkGoalsAgainst) > 0 ? ((statsA.gkSaves / (statsA.gkSaves + statsA.gkGoalsAgainst)) * 100).toFixed(0) : 0; const gkEffB = (statsB.gkSaves + statsB.gkGoalsAgainst) > 0 ? ((statsB.gkSaves / (statsB.gkSaves + statsB.gkGoalsAgainst)) * 100).toFixed(0) : 0; const rows = [{ label: "Golos", valA: statsA.goals, valB: statsB.goals }, { label: "Eficácia Remate", valA: `${effA}%`, valB: `${effB}%` }, { label: "Eficácia GR", valA: `${gkEffA}%`, valB: `${gkEffB}%` }, { label: "Faltas Técnicas", valA: statsA.technical_faults, valB: statsB.technical_faults }, { label: "Perdas de Bola", valA: statsA.turnovers, valB: statsB.turnovers }]; let html = ''; rows.forEach(row => { html += `<div class="grid grid-cols-3 items-center text-center border-b border-gray-700 py-3"><div class="text-xl font-bold text-blue-400">${row.valA}</div><div class="text-sm text-gray-400 font-medium uppercase tracking-wide">${row.label}</div><div class="text-xl font-bold text-orange-400">${row.valB}</div></div>`; }); const header = `<div class="grid grid-cols-3 text-center mb-4 border-b border-gray-600 pb-2"><div class="font-bold text-white truncate px-2 text-lg">${teamA}</div><div></div><div class="font-bold text-white truncate px-2 text-lg">${teamB}</div></div>`; els.statsComparisonContainer.innerHTML = header + html; }
 function handleReset() { const confirmacao = confirm("Tem a certeza que quer iniciar um Novo Jogo?\n\nTodos os dados da sessão atual serão apagados e voltará ao menu inicial."); if (confirmacao) { sessionStorage.clear(); window.location.reload(); } }
 function showWelcomeScreen() { if(els.welcomeModal) els.welcomeModal.classList.remove('hidden'); if(els.mainApp) els.mainApp.classList.add('hidden'); }
