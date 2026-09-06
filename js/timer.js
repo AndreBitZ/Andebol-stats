@@ -1,3 +1,4 @@
+// FORCE DEPLOY 2026-09-06 — trigger Vercel deployment from main
 // js/timer.js - Cronómetro ligado ao relógio oficial e aos stints
 import { store } from './state.js';
 import { syncOpenStints, closeAllOpenStints } from './domain/matchClock.js';
