@@ -1,7 +1,6 @@
-// FORCE DEPLOY 2026-09-06 — trigger Vercel deployment from main
 // js/timer.js - Cronómetro ligado ao relógio oficial e aos stints
 import { store } from './state.js';
-import { syncOpenStints, closeAllOpenStints } from './domain/matchClock.js';
+import { syncOpenStints, closeAllOpenStints, getPlayerSeconds } from './domain/matchClock.js';
 
 function reconcileSuspensions(state) {
     const now = Number(state.totalSeconds) || 0;
@@ -27,6 +26,16 @@ function reconcileSuspensions(state) {
     }
 }
 
+function syncPlayerTimeOnCourt(state) {
+    // Os stints são a fonte canónica dos minutos. O campo timeOnCourt é mantido
+    // sincronizado para a UI atual e para compatibilidade com os restantes módulos.
+    for (const side of ['A', 'B']) {
+        for (const player of (state.gameData?.[side]?.players || [])) {
+            player.timeOnCourt = Math.floor(getPlayerSeconds(state, side, player.id ?? player.Numero));
+        }
+    }
+}
+
 function tickSuspensions(state) {
     reconcileSuspensions(state);
 }
@@ -43,6 +52,7 @@ export class GameTimer {
         if (this.intervalId) return;
         reconcileSuspensions(store.state);
         syncOpenStints(store.state);
+        syncPlayerTimeOnCourt(store.state);
         this.startTime = Date.now();
         this.intervalId = setInterval(() => {
             const now = Date.now();
@@ -50,6 +60,7 @@ export class GameTimer {
             const totalTime = this.elapsedPaused + delta;
             store.state.totalSeconds = totalTime;
             syncOpenStints(store.state);
+            syncPlayerTimeOnCourt(store.state);
             tickSuspensions(store.state);
             store.notify();
             this.onTick(totalTime);
@@ -62,6 +73,8 @@ export class GameTimer {
         this.intervalId = null;
         this.elapsedPaused = currentTotalTime;
         store.state.totalSeconds = currentTotalTime;
+        syncOpenStints(store.state);
+        syncPlayerTimeOnCourt(store.state);
         reconcileSuspensions(store.state);
         store.notify();
     }
@@ -73,8 +86,11 @@ export class GameTimer {
         }
         this.elapsedPaused = currentTotalTime;
         store.state.totalSeconds = currentTotalTime;
+        syncOpenStints(store.state);
+        syncPlayerTimeOnCourt(store.state);
         reconcileSuspensions(store.state);
         closeAllOpenStints(store.state, currentTotalTime);
+        syncPlayerTimeOnCourt(store.state);
         store.notify();
     }
 
@@ -86,5 +102,6 @@ export class GameTimer {
 if (typeof window !== 'undefined') {
     window.addEventListener('handball:state-updated', () => {
         reconcileSuspensions(store.state);
+        syncPlayerTimeOnCourt(store.state);
     });
 }
