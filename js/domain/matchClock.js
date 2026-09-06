@@ -41,6 +41,17 @@ function installBilateralStartGuard() {
     const button = event.target?.closest?.('#startBtn');
     if (!button) return;
     const state = store.state;
+
+    // A validação de 7+7 só é válida no arranque real do jogo.
+    // Depois de o cronómetro ter começado, uma equipa pode estar temporariamente
+    // em inferioridade numérica por sanção/desqualificação e deve poder retomar
+    // com 6 (ou menos, conforme a situação regulamentar) sem ser bloqueada.
+    const matchAlreadyStarted = state?.matchStarted === true ||
+      Number(state?.totalSeconds) > 0 ||
+      state?.isRunning === true ||
+      (Array.isArray(state?.gameEvents) && state.gameEvents.length > 0);
+    if (matchAlreadyStarted) return;
+
     const resultA = validateStartingFormation(state, 'A');
     const resultB = validateStartingFormation(state, 'B');
     if (resultA.ok && resultB.ok) return;
