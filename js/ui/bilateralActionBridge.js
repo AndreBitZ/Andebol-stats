@@ -37,24 +37,36 @@ function openShot(side,id){ const player=findPlayer(side,id); if(!player)return;
 const GENERIC_ACTIONS={
   positive:[
     {key:'assist',label:'Assistência 🎯',action:ACTION_TYPES.ASSIST},
+    {key:'pre_assist',label:'Pré-assistência ↗️',action:ACTION_TYPES.PRE_ASSIST},
     {key:'steal',label:'Roubo de Bola ✋',action:ACTION_TYPES.STEAL},
+    {key:'interception',label:'Interceção 🛡️',action:ACTION_TYPES.INTERCEPTION},
+    {key:'recovery',label:'Recuperação 🔄',action:ACTION_TYPES.RECOVERY},
+    {key:'defensive_block',label:'Bloco Defensivo 🧱',action:ACTION_TYPES.DEFENSIVE_BLOCK},
     {key:'7m_provoked',label:'7m Provocado ⚡',action:ACTION_TYPES.SEVEN_METER_WON}
   ],
   negative:[
-    {key:'technical_fault',label:'Falta Técnica ❌',action:ACTION_TYPES.TECHNICAL_FAULT},
     {key:'turnover',label:'Perda de Bola 📉',action:ACTION_TYPES.TURNOVER},
-    {key:'7m_foul',label:'7m Cometido 🛑',action:ACTION_TYPES.SEVEN_METER_FOUL}
+    {key:'reception_error',label:'Erro de Receção ❌',action:ACTION_TYPES.RECEPTION_ERROR},
+    {key:'offensive_foul',label:'Falta Ofensiva 🚫',action:ACTION_TYPES.OFFENSIVE_FOUL},
+    {key:'technical_fault',label:'Falta Técnica ⚠️',action:ACTION_TYPES.TECHNICAL_FAULT},
+    {key:'7m_foul',label:'7m Cometido 🛑',action:ACTION_TYPES.SEVEN_METER_FOUL},
+    {key:'7m_conceded',label:'7m Sofrido pelo Adversário 🛑',action:ACTION_TYPES.SEVEN_METER_CONCEDED},
+    {key:'passive_warning',label:'Aviso de Passivo ⏳',action:ACTION_TYPES.PASSIVE_WARNING},
+    {key:'passive_turnover',label:'Perda por Passivo 📉',action:ACTION_TYPES.PASSIVE_TURNOVER},
+    {key:'gk_distribution_success',label:'Distribuição GR ✓',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_SUCCESS},
+    {key:'gk_distribution_error',label:'Erro Distribuição GR ❌',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_ERROR},
+    {key:'gk_assist',label:'Assistência do GR 🧤',action:ACTION_TYPES.GOALKEEPER_ASSIST}
   ]
 };
 function ensureGenericPopup(){
   let popup=document.getElementById('bilateral-generic-action-popup'); if(popup)return popup;
   popup=document.createElement('div');popup.id='bilateral-generic-action-popup';popup.className='fixed inset-0 z-[10001] hidden items-center justify-center bg-black/70 p-4';
-  popup.innerHTML=`<div class="w-full max-w-sm rounded-2xl bg-gray-800 border border-gray-600 shadow-2xl p-5" role="dialog" aria-modal="true"><div class="flex items-center justify-between gap-3 mb-4"><div><div id="bilateral-generic-title" class="text-xl font-bold text-white"></div><div id="bilateral-generic-player" class="text-sm text-gray-400"></div></div><button id="bilateral-generic-close" type="button" class="px-3 py-2 rounded-lg bg-gray-700 text-white">✕</button></div><div id="bilateral-generic-options" class="grid grid-cols-1 gap-2"></div></div>`;
+  popup.innerHTML=`<div class="w-full max-w-sm rounded-2xl bg-gray-800 border border-gray-600 shadow-2xl p-5" role="dialog" aria-modal="true"><div class="flex items-center justify-between gap-3 mb-4"><div><div id="bilateral-generic-title" class="text-xl font-bold text-white"></div><div id="bilateral-generic-player" class="text-sm text-gray-400"></div></div><button id="bilateral-generic-close" type="button" class="px-3 py-2 rounded-lg bg-gray-700 text-white">✕</button></div><div id="bilateral-generic-options" class="grid grid-cols-1 gap-2 max-h-[75vh] overflow-y-auto"></div></div>`;
   document.body.appendChild(popup); popup.addEventListener('click',e=>{if(e.target===popup){close('bilateral-generic-action-popup');selected=null;}}); popup.querySelector('#bilateral-generic-close').onclick=()=>{close('bilateral-generic-action-popup');selected=null;}; return popup;
 }
 function openGeneric(side,id,category){
-  const player=findPlayer(side,id);if(!player)return; selected={side,playerId:String(id)}; close('bilateral-action-popup'); const popup=ensureGenericPopup(); popup._selection={side,playerId:String(id)}; popup.querySelector('#bilateral-generic-title').textContent=category==='positive'?'Ação Positiva':'Ação Negativa'; popup.querySelector('#bilateral-generic-player').textContent=playerLabel(side,id); const options=popup.querySelector('#bilateral-generic-options');
-  options.innerHTML=GENERIC_ACTIONS[category].map(o=>`<button type="button" class="generic-action-choice w-full p-4 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-bold" data-action="${o.action}">${o.label}</button>`).join('');
+  const player=findPlayer(side,id);if(!player)return; selected={side,playerId:String(id)}; close('bilateral-action-popup'); const popup=ensureGenericPopup(); popup._selection={side,playerId:String(id)}; popup.querySelector('#bilateral-generic-title').textContent=category==='positive'?'Ações Positivas':'Ações Negativas'; popup.querySelector('#bilateral-generic-player').textContent=playerLabel(side,id); const options=popup.querySelector('#bilateral-generic-options');
+  options.innerHTML=GENERIC_ACTIONS[category].map(o=>`<button type="button" class="generic-action-choice w-full p-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-bold text-sm" data-action="${o.action}">${o.label}</button>`).join('');
   options.querySelectorAll('.generic-action-choice').forEach(btn=>btn.onclick=()=>{const sel=popup._selection;if(!sel)return;try{recordAction({side:sel.side,playerId:sel.playerId,action:btn.dataset.action,metadata:{ui_category:category}});closeAll();window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:btn.dataset.action,side:sel.side,playerId:sel.playerId}}));}catch(err){showError(err);}});
   popup.classList.remove('hidden');popup.classList.add('flex');
 }
