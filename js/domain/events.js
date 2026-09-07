@@ -10,9 +10,14 @@ export const EVENT_TYPES = Object.freeze([
 ]);
 
 export const SHOT_RESULTS = Object.freeze(['GOAL','SAVED','MISSED','POST','BLOCKED']);
+
+// Contexto do ponto de vista da equipa que executa a ação.
+// O valor usa jogadores efetivamente disponíveis em campo, incluindo GR.
 export const NUMERICAL_CONTEXTS = Object.freeze([
-  'EVEN_6V6','POWERPLAY_6V5','POWERPLAY_6V4','SHORTHANDED_5V6','SHORTHANDED_4V6',
-  'EMPTY_GOAL_7V6','EMPTY_GOAL_7V5','OTHER','UNKNOWN'
+  'EVEN_7V7','EVEN_6V6','EVEN_5V5','EVEN_4V4','EVEN_3V3',
+  'POWERPLAY_7V6','POWERPLAY_7V5','POWERPLAY_6V5','POWERPLAY_6V4','POWERPLAY_5V4',
+  'SHORTHANDED_6V7','SHORTHANDED_5V7','SHORTHANDED_5V6','SHORTHANDED_4V6','SHORTHANDED_4V5',
+  'OTHER','UNKNOWN'
 ]);
 export const GAME_STATES = Object.freeze(['LEADING','DRAWING','TRAILING']);
 
