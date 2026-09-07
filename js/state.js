@@ -30,7 +30,7 @@ import('./canonicalExport.js').catch(e=>console.warn('[Canonical Match] Export b
 import('./canonicalImport.js').catch(e=>console.warn('[Canonical Match] Import bridge indisponível:',e));
 import('./domain/events.js').catch(e=>console.warn('[Domain] events indisponível:',e));
 import('./domain/stints.js').catch(e=>console.warn('[Domain] stints indisponível:',e));
-import('./domain/analytics.js').catch(e=>console.warn('[Domain] analytics indisponível:',e));
+import('./domain/analytics.js').then(m=>m.installAnalytics(store)).catch(e=>console.warn('[Domain] analytics indisponível:',e));
 import('./domain/numericalSituation.js').catch(e=>console.warn('[Domain] situação numérica indisponível:',e));
 import('./domain/sequenceEngine.js').catch(e=>console.warn('[Domain] sequências indisponível:',e));
 import('./ui/awayRosterUI.js').catch(e=>console.warn('[UI] plantel adversário indisponível:',e));
