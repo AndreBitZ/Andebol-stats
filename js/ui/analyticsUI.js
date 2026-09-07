@@ -20,7 +20,7 @@ function teamCard(name, team) {
     ['Posses', team.possessions],
     ['Golos', team.goals],
     ['Remates', team.shots],
-    ['Defesas GR sofridas', team.saved],
+    ['Defesas GR', team.saved],
     ['Remates falhados', team.missed],
     ['Postes', team.post],
     ['Remates bloqueados', team.blocked],
@@ -29,8 +29,9 @@ function teamCard(name, team) {
     ['Interceções', team.interceptions],
     ['Recuperações', team.recoveries],
     ['7 metros ganhos', team.seven_meter_won],
-    ['Transições', team.transition_attacks]
+    ['Ataques em transição', team.transition_attacks]
   ];
+
   return `<div class="bg-gray-900 rounded-xl p-4 border border-gray-700">
     <h4 class="text-xl font-bold text-white mb-4">${name}</h4>
     <div class="grid grid-cols-2 gap-3 mb-4">
@@ -56,6 +57,17 @@ export function renderAnalyticsPanel() {
 
 if (typeof window !== 'undefined' && !window.__handballAnalyticsUIInstalled) {
   window.__handballAnalyticsUIInstalled = true;
-  window.addEventListener('handball:state-updated', renderAnalyticsPanel);
+
+  // main.js ainda possui o renderizador antigo do separador Estatísticas.
+  // Estes listeners executam a renderização no fim do ciclo para que o painel
+  // analítico não seja imediatamente substituído pelas 5 estatísticas antigas.
+  const renderAfterLegacyUI = () => window.setTimeout(renderAnalyticsPanel, 0);
+
+  window.addEventListener('handball:state-updated', renderAfterLegacyUI);
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest?.('.tab-link');
+    if (button?.dataset?.tab === 'stats') renderAfterLegacyUI();
+  }, true);
+
   renderAnalyticsPanel();
 }
