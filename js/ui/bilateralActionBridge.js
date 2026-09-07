@@ -42,7 +42,9 @@ const GENERIC_ACTIONS={
     {key:'interception',label:'Interceção 🛡️',action:ACTION_TYPES.INTERCEPTION},
     {key:'recovery',label:'Recuperação 🔄',action:ACTION_TYPES.RECOVERY},
     {key:'defensive_block',label:'Bloco Defensivo 🧱',action:ACTION_TYPES.DEFENSIVE_BLOCK},
-    {key:'7m_provoked',label:'7m Provocado ⚡',action:ACTION_TYPES.SEVEN_METER_WON}
+    {key:'7m_provoked',label:'7m Provocado ⚡',action:ACTION_TYPES.SEVEN_METER_WON},
+    {key:'gk_distribution_success',label:'Distribuição GR ✓',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_SUCCESS},
+    {key:'gk_assist',label:'Assistência do GR 🧤',action:ACTION_TYPES.GOALKEEPER_ASSIST}
   ],
   negative:[
     {key:'turnover',label:'Perda de Bola 📉',action:ACTION_TYPES.TURNOVER},
@@ -50,12 +52,10 @@ const GENERIC_ACTIONS={
     {key:'offensive_foul',label:'Falta Ofensiva 🚫',action:ACTION_TYPES.OFFENSIVE_FOUL},
     {key:'technical_fault',label:'Falta Técnica ⚠️',action:ACTION_TYPES.TECHNICAL_FAULT},
     {key:'7m_foul',label:'7m Cometido 🛑',action:ACTION_TYPES.SEVEN_METER_FOUL},
-    {key:'7m_conceded',label:'7m Sofrido pelo Adversário 🛑',action:ACTION_TYPES.SEVEN_METER_CONCEDED},
+    {key:'7m_conceded',label:'7m Concedido 🛑',action:ACTION_TYPES.SEVEN_METER_CONCEDED},
     {key:'passive_warning',label:'Aviso de Passivo ⏳',action:ACTION_TYPES.PASSIVE_WARNING},
     {key:'passive_turnover',label:'Perda por Passivo 📉',action:ACTION_TYPES.PASSIVE_TURNOVER},
-    {key:'gk_distribution_success',label:'Distribuição GR ✓',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_SUCCESS},
-    {key:'gk_distribution_error',label:'Erro Distribuição GR ❌',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_ERROR},
-    {key:'gk_assist',label:'Assistência do GR 🧤',action:ACTION_TYPES.GOALKEEPER_ASSIST}
+    {key:'gk_distribution_error',label:'Erro Distribuição GR ❌',action:ACTION_TYPES.GOALKEEPER_DISTRIBUTION_ERROR}
   ]
 };
 function ensureGenericPopup(){
