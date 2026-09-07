@@ -1,6 +1,7 @@
 /* Canonical live sanction engine. Bilateral, clock-aware and stint-safe. */
 import { store } from '../state.js';
 import { createEvent } from './events.js';
+import { getNumericalContext } from './numericalSituation.js';
 
 export const SANCTION_TYPES = Object.freeze({
   YELLOW: 'YELLOW_CARD',
@@ -55,6 +56,7 @@ export function recordSanction({ side, playerId, sanction }) {
 
   const timestamp = Number(store.state.totalSeconds) || 0;
   let createdEvent = null;
+  const numericalContext = getNumericalContext(store.state, side);
 
   store.update(state => {
     const player = getPlayer(state, side, playerId);
@@ -79,6 +81,7 @@ export function recordSanction({ side, playerId, sanction }) {
         match_id: state.matchId ?? null, timestamp_seconds: timestamp, period: state.currentGamePart,
         team_id: side, player_id: actualPlayerId, event_type: SANCTION_TYPES.YELLOW,
         score_for_before: scoreFor, score_against_before: scoreAgainst,
+        numerical_context: numericalContext,
         home_away: side === 'A' ? 'HOME' : 'AWAY', metadata: commonMetadata
       });
     } else if (sanction === '2min') {
@@ -100,6 +103,7 @@ export function recordSanction({ side, playerId, sanction }) {
         team_id: side, player_id: actualPlayerId,
         event_type: third ? SANCTION_TYPES.DISQUALIFICATION : SANCTION_TYPES.TWO_MIN,
         score_for_before: scoreFor, score_against_before: scoreAgainst,
+        numerical_context: numericalContext,
         home_away: side === 'A' ? 'HOME' : 'AWAY',
         metadata: { ...commonMetadata, two_min_number: player.sanctions.twoMin, automatic_disqualification: third, suspension_end_time: timestamp + 120 }
       });
@@ -116,6 +120,7 @@ export function recordSanction({ side, playerId, sanction }) {
         match_id: state.matchId ?? null, timestamp_seconds: timestamp, period: state.currentGamePart,
         team_id: side, player_id: actualPlayerId, event_type: SANCTION_TYPES.RED,
         score_for_before: scoreFor, score_against_before: scoreAgainst,
+        numerical_context: numericalContext,
         home_away: side === 'A' ? 'HOME' : 'AWAY', metadata: commonMetadata
       });
     } else {
