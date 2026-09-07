@@ -3,6 +3,7 @@ import { store } from '../state.js';
 import { createEvent, SHOT_RESULTS } from './events.js';
 import { activeGoalkeeper, registerShot } from './shotEngine.js';
 import { canRecordLiveAction } from './matchClock.js';
+import { getNumericalContext } from './numericalSituation.js';
 
 export const ACTION_TYPES = Object.freeze({
   SHOT: 'SHOT', ASSIST: 'ASSIST', PRE_ASSIST: 'PRE_ASSIST', TURNOVER: 'TURNOVER',
@@ -29,12 +30,13 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
   const p = player(attacking, playerId);
   if (!p) throw new Error('Atleta não encontrado.');
   if (!Object.values(ACTION_TYPES).includes(action)) throw new Error('Ação inválida.');
+  const numericalContext = getNumericalContext(s, attacking);
 
   if (action === ACTION_TYPES.SHOT) {
     if (!SHOT_RESULTS.includes(shotResult)) throw new Error('Resultado de remate inválido.');
     return store.update(next => registerShot(next, {
       attackingSide: attacking, shooterId: p.id, result: shotResult,
-      goalkeeperId, ...metadata
+      goalkeeperId, numerical_context: numericalContext, ...metadata
     }));
   }
 
@@ -47,6 +49,7 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
       event_type: action,
       score_for_before: next.gameData[attacking]?.stats?.goals || 0,
       score_against_before: next.gameData[defending]?.stats?.goals || 0,
+      numerical_context: numericalContext,
       home_away: attacking === 'A' ? 'HOME' : 'AWAY',
       metadata
     });
