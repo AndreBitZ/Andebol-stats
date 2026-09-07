@@ -19,7 +19,6 @@ export function getNumericalContext(state, attackingSide) {
   const own = effectiveOnCourt(state, attackingSide);
   const otherSide = attackingSide === 'A' ? 'B' : 'A';
   const other = effectiveOnCourt(state, otherSide);
-
   if (own === other) return `EVEN_${own}V${other}`;
   if (own > other) return `POWERPLAY_${own}V${other}`;
   return `SHORTHANDED_${own}V${other}`;
@@ -31,16 +30,20 @@ export function getMatchNumericalSituation(state) {
 
 export function syncNumericalSituationLog(state) {
   const now = Math.max(0, Number(state?.totalSeconds) || 0);
+  const currentA = effectiveOnCourt(state, 'A');
+  const currentB = effectiveOnCourt(state, 'B');
+  const situationA = `${currentA}V${currentB}`;
+  const situationB = `${currentB}V${currentA}`;
+
   if (!Array.isArray(state.gameSituationLog) || state.gameSituationLog.length === 0) {
-    state.gameSituationLog = [{ startTime: now, endTime: null, situationA: '7V7', situationB: '7V7' }];
+    state.gameSituationLog = [{ startTime: now, endTime: null, situationA, situationB }];
+    state.lastKnownSituations = { A: situationA, B: situationB };
+    return true;
   }
 
-  const situationA = `${effectiveOnCourt(state, 'A')}V${effectiveOnCourt(state, 'B')}`;
-  const situationB = `${effectiveOnCourt(state, 'B')}V${effectiveOnCourt(state, 'A')}`;
   const last = state.gameSituationLog[state.gameSituationLog.length - 1];
-
-  if (!last || last.situationA !== situationA || last.situationB !== situationB) {
-    if (last && last.endTime == null && now >= Number(last.startTime || 0)) last.endTime = now;
+  if (last.situationA !== situationA || last.situationB !== situationB) {
+    if (last.endTime == null && now >= Number(last.startTime || 0)) last.endTime = now;
     state.gameSituationLog.push({ startTime: now, endTime: null, situationA, situationB });
     state.lastKnownSituations = { A: situationA, B: situationB };
     return true;
