@@ -40,7 +40,13 @@ export function calculatePlayerAnalytics(state = {}, side) {
     const minutes = minutesForPlayer(state, side, player);
     const positive = Array.isArray(player.positiveActions) ? player.positiveActions.length : 0;
     const negative = Array.isArray(player.negativeActions) ? player.negativeActions.length : 0;
-    const goalkeeperSaves = mine.filter(e => e.event_type === 'GOALKEEPER_SAVE').length;
+
+    // A saved shot belongs to the goalkeeper defending that shot, not to the shooter.
+    // GOALKEEPER_SAVE is also supported for manually recorded goalkeeper actions.
+    const goalkeeperSaves = events.filter(e =>
+      (e.event_type === 'SHOT' && e.shot_result === 'SAVED' && String(e.goalkeeper_id ?? '') === playerKey(player)) ||
+      (e.event_type === 'GOALKEEPER_SAVE' && String(e.player_id ?? '') === playerKey(player))
+    ).length;
     const goalkeeperDistributionSuccess = mine.filter(e => e.event_type === 'GOALKEEPER_DISTRIBUTION_SUCCESS').length;
     const goalkeeperDistributionError = mine.filter(e => e.event_type === 'GOALKEEPER_DISTRIBUTION_ERROR').length;
     const assists = mine.filter(e => e.event_type === 'ASSIST').length;
