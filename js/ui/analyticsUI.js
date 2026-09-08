@@ -51,6 +51,7 @@ export function renderAnalyticsPanel() {
   const analytics = calculateMatchAnalytics(state);
   const nameA = state.teamAName || 'Equipa A';
   const nameB = state.teamBName || 'Equipa B';
+  container.dataset.analyticsPanel = 'active';
   container.innerHTML = `<div class="mb-4 text-center"><div class="text-sm text-gray-400">Análise em tempo real</div><div class="text-xs text-gray-500">Eventos registados: ${analytics.total_events} · Cronómetro: ${seconds(analytics.updated_at_seconds)}</div></div>
     <div class="grid md:grid-cols-2 gap-4">${teamCard(nameA, analytics.A)}${teamCard(nameB, analytics.B)}</div>`;
 }
@@ -58,16 +59,48 @@ export function renderAnalyticsPanel() {
 if (typeof window !== 'undefined' && !window.__handballAnalyticsUIInstalled) {
   window.__handballAnalyticsUIInstalled = true;
 
-  // main.js ainda possui o renderizador antigo do separador Estatísticas.
-  // Estes listeners executam a renderização no fim do ciclo para que o painel
-  // analítico não seja imediatamente substituído pelas 5 estatísticas antigas.
-  const renderAfterLegacyUI = () => window.setTimeout(renderAnalyticsPanel, 0);
+  let observer = null;
+  let rendering = false;
+  let scheduled = false;
 
-  window.addEventListener('handball:state-updated', renderAfterLegacyUI);
+  const renderSafely = () => {
+    if (scheduled) return;
+    scheduled = true;
+    window.setTimeout(() => {
+      scheduled = false;
+      if (rendering) return;
+      const container = document.getElementById('stats-comparison-container');
+      if (!container) return;
+      rendering = true;
+      if (observer) observer.disconnect();
+      try {
+        renderAnalyticsPanel();
+      } finally {
+        rendering = false;
+        if (observer) observer.observe(container, { childList: true, subtree: true });
+      }
+    }, 0);
+  };
+
+  window.addEventListener('handball:state-updated', renderSafely);
+
   document.addEventListener('click', (event) => {
     const button = event.target.closest?.('.tab-link');
-    if (button?.dataset?.tab === 'stats') renderAfterLegacyUI();
+    if (button?.dataset?.tab === 'stats') renderSafely();
   }, true);
 
-  renderAnalyticsPanel();
+  const installObserver = () => {
+    const container = document.getElementById('stats-comparison-container');
+    if (!container) {
+      window.setTimeout(installObserver, 100);
+      return;
+    }
+    observer = new MutationObserver(() => {
+      if (!rendering) renderSafely();
+    });
+    observer.observe(container, { childList: true, subtree: true });
+    renderSafely();
+  };
+
+  installObserver();
 }
