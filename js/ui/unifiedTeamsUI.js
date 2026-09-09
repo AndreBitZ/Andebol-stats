@@ -1,4 +1,5 @@
 import { store } from '../state.js';
+import './shotModalUI.js';
 
 function hideLegacy() {
   ['goalOpponentBtn','saveOpponentBtn','missOpponentBtn','twoMinOpponentBtn','opponent7v6Btn'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
