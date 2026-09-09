@@ -40,9 +40,10 @@ const TURNOVERS = ['TURNOVER','RECEPTION_ERROR','OFFENSIVE_FOUL','PASSIVE_TURNOV
 
 function emptyTeam() {
   return { possessions:0, goals:0, shots:0, saved:0, missed:0, post:0, blocked:0,
+    saves:0, goals_conceded:0,
     turnovers:0, steals:0, interceptions:0, recoveries:0, seven_meter_won:0,
-    attack_efficiency:null, shot_efficiency:null, average_attack_duration_seconds:null,
-    transition_attacks:0 };
+    attack_efficiency:null, shot_efficiency:null, goalkeeper_save_efficiency:null,
+    average_attack_duration_seconds:null, transition_attacks:0 };
 }
 
 function teamFromId(state, teamId) {
@@ -77,6 +78,11 @@ export function calculateMatchAnalytics(state = {}) {
     if (event.event_type === 'SHOT') {
       result[side].shots += 1;
       if (SHOT_RESULTS.includes(event.shot_result)) result[side][event.shot_result.toLowerCase()] += 1;
+
+      // A saved shot belongs to the defending goalkeeper/team, not the shooter.
+      const defendingSide = side === 'A' ? 'B' : 'A';
+      if (event.shot_result === 'SAVED') result[defendingSide].saves += 1;
+      if (event.shot_result === 'GOAL') result[defendingSide].goals_conceded += 1;
     }
     if (TURNOVERS.includes(event.event_type)) result[side].turnovers += 1;
     if (event.event_type === 'STEAL') result[side].steals += 1;
@@ -89,6 +95,7 @@ export function calculateMatchAnalytics(state = {}) {
     const t = result[side];
     t.attack_efficiency = possessionEfficiency(t.goals, t.possessions);
     t.shot_efficiency = safeRate(t.goals, t.shots);
+    t.goalkeeper_save_efficiency = saveRate(t.saves, t.goals_conceded);
   }
   return result;
 }
