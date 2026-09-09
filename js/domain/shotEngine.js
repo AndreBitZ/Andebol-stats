@@ -42,8 +42,10 @@ export function registerShot(state, { attackingSide, shooterId, result, goalkeep
   } else if (result === 'SAVED') {
     attack.stats.savedShots = (attack.stats.savedShots || 0) + 1;
     if (goalkeeper) goalkeeper.saves = (goalkeeper.saves || 0) + 1;
-  } else if (result === 'MISSED' || result === 'POST') {
+  } else if (result === 'MISSED') {
     attack.stats.misses = (attack.stats.misses || 0) + 1;
+  } else if (result === 'POST') {
+    attack.stats.posts = (attack.stats.posts || 0) + 1;
   } else if (result === 'BLOCKED') {
     attack.stats.blocked = (attack.stats.blocked || 0) + 1;
   }
