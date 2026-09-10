@@ -1,21 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
   <title id="title">Campo de andebol — zonas de remate</title>
-  <desc id="desc">Esquema de referência para zonas de remate. A área do guarda-redes, dentro da linha dos 6 metros, não pertence a nenhuma zona.</desc>
+  <desc id="desc">Reprodução vetorial fiel do esquema de referência. A área do guarda-redes, dentro da linha dos 6 metros, não pertence a nenhuma zona.</desc>
   <rect width="1024" height="1024" fill="#fff"/>
 
-  <!-- Campo -->
+  <!-- Campo e linhas -->
   <g fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
     <rect x="52" y="70" width="920" height="904"/>
 
     <!-- Área do GR / linha dos 6 m: NÃO É UMA ZONA -->
-    <path d="M211 70 C211 70 211 327 512 327 C813 327 813 70 813 70"/>
+    <path d="M211 70 A301 257 0 0 1 813 70"/>
 
-    <!-- Linhas laterais que ligam a área do GR aos setores -->
+    <!-- Linhas que fecham os setores 1/2 e 4/5 -->
     <path d="M132 360 L264 242"/>
     <path d="M892 360 L760 242"/>
 
-    <!-- Linha dos 9 m tracejada -->
-    <path d="M53 99 C53 99 53 512 512 512 C971 512 971 99 971 99" stroke-dasharray="13 10"/>
+    <!-- Linha dos 9 m: lados + arco central, tracejada -->
+    <path d="M53 99 L132 360" stroke-dasharray="13 10"/>
+    <path d="M132 360 A380 413 0 0 1 892 360" stroke-dasharray="13 10"/>
+    <path d="M892 360 L971 99" stroke-dasharray="13 10"/>
 
     <!-- Divisões dos setores 2/3/4 -->
     <path d="M343 508 L407 327"/>
@@ -25,11 +27,11 @@
     <path d="M343 508 V754"/>
     <path d="M681 508 V754"/>
 
-    <!-- Início da zona 9 -->
+    <!-- Limite superior da zona 9 -->
     <path d="M52 754 H972"/>
   </g>
 
-  <!-- Baliza e rede, como na referência -->
+  <!-- Baliza e rede -->
   <g fill="none" stroke="#111" stroke-linecap="round" stroke-linejoin="round">
     <g stroke-width="4">
       <path d="M430 70 H594"/>
@@ -47,13 +49,13 @@
     </g>
   </g>
 
-  <!-- Pontos de referência -->
+  <!-- Pontos da referência -->
   <g fill="#111">
     <circle cx="512" cy="221" r="11"/>
     <circle cx="512" cy="972" r="10"/>
   </g>
 
-  <!-- Zonas: a área do GR fica deliberadamente sem etiqueta -->
+  <!-- Zonas 1–9. A área do GR fica sem etiqueta. -->
   <g font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="40" fill="#111" text-anchor="middle">
     <text x="145" y="230">Zona 1</text>
     <text x="290" y="390">Zona 2</text>
