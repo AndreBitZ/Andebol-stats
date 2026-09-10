@@ -1,10 +1,11 @@
 // js/constants.js - Regras e Pontuações do Andebol
+import './shotVisuals.js';
 
 export const SHOT_ZONE_RULES = { 
     'Ponta': [1, 5], 'Pivot': [2, 3, 4], 'Penetração': [2, 3, 4], 
     '6mt': [2, 3, 4], '9mt': [6, 7, 8], '7mt': [], 
-    '1ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8], '2ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8], 
-    '3ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8], 'Após Golo': [1, 2, 3, 4, 5, 6, 7, 8], 
+    '1ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8, 9], '2ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8, 9], 
+    '3ª Vaga': [1, 2, 3, 4, 5, 6, 7, 8, 9], 'Após Golo': [1, 2, 3, 4, 5, 6, 7, 8, 9], 
     'Baliza Aberta': [] 
 };
 
@@ -23,7 +24,7 @@ export const POINT_SYSTEM = {
             '3ª Vaga': { saved: 8, goal: -2 },
             'Após Golo': { saved: 8, goal: -2 },
             'Baliza Aberta': { saved: 10, goal: -1 },
-            'Default': { saved: 5, goal: -2 } // Fallback
+            'Default': { saved: 5, goal: -2 }
         },
         positive_actions: { '2min_provoked': 1, '2min_7m_provoked': 1 },
         negative_actions: {
@@ -44,7 +45,7 @@ export const POINT_SYSTEM = {
             '3ª Vaga': { goal: 5, fail: -8 },
             'Após Golo': { goal: 5, fail: -8 },
             'Baliza Aberta': { goal: 10, fail: -1 },
-            'Default': { goal: 5, fail: -5 } // Fallback
+            'Default': { goal: 5, fail: -5 }
         },
         positive_actions: {
             'assist': 4, 'steal': 8, '2min_provoked': 1,
