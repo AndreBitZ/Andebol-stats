@@ -11,7 +11,7 @@ function makeZoneButton(zone, label = `Zona ${zone}`) {
   return button;
 }
 
-function installCourt() {
+export function installShotCourt() {
   const container = document.getElementById('shotZoneContainer');
   if (!container) return;
 
@@ -42,7 +42,6 @@ function installCourt() {
   row3.appendChild(makeZoneButton(9));
 
   grid.append(row1, row2, row3);
-
   container.replaceChildren(heading, subtitle, grid);
 }
 
@@ -56,13 +55,11 @@ function makeGoalButton(zone) {
   return button;
 }
 
-function installGoal() {
+export function installShotGoal() {
   const wrapper = document.getElementById('goalSvgWrapper');
   const oldGoal = document.getElementById('goalSvg');
   if (!wrapper || !oldGoal) return;
 
-  // Mantemos o id #goalSvg porque o main.js usa esse elemento para calcular
-  // a posição selecionada. Agora é um painel HTML 3x3, não uma imagem SVG.
   const goal = document.createElement('div');
   goal.id = 'goalSvg';
   goal.className = 'grid grid-cols-3 gap-1 p-2 rounded-lg border border-gray-500 bg-gray-900 w-full';
@@ -74,14 +71,7 @@ function installGoal() {
   }
 
   oldGoal.replaceWith(goal);
-}
 
-function handleGoalZoneSelection() {
-  const goal = document.getElementById('goalSvg');
-  if (!goal) return;
-
-  // O main.js continua a receber o clique através do #goalSvg.
-  // Este listener apenas destaca visualmente a célula 3x3 escolhida.
   goal.addEventListener('click', event => {
     const button = event.target.closest('.goal-zone-btn');
     if (!button) return;
@@ -94,32 +84,7 @@ function handleGoalZoneSelection() {
   });
 }
 
-function handleSevenMetersAfterMain() {
-  document.querySelectorAll('.shot-type-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const isSeven = btn.textContent.trim().toLowerCase() === '7mt';
-      window.setTimeout(() => {
-        const zone = document.getElementById('shotZoneContainer');
-        const goal = document.getElementById('shotGoalContainer');
-        if (!zone || !goal) return;
-        if (isSeven) {
-          zone.classList.add('hidden');
-          goal.classList.remove('hidden');
-        }
-      }, 0);
-    });
-  });
-}
-
-function initShotVisuals() {
-  installCourt();
-  installGoal();
-  handleGoalZoneSelection();
-  handleSevenMetersAfterMain();
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initShotVisuals, { once: true });
-} else {
-  initShotVisuals();
+export function initShotVisuals() {
+  installShotCourt();
+  installShotGoal();
 }
