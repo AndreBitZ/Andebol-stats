@@ -3,8 +3,9 @@
 const COURT_SRC = './assets/shot-court-zones.svg';
 const GOAL_SRC = './assets/shot-goal-zones.svg';
 
-function zoneButton(zone, style) {
-  return `<button type="button" class="shot-zone-btn absolute bg-transparent hover:bg-blue-500/20 active:bg-blue-500/30 rounded-lg transition border-2 border-transparent hover:border-blue-400/50" data-zone="${zone}" aria-label="Zona ${zone}" style="${style}"><span class="sr-only">Zona ${zone}</span></button>`;
+function zoneButton(zone, style, clipPath = '') {
+  const clip = clipPath ? `clip-path:polygon(${clipPath});` : '';
+  return `<button type="button" class="shot-zone-btn absolute bg-transparent hover:bg-blue-500/20 active:bg-blue-500/30 transition border-0 p-0" data-zone="${zone}" aria-label="Zona ${zone}" style="${style}${clip}"><span class="sr-only">Zona ${zone}</span></button>`;
 }
 
 function installCourt() {
@@ -30,18 +31,18 @@ function installCourt() {
   img.draggable = false;
   wrapper.appendChild(img);
 
-  // Coordenadas em percentagem do viewBox 1024x1024.
-  // A área do GR não recebe qualquer botão.
+  // Zonas clicáveis seguem a geometria desenhada no campo.
+  // A área do guarda-redes não recebe qualquer botão.
   wrapper.insertAdjacentHTML('beforeend', [
-    zoneButton(1, 'left:5%;top:10%;width:22%;height:24%;'),
-    zoneButton(5, 'right:5%;top:10%;width:22%;height:24%;'),
-    zoneButton(2, 'left:15%;top:28%;width:28%;height:25%;'),
-    zoneButton(4, 'right:15%;top:28%;width:28%;height:25%;'),
-    zoneButton(3, 'left:39%;top:30%;width:22%;height:23%;'),
-    zoneButton(6, 'left:5%;top:49%;width:30%;height:25%;'),
-    zoneButton(7, 'left:35%;top:49%;width:30%;height:25%;'),
-    zoneButton(8, 'right:5%;top:49%;width:30%;height:25%;'),
-    zoneButton(9, 'left:5%;top:74%;width:90%;height:20%;')
+    zoneButton(1, 'left:5%;top:10%;width:22%;height:27%;', '0% 0%,100% 0%,91% 72%,38% 100%'),
+    zoneButton(5, 'left:73%;top:10%;width:22%;height:27%;', '0% 0%,100% 0%,62% 100%,9% 72%'),
+    zoneButton(2, 'left:14%;top:27%;width:28%;height:26%;', '4% 0%,100% 0%,82% 100%,0% 100%'),
+    zoneButton(4, 'left:58%;top:27%;width:28%;height:26%;', '0% 0%,96% 0%,100% 100%,18% 100%'),
+    zoneButton(3, 'left:40%;top:30%;width:20%;height:23%;', '8% 0%,92% 0%,100% 100%,0% 100%'),
+    zoneButton(6, 'left:5%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
+    zoneButton(7, 'left:35%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
+    zoneButton(8, 'left:65%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
+    zoneButton(9, 'left:5%;top:74%;width:90%;height:20%;', '0% 0%,100% 0%,100% 100%,0% 100%')
   ].join(''));
 
   const hint = document.createElement('p');
