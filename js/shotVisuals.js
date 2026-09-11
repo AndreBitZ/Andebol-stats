@@ -1,72 +1,97 @@
-// Visualização do modal de remate baseada nos SVGs oficiais do campo e da baliza.
+// Interface visual do modal de remate usando apenas botões HTML.
+// Não depende de SVG para selecionar as zonas.
 
-const COURT_SRC = './assets/shot-court-zones.svg';
-const GOAL_SRC = './assets/shot-goal-zones.svg';
-
-function zoneButton(zone, style, clipPath = '') {
-  const clip = clipPath ? `clip-path:polygon(${clipPath});` : '';
-  return `<button type="button" class="shot-zone-btn absolute bg-transparent hover:bg-blue-500/20 active:bg-blue-500/30 transition border-0 p-0" data-zone="${zone}" aria-label="Zona ${zone}" style="${style}${clip}"><span class="sr-only">Zona ${zone}</span></button>`;
+function makeZoneButton(zone, label = `Zona ${zone}`) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'shot-zone-btn w-full min-h-[58px] rounded-xl border border-gray-600 bg-gray-700 text-white font-bold text-lg transition hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  button.dataset.zone = String(zone);
+  button.setAttribute('aria-label', label);
+  button.textContent = String(zone);
+  return button;
 }
 
 function installCourt() {
   const container = document.getElementById('shotZoneContainer');
   if (!container) return;
 
-  const heading = container.querySelector('p');
-  container.innerHTML = '';
-  if (heading) {
-    heading.textContent = '2. Zona de Remate';
-    heading.className = 'text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left';
-    container.appendChild(heading);
-  }
+  const heading = document.createElement('p');
+  heading.className = 'text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left';
+  heading.textContent = '2. Zona de Remate';
 
-  const wrapper = document.createElement('div');
-  wrapper.className = 'relative w-full overflow-hidden rounded-lg bg-white border border-gray-600';
-  wrapper.style.aspectRatio = '1 / 1';
+  const subtitle = document.createElement('p');
+  subtitle.className = 'text-gray-500 text-xs mb-3';
+  subtitle.textContent = 'Escolha a zona de origem do remate';
 
-  const img = document.createElement('img');
-  img.src = COURT_SRC;
-  img.alt = 'Campo de andebol dividido nas zonas de remate 1 a 9';
-  img.className = 'block w-full h-full object-contain select-none';
-  img.draggable = false;
-  wrapper.appendChild(img);
+  const grid = document.createElement('div');
+  grid.className = 'grid gap-2 w-full';
 
-  // Zonas clicáveis seguem a geometria desenhada no campo.
-  // A área do guarda-redes não recebe qualquer botão.
-  wrapper.insertAdjacentHTML('beforeend', [
-    zoneButton(1, 'left:5%;top:10%;width:22%;height:27%;', '0% 0%,100% 0%,91% 72%,38% 100%'),
-    zoneButton(5, 'left:73%;top:10%;width:22%;height:27%;', '0% 0%,100% 0%,62% 100%,9% 72%'),
-    zoneButton(2, 'left:14%;top:27%;width:28%;height:26%;', '4% 0%,100% 0%,82% 100%,0% 100%'),
-    zoneButton(4, 'left:58%;top:27%;width:28%;height:26%;', '0% 0%,96% 0%,100% 100%,18% 100%'),
-    zoneButton(3, 'left:40%;top:30%;width:20%;height:23%;', '8% 0%,92% 0%,100% 100%,0% 100%'),
-    zoneButton(6, 'left:5%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
-    zoneButton(7, 'left:35%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
-    zoneButton(8, 'left:65%;top:50%;width:30%;height:24%;', '0% 0%,100% 0%,100% 100%,0% 100%'),
-    zoneButton(9, 'left:5%;top:74%;width:90%;height:20%;', '0% 0%,100% 0%,100% 100%,0% 100%')
-  ].join(''));
+  // 1ª linha: zonas 1 a 5.
+  const row1 = document.createElement('div');
+  row1.className = 'grid grid-cols-5 gap-2 w-full';
+  [1, 2, 3, 4, 5].forEach(zone => row1.appendChild(makeZoneButton(zone)));
 
-  const hint = document.createElement('p');
-  hint.className = 'text-xs text-gray-500 mt-1';
-  hint.textContent = 'Toque diretamente na zona do campo';
+  // 2ª linha: zonas 6 e 7, ocupando toda a largura da primeira linha.
+  const row2 = document.createElement('div');
+  row2.className = 'grid grid-cols-2 gap-2 w-full';
+  [6, 7].forEach(zone => row2.appendChild(makeZoneButton(zone)));
 
-  container.appendChild(wrapper);
-  container.appendChild(hint);
+  // 3ª linha: zona 9, ocupando toda a largura.
+  const row3 = document.createElement('div');
+  row3.className = 'grid grid-cols-1 gap-2 w-full';
+  row3.appendChild(makeZoneButton(9));
+
+  grid.append(row1, row2, row3);
+
+  container.replaceChildren(heading, subtitle, grid);
+}
+
+function makeGoalButton(zone) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'goal-zone-btn min-h-[58px] rounded-md border border-gray-500 bg-gray-700 text-white font-bold text-lg transition hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  button.dataset.goalZone = String(zone);
+  button.setAttribute('aria-label', `Zona da baliza ${zone}`);
+  button.textContent = String(zone);
+  return button;
 }
 
 function installGoal() {
   const wrapper = document.getElementById('goalSvgWrapper');
-  if (!wrapper) return;
+  const oldGoal = document.getElementById('goalSvg');
+  if (!wrapper || !oldGoal) return;
 
-  const oldSvg = document.getElementById('goalSvg');
-  if (!oldSvg) return;
+  // Mantemos o id #goalSvg porque o main.js usa esse elemento para calcular
+  // a posição selecionada. Agora é um painel HTML 3x3, não uma imagem SVG.
+  const goal = document.createElement('div');
+  goal.id = 'goalSvg';
+  goal.className = 'grid grid-cols-3 gap-1 p-2 rounded-lg border border-gray-500 bg-gray-900 w-full';
+  goal.setAttribute('role', 'grid');
+  goal.setAttribute('aria-label', 'Baliza dividida em 9 zonas');
 
-  const img = document.createElement('img');
-  img.id = 'goalSvg';
-  img.src = GOAL_SRC;
-  img.alt = 'Baliza de andebol dividida em 9 zonas';
-  img.className = 'w-full h-full object-contain pointer-events-auto select-none';
-  img.draggable = false;
-  oldSvg.replaceWith(img);
+  for (let zone = 1; zone <= 9; zone++) {
+    goal.appendChild(makeGoalButton(zone));
+  }
+
+  oldGoal.replaceWith(goal);
+}
+
+function handleGoalZoneSelection() {
+  const goal = document.getElementById('goalSvg');
+  if (!goal) return;
+
+  // O main.js continua a receber o clique através do #goalSvg.
+  // Este listener apenas destaca visualmente a célula 3x3 escolhida.
+  goal.addEventListener('click', event => {
+    const button = event.target.closest('.goal-zone-btn');
+    if (!button) return;
+    goal.querySelectorAll('.goal-zone-btn').forEach(b => {
+      b.classList.remove('bg-blue-600');
+      b.classList.add('bg-gray-700');
+    });
+    button.classList.remove('bg-gray-700');
+    button.classList.add('bg-blue-600');
+  });
 }
 
 function handleSevenMetersAfterMain() {
@@ -89,6 +114,7 @@ function handleSevenMetersAfterMain() {
 function initShotVisuals() {
   installCourt();
   installGoal();
+  handleGoalZoneSelection();
   handleSevenMetersAfterMain();
 }
 
