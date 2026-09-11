@@ -1,5 +1,4 @@
 // js/constants.js - Regras e Pontuações do Andebol
-import './shotVisuals.js';
 
 export const SHOT_ZONE_RULES = { 
     'Ponta': [1, 5], 'Pivot': [2, 3, 4], 'Penetração': [2, 3, 4], 
