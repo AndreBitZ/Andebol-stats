@@ -1,6 +1,6 @@
 // Interface visual do modal de remate usando apenas botões HTML.
 // Não depende de SVG nem de imagens para selecionar zonas.
-// UI_VERSION: BUTTONS_V3_NO_SVG_2026_09_11
+// UI_VERSION: BUTTONS_V4_OBSERVER_2026_09_11
 
 function makeZoneButton(zone, label = `Zona ${zone}`) {
   const button = document.createElement('button');
@@ -27,17 +27,14 @@ export function installShotCourt() {
   const grid = document.createElement('div');
   grid.className = 'grid gap-2 w-full';
 
-  // 1ª linha: zonas 1 a 5.
   const row1 = document.createElement('div');
   row1.className = 'grid grid-cols-5 gap-2 w-full';
   [1, 2, 3, 4, 5].forEach(zone => row1.appendChild(makeZoneButton(zone)));
 
-  // 2ª linha: zonas 6 e 7, cada uma com metade da largura.
   const row2 = document.createElement('div');
   row2.className = 'grid grid-cols-2 gap-2 w-full';
   [6, 7].forEach(zone => row2.appendChild(makeZoneButton(zone)));
 
-  // 3ª linha: zona 9 com toda a largura.
   const row3 = document.createElement('div');
   row3.className = 'grid grid-cols-1 gap-2 w-full';
   row3.appendChild(makeZoneButton(9));
@@ -60,7 +57,6 @@ export function installShotGoal() {
   const wrapper = document.getElementById('goalSvgWrapper');
   if (!wrapper) return;
 
-  // Remove qualquer SVG/imagem antiga que ainda exista no HTML/cache.
   wrapper.querySelectorAll('svg, img, image').forEach(node => node.remove());
   wrapper.className = 'w-full';
   wrapper.style.position = 'relative';
@@ -76,10 +72,7 @@ export function installShotGoal() {
   goal.setAttribute('role', 'grid');
   goal.setAttribute('aria-label', 'Baliza dividida em 9 zonas');
 
-  for (let zone = 1; zone <= 9; zone++) {
-    goal.appendChild(makeGoalButton(zone));
-  }
-
+  for (let zone = 1; zone <= 9; zone++) goal.appendChild(makeGoalButton(zone));
   wrapper.insertBefore(goal, wrapper.firstChild);
 
   const marker = document.getElementById('shotMarker');
@@ -95,7 +88,6 @@ export function installShotGoal() {
     button.classList.remove('bg-gray-700');
     button.classList.add('bg-blue-600');
 
-    // Coordenadas normalizadas no centro da célula 3x3.
     const col = (zone - 1) % 3;
     const row = Math.floor((zone - 1) / 3);
     const xPercent = ((col + 0.5) / 3) * 100;
@@ -110,7 +102,6 @@ export function installShotGoal() {
     const outcomeContainer = document.getElementById('shotOutcomeContainer');
     if (outcomeContainer) outcomeContainer.classList.remove('hidden');
 
-    // A lógica existente do main.js lê currentShotCoords através do clique no #goalSvg.
     goal.dispatchEvent(new CustomEvent('shot-goal-selected', {
       bubbles: true,
       detail: { zone, x: xPercent.toFixed(1), y: yPercent.toFixed(1) }
@@ -118,10 +109,46 @@ export function installShotGoal() {
   });
 }
 
-export function initShotVisuals() {
-  // Executar sempre a limpeza antes de reconstruir.
+function cleanAndInstall() {
   const modal = document.getElementById('shotModal');
-  if (modal) modal.querySelectorAll('svg, img, image').forEach(node => node.remove());
+  if (!modal) return;
+
+  // Se outra parte da aplicação voltar a inserir a interface antiga,
+  // removê-la imediatamente e reconstruir a versão de botões.
+  modal.querySelectorAll('svg, img, image').forEach(node => node.remove());
   installShotCourt();
   installShotGoal();
+}
+
+export function initShotVisuals() {
+  cleanAndInstall();
+
+  // O modal pode ser reconstruído depois do arranque por código legado.
+  // Observamos o modal para garantir que a interface final continua a ser
+  // exclusivamente HTML com botões.
+  const startObserver = () => {
+    const modal = document.getElementById('shotModal');
+    if (!modal || modal.dataset.shotObserverInstalled === '1') return;
+
+    modal.dataset.shotObserverInstalled = '1';
+    const observer = new MutationObserver(() => {
+      if (modal.dataset.shotRebuilding === '1') return;
+      const hasLegacyVisual = !!modal.querySelector('svg, img, image');
+      const hasZoneButtons = !!modal.querySelector('#shotZoneContainer .shot-zone-btn');
+      const hasGoalButtons = !!modal.querySelector('#goalSvg .goal-zone-btn');
+
+      if (hasLegacyVisual || !hasZoneButtons || !hasGoalButtons) {
+        modal.dataset.shotRebuilding = '1';
+        cleanAndInstall();
+        modal.dataset.shotRebuilding = '0';
+      }
+    });
+
+    observer.observe(modal, { childList: true, subtree: true });
+  };
+
+  startObserver();
+  setTimeout(startObserver, 0);
+  setTimeout(startObserver, 250);
+  setTimeout(startObserver, 1000);
 }
