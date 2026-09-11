@@ -1,5 +1,6 @@
 // Interface visual do modal de remate usando apenas botões HTML.
 // Não depende de SVG para selecionar as zonas.
+// UI_VERSION: BUTTONS_V2_2026_09_11
 
 function makeZoneButton(zone, label = `Zona ${zone}`) {
   const button = document.createElement('button');
@@ -26,17 +27,14 @@ export function installShotCourt() {
   const grid = document.createElement('div');
   grid.className = 'grid gap-2 w-full';
 
-  // 1ª linha: zonas 1 a 5.
   const row1 = document.createElement('div');
   row1.className = 'grid grid-cols-5 gap-2 w-full';
   [1, 2, 3, 4, 5].forEach(zone => row1.appendChild(makeZoneButton(zone)));
 
-  // 2ª linha: zonas 6 e 7, ocupando toda a largura da primeira linha.
   const row2 = document.createElement('div');
   row2.className = 'grid grid-cols-2 gap-2 w-full';
   [6, 7].forEach(zone => row2.appendChild(makeZoneButton(zone)));
 
-  // 3ª linha: zona 9, ocupando toda a largura.
   const row3 = document.createElement('div');
   row3.className = 'grid grid-cols-1 gap-2 w-full';
   row3.appendChild(makeZoneButton(9));
