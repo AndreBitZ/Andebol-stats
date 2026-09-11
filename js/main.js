@@ -2,6 +2,7 @@
 import { store } from './state.js';
 import { GameTimer } from './timer.js';
 import { POINT_SYSTEM } from './constants.js';
+import { initShotVisuals } from './shotVisuals.js';
 import { Rules } from './rules.js';
 
 let timer;
@@ -15,6 +16,8 @@ let tempRoster = { players: [], officials: [] };
 function startApp() {
     console.log("Aplicação a iniciar...");
     initDOMElements();
+    // Instalar a interface de remate depois de o DOM existir, substituindo sempre a estrutura antiga.
+    initShotVisuals();
     timer = new GameTimer((seconds) => {
         store.state.totalSeconds = seconds;
         updateDisplay();
