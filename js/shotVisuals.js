@@ -1,6 +1,6 @@
 // Interface visual do modal de remate usando apenas botões HTML.
-// Não depende de SVG para selecionar as zonas.
-// UI_VERSION: BUTTONS_V2_2026_09_11
+// Não depende de SVG nem de imagens para selecionar zonas.
+// UI_VERSION: BUTTONS_V3_NO_SVG_2026_09_11
 
 function makeZoneButton(zone, label = `Zona ${zone}`) {
   const button = document.createElement('button');
@@ -27,14 +27,17 @@ export function installShotCourt() {
   const grid = document.createElement('div');
   grid.className = 'grid gap-2 w-full';
 
+  // 1ª linha: zonas 1 a 5.
   const row1 = document.createElement('div');
   row1.className = 'grid grid-cols-5 gap-2 w-full';
   [1, 2, 3, 4, 5].forEach(zone => row1.appendChild(makeZoneButton(zone)));
 
+  // 2ª linha: zonas 6 e 7, cada uma com metade da largura.
   const row2 = document.createElement('div');
   row2.className = 'grid grid-cols-2 gap-2 w-full';
   [6, 7].forEach(zone => row2.appendChild(makeZoneButton(zone)));
 
+  // 3ª linha: zona 9 com toda a largura.
   const row3 = document.createElement('div');
   row3.className = 'grid grid-cols-1 gap-2 w-full';
   row3.appendChild(makeZoneButton(9));
@@ -55,8 +58,17 @@ function makeGoalButton(zone) {
 
 export function installShotGoal() {
   const wrapper = document.getElementById('goalSvgWrapper');
+  if (!wrapper) return;
+
+  // Remove qualquer SVG/imagem antiga que ainda exista no HTML/cache.
+  wrapper.querySelectorAll('svg, img, image').forEach(node => node.remove());
+  wrapper.className = 'w-full';
+  wrapper.style.position = 'relative';
+  wrapper.style.height = 'auto';
+  wrapper.style.cursor = 'default';
+
   const oldGoal = document.getElementById('goalSvg');
-  if (!wrapper || !oldGoal) return;
+  if (oldGoal) oldGoal.remove();
 
   const goal = document.createElement('div');
   goal.id = 'goalSvg';
@@ -68,21 +80,48 @@ export function installShotGoal() {
     goal.appendChild(makeGoalButton(zone));
   }
 
-  oldGoal.replaceWith(goal);
+  wrapper.insertBefore(goal, wrapper.firstChild);
 
+  const marker = document.getElementById('shotMarker');
   goal.addEventListener('click', event => {
     const button = event.target.closest('.goal-zone-btn');
     if (!button) return;
+
+    const zone = Number(button.dataset.goalZone);
     goal.querySelectorAll('.goal-zone-btn').forEach(b => {
       b.classList.remove('bg-blue-600');
       b.classList.add('bg-gray-700');
     });
     button.classList.remove('bg-gray-700');
     button.classList.add('bg-blue-600');
+
+    // Coordenadas normalizadas no centro da célula 3x3.
+    const col = (zone - 1) % 3;
+    const row = Math.floor((zone - 1) / 3);
+    const xPercent = ((col + 0.5) / 3) * 100;
+    const yPercent = ((row + 0.5) / 3) * 100;
+
+    if (marker) {
+      marker.style.left = `${xPercent}%`;
+      marker.style.top = `${yPercent}%`;
+      marker.classList.remove('hidden');
+    }
+
+    const outcomeContainer = document.getElementById('shotOutcomeContainer');
+    if (outcomeContainer) outcomeContainer.classList.remove('hidden');
+
+    // A lógica existente do main.js lê currentShotCoords através do clique no #goalSvg.
+    goal.dispatchEvent(new CustomEvent('shot-goal-selected', {
+      bubbles: true,
+      detail: { zone, x: xPercent.toFixed(1), y: yPercent.toFixed(1) }
+    }));
   });
 }
 
 export function initShotVisuals() {
+  // Executar sempre a limpeza antes de reconstruir.
+  const modal = document.getElementById('shotModal');
+  if (modal) modal.querySelectorAll('svg, img, image').forEach(node => node.remove());
   installShotCourt();
   installShotGoal();
 }
