@@ -1,6 +1,6 @@
 // Interface visual do modal de remate usando apenas botões HTML.
 // Não depende de SVG nem de imagens para selecionar zonas.
-// UI_VERSION: BUTTONS_V5_GLOBAL_OBSERVER_2026_09_11
+// UI_VERSION: BUTTONS_V6_NATIVE_MODAL_2026_09_11
 
 function makeZoneButton(zone, label = `Zona ${zone}`) {
   const button = document.createElement('button');
@@ -21,7 +21,7 @@ export function installShotCourt() {
   heading.textContent = '2. Zona de Remate';
 
   const subtitle = document.createElement('p');
-  subtitle.className = 'text-gray-500 text-xs mb-3';
+  subtitle.className = 'text-gray-500 text-xs mb-3 text-left';
   subtitle.textContent = 'Escolha a zona de origem do remate';
 
   const grid = document.createElement('div');
@@ -71,6 +71,9 @@ export function installShotGoal() {
   goal.className = 'grid grid-cols-3 gap-1 p-2 rounded-lg border border-gray-500 bg-gray-900 w-full';
   goal.setAttribute('role', 'grid');
   goal.setAttribute('aria-label', 'Baliza dividida em 9 zonas');
+  goal.dataset.selectedZone = '';
+  goal.dataset.selectedX = '';
+  goal.dataset.selectedY = '';
 
   for (let zone = 1; zone <= 9; zone++) goal.appendChild(makeGoalButton(zone));
   wrapper.insertBefore(goal, wrapper.firstChild);
@@ -92,6 +95,10 @@ export function installShotGoal() {
     const row = Math.floor((zone - 1) / 3);
     const xPercent = ((col + 0.5) / 3) * 100;
     const yPercent = ((row + 0.5) / 3) * 100;
+
+    goal.dataset.selectedZone = String(zone);
+    goal.dataset.selectedX = xPercent.toFixed(1);
+    goal.dataset.selectedY = yPercent.toFixed(1);
 
     if (marker) {
       marker.style.left = `${xPercent}%`;
@@ -139,10 +146,7 @@ function protectShotModal() {
 }
 
 export function initShotVisuals() {
-  // Primeira limpeza.
   protectShotModal();
-
-  // Se o modal for criado ou substituído depois do arranque, detetamos isso no body.
   const bodyObserver = new MutationObserver(() => protectShotModal());
   if (document.body) bodyObserver.observe(document.body, { childList: true, subtree: true });
 }
