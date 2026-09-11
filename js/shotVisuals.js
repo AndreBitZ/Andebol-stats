@@ -1,6 +1,6 @@
 // Interface visual do modal de remate usando apenas botões HTML.
 // Não depende de SVG nem de imagens para selecionar zonas.
-// UI_VERSION: BUTTONS_V4_OBSERVER_2026_09_11
+// UI_VERSION: BUTTONS_V5_GLOBAL_OBSERVER_2026_09_11
 
 function makeZoneButton(zone, label = `Zona ${zone}`) {
   const button = document.createElement('button');
@@ -112,43 +112,37 @@ export function installShotGoal() {
 function cleanAndInstall() {
   const modal = document.getElementById('shotModal');
   if (!modal) return;
-
-  // Se outra parte da aplicação voltar a inserir a interface antiga,
-  // removê-la imediatamente e reconstruir a versão de botões.
   modal.querySelectorAll('svg, img, image').forEach(node => node.remove());
   installShotCourt();
   installShotGoal();
 }
 
-export function initShotVisuals() {
+function protectShotModal() {
+  const modal = document.getElementById('shotModal');
+  if (!modal || modal.dataset.shotObserverInstalled === '1') return;
+
+  modal.dataset.shotObserverInstalled = '1';
+  const observer = new MutationObserver(() => {
+    if (modal.dataset.shotRebuilding === '1') return;
+    const hasLegacyVisual = !!modal.querySelector('svg, img, image');
+    const hasZoneButtons = !!modal.querySelector('#shotZoneContainer .shot-zone-btn');
+    const hasGoalButtons = !!modal.querySelector('#goalSvg .goal-zone-btn');
+
+    if (hasLegacyVisual || !hasZoneButtons || !hasGoalButtons) {
+      modal.dataset.shotRebuilding = '1';
+      cleanAndInstall();
+      modal.dataset.shotRebuilding = '0';
+    }
+  });
+  observer.observe(modal, { childList: true, subtree: true });
   cleanAndInstall();
+}
 
-  // O modal pode ser reconstruído depois do arranque por código legado.
-  // Observamos o modal para garantir que a interface final continua a ser
-  // exclusivamente HTML com botões.
-  const startObserver = () => {
-    const modal = document.getElementById('shotModal');
-    if (!modal || modal.dataset.shotObserverInstalled === '1') return;
+export function initShotVisuals() {
+  // Primeira limpeza.
+  protectShotModal();
 
-    modal.dataset.shotObserverInstalled = '1';
-    const observer = new MutationObserver(() => {
-      if (modal.dataset.shotRebuilding === '1') return;
-      const hasLegacyVisual = !!modal.querySelector('svg, img, image');
-      const hasZoneButtons = !!modal.querySelector('#shotZoneContainer .shot-zone-btn');
-      const hasGoalButtons = !!modal.querySelector('#goalSvg .goal-zone-btn');
-
-      if (hasLegacyVisual || !hasZoneButtons || !hasGoalButtons) {
-        modal.dataset.shotRebuilding = '1';
-        cleanAndInstall();
-        modal.dataset.shotRebuilding = '0';
-      }
-    });
-
-    observer.observe(modal, { childList: true, subtree: true });
-  };
-
-  startObserver();
-  setTimeout(startObserver, 0);
-  setTimeout(startObserver, 250);
-  setTimeout(startObserver, 1000);
+  // Se o modal for criado ou substituído depois do arranque, detetamos isso no body.
+  const bodyObserver = new MutationObserver(() => protectShotModal());
+  if (document.body) bodyObserver.observe(document.body, { childList: true, subtree: true });
 }
