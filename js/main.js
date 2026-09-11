@@ -18,6 +18,8 @@ function startApp() {
     initDOMElements();
     // Instalar a interface de remate depois de o DOM existir, substituindo sempre a estrutura antiga.
     initShotVisuals();
+    // installShotGoal substitui #goalSvg; atualizar a referência usada pela lógica de seleção da baliza.
+    els.goalSvg = document.getElementById('goalSvg');
     timer = new GameTimer((seconds) => {
         store.state.totalSeconds = seconds;
         updateDisplay();
