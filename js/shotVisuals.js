@@ -1,20 +1,37 @@
-// Interface visual do modal de remate usando apenas botões HTML.
-// Não depende de SVG nem de imagens para selecionar zonas.
-// UI_VERSION: BUTTONS_V6_NATIVE_MODAL_2026_09_11
+// Interface visual do modal de remate — versão nativa e autónoma.
+// Não usa SVG/imagens para selecionar zonas.
+// UI_VERSION: BUTTONS_V7_FORCE_NATIVE_2026_09_14
 
-function makeZoneButton(zone, label = `Zona ${zone}`) {
+function makeZoneButton(zone) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'shot-zone-btn w-full min-h-[58px] rounded-xl border border-gray-600 bg-gray-700 text-white font-bold text-lg transition hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500';
   button.dataset.zone = String(zone);
-  button.setAttribute('aria-label', label);
   button.textContent = String(zone);
+  button.setAttribute('aria-label', `Zona de remate ${zone}`);
   return button;
 }
 
-export function installShotCourt() {
+function makeGoalButton(zone) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'goal-zone-btn min-h-[58px] rounded-md border border-gray-500 bg-gray-700 text-white font-bold text-lg transition hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  button.dataset.goalZone = String(zone);
+  button.textContent = String(zone);
+  button.setAttribute('aria-label', `Zona da baliza ${zone}`);
+  return button;
+}
+
+function installCourt() {
   const container = document.getElementById('shotZoneContainer');
   if (!container) return;
+
+  container.classList.remove('hidden');
+  container.innerHTML = '';
+  container.style.backgroundImage = 'none';
+  container.style.background = 'transparent';
+  container.style.height = 'auto';
+  container.style.minHeight = '0';
 
   const heading = document.createElement('p');
   heading.className = 'text-gray-400 text-xs uppercase font-bold tracking-wider mb-2 text-left';
@@ -29,39 +46,30 @@ export function installShotCourt() {
 
   const row1 = document.createElement('div');
   row1.className = 'grid grid-cols-5 gap-2 w-full';
-  [1, 2, 3, 4, 5].forEach(zone => row1.appendChild(makeZoneButton(zone)));
+  [1, 2, 3, 4, 5].forEach(z => row1.appendChild(makeZoneButton(z)));
 
   const row2 = document.createElement('div');
   row2.className = 'grid grid-cols-2 gap-2 w-full';
-  [6, 7].forEach(zone => row2.appendChild(makeZoneButton(zone)));
+  [6, 7].forEach(z => row2.appendChild(makeZoneButton(z)));
 
   const row3 = document.createElement('div');
   row3.className = 'grid grid-cols-1 gap-2 w-full';
   row3.appendChild(makeZoneButton(9));
 
   grid.append(row1, row2, row3);
-  container.replaceChildren(heading, subtitle, grid);
+  container.append(heading, subtitle, grid);
 }
 
-function makeGoalButton(zone) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'goal-zone-btn min-h-[58px] rounded-md border border-gray-500 bg-gray-700 text-white font-bold text-lg transition hover:bg-blue-600 active:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500';
-  button.dataset.goalZone = String(zone);
-  button.setAttribute('aria-label', `Zona da baliza ${zone}`);
-  button.textContent = String(zone);
-  return button;
-}
-
-export function installShotGoal() {
+function installGoal() {
   const wrapper = document.getElementById('goalSvgWrapper');
   if (!wrapper) return;
 
-  wrapper.querySelectorAll('svg, img, image').forEach(node => node.remove());
-  wrapper.className = 'w-full';
-  wrapper.style.position = 'relative';
+  wrapper.querySelectorAll('svg, img, image').forEach(el => el.remove());
+  wrapper.style.backgroundImage = 'none';
+  wrapper.style.background = 'transparent';
   wrapper.style.height = 'auto';
-  wrapper.style.cursor = 'default';
+  wrapper.style.position = 'relative';
+  wrapper.className = 'w-full';
 
   const oldGoal = document.getElementById('goalSvg');
   if (oldGoal) oldGoal.remove();
@@ -69,21 +77,17 @@ export function installShotGoal() {
   const goal = document.createElement('div');
   goal.id = 'goalSvg';
   goal.className = 'grid grid-cols-3 gap-1 p-2 rounded-lg border border-gray-500 bg-gray-900 w-full';
-  goal.setAttribute('role', 'grid');
-  goal.setAttribute('aria-label', 'Baliza dividida em 9 zonas');
   goal.dataset.selectedZone = '';
   goal.dataset.selectedX = '';
   goal.dataset.selectedY = '';
 
-  for (let zone = 1; zone <= 9; zone++) goal.appendChild(makeGoalButton(zone));
+  for (let z = 1; z <= 9; z++) goal.appendChild(makeGoalButton(z));
   wrapper.insertBefore(goal, wrapper.firstChild);
 
-  const marker = document.getElementById('shotMarker');
-  goal.addEventListener('click', event => {
-    const button = event.target.closest('.goal-zone-btn');
+  goal.addEventListener('click', e => {
+    const button = e.target.closest('.goal-zone-btn');
     if (!button) return;
 
-    const zone = Number(button.dataset.goalZone);
     goal.querySelectorAll('.goal-zone-btn').forEach(b => {
       b.classList.remove('bg-blue-600');
       b.classList.add('bg-gray-700');
@@ -91,62 +95,87 @@ export function installShotGoal() {
     button.classList.remove('bg-gray-700');
     button.classList.add('bg-blue-600');
 
+    const zone = Number(button.dataset.goalZone);
     const col = (zone - 1) % 3;
     const row = Math.floor((zone - 1) / 3);
-    const xPercent = ((col + 0.5) / 3) * 100;
-    const yPercent = ((row + 0.5) / 3) * 100;
+    const x = ((col + 0.5) / 3) * 100;
+    const y = ((row + 0.5) / 3) * 100;
 
     goal.dataset.selectedZone = String(zone);
-    goal.dataset.selectedX = xPercent.toFixed(1);
-    goal.dataset.selectedY = yPercent.toFixed(1);
+    goal.dataset.selectedX = x.toFixed(1);
+    goal.dataset.selectedY = y.toFixed(1);
 
+    const marker = document.getElementById('shotMarker');
     if (marker) {
-      marker.style.left = `${xPercent}%`;
-      marker.style.top = `${yPercent}%`;
+      marker.style.left = `${x}%`;
+      marker.style.top = `${y}%`;
       marker.classList.remove('hidden');
     }
 
-    const outcomeContainer = document.getElementById('shotOutcomeContainer');
-    if (outcomeContainer) outcomeContainer.classList.remove('hidden');
-
-    goal.dispatchEvent(new CustomEvent('shot-goal-selected', {
-      bubbles: true,
-      detail: { zone, x: xPercent.toFixed(1), y: yPercent.toFixed(1) }
-    }));
+    const outcome = document.getElementById('shotOutcomeContainer');
+    if (outcome) outcome.classList.remove('hidden');
   });
 }
 
-function cleanAndInstall() {
+function removeLegacyVisuals(modal) {
+  modal.querySelectorAll('svg, img, image').forEach(el => el.remove());
+  modal.querySelectorAll('[style*="background-image"]').forEach(el => {
+    el.style.backgroundImage = 'none';
+  });
+}
+
+function isSevenMeter() {
+  const selected = document.querySelector('.shot-type-btn.bg-blue-600');
+  if (!selected) return false;
+  return selected.textContent.trim().toLowerCase().replace(/\s+/g, '') === '7mt';
+}
+
+function forceNativeShotUI() {
   const modal = document.getElementById('shotModal');
   if (!modal) return;
-  modal.querySelectorAll('svg, img, image').forEach(node => node.remove());
-  installShotCourt();
-  installShotGoal();
+
+  removeLegacyVisuals(modal);
+
+  const zone = document.getElementById('shotZoneContainer');
+  const goalWrapper = document.getElementById('goalSvgWrapper');
+  const goal = document.getElementById('goalSvg');
+
+  if (isSevenMeter()) {
+    // 7 metros não utiliza zonas 1–9.
+    if (zone) {
+      zone.classList.add('hidden');
+      zone.innerHTML = '';
+    }
+    if (goalWrapper) {
+      goalWrapper.classList.add('hidden');
+      goalWrapper.innerHTML = '';
+    }
+    return;
+  }
+
+  if (zone && !zone.querySelector('.shot-zone-btn')) installCourt();
+  if (goalWrapper && !goalWrapper.querySelector('.goal-zone-btn')) installGoal();
 }
 
-function protectShotModal() {
-  const modal = document.getElementById('shotModal');
-  if (!modal || modal.dataset.shotObserverInstalled === '1') return;
+export function installShotCourt() {
+  installCourt();
+}
 
-  modal.dataset.shotObserverInstalled = '1';
-  const observer = new MutationObserver(() => {
-    if (modal.dataset.shotRebuilding === '1') return;
-    const hasLegacyVisual = !!modal.querySelector('svg, img, image');
-    const hasZoneButtons = !!modal.querySelector('#shotZoneContainer .shot-zone-btn');
-    const hasGoalButtons = !!modal.querySelector('#goalSvg .goal-zone-btn');
-
-    if (hasLegacyVisual || !hasZoneButtons || !hasGoalButtons) {
-      modal.dataset.shotRebuilding = '1';
-      cleanAndInstall();
-      modal.dataset.shotRebuilding = '0';
-    }
-  });
-  observer.observe(modal, { childList: true, subtree: true });
-  cleanAndInstall();
+export function installShotGoal() {
+  installGoal();
 }
 
 export function initShotVisuals() {
-  protectShotModal();
-  const bodyObserver = new MutationObserver(() => protectShotModal());
-  if (document.body) bodyObserver.observe(document.body, { childList: true, subtree: true });
+  // Executa imediatamente e também durante a abertura do modal.
+  forceNativeShotUI();
+
+  const observer = new MutationObserver(() => {
+    window.clearTimeout(window.__shotUiTimer);
+    window.__shotUiTimer = window.setTimeout(forceNativeShotUI, 0);
+  });
+
+  if (document.body) observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+
+  // Segurança contra qualquer código legado que reconstrua o modal depois.
+  window.setInterval(forceNativeShotUI, 250);
 }
