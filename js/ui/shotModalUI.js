@@ -15,6 +15,8 @@ function player(side,id){
 function goalkeeper(side){ return currentDefendingGoalkeeper(side); }
 function close(){
   const el=document.getElementById('professional-shot-modal');
+  const distanceModal=document.getElementById('shot-distance-modal');
+  if(distanceModal) distanceModal.remove();
   if(el){el.classList.add('hidden');el.classList.remove('flex');}
   selection=null;
 }
@@ -42,7 +44,7 @@ function ensure(){
     #professional-shot-modal .shot-seven-selected{background:#4c1d95!important;border-color:#c084fc!important;box-shadow:inset 0 0 0 3px #c084fc}
     #professional-shot-modal .shot-zone-grid{display:grid;gap:8px;width:100%}
     #professional-shot-modal .shot-row-5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-    #professional-shot-modal .shot-row-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+    #professional-shot-modal .shot-row-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     #professional-shot-modal .shot-row-1{display:grid;grid-template-columns:1fr;gap:8px}
     #professional-shot-modal .shot-goal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
     #professional-shot-modal .shot-zone-number,#professional-shot-modal .shot-goal-number{font-size:20px;line-height:1;font-weight:900}
@@ -60,14 +62,14 @@ function ensure(){
             <div class="shot-row-5">
               ${[1,2,3,4,5].map(z=>makeButton(`<span class="shot-zone-number">${z}</span>`,{'data-zone':z},'shot-zone-btn')).join('')}
             </div>
-            <div class="shot-row-2">
-              ${[6,7].map(z=>makeButton(`<span class="shot-zone-number">${z}</span>`,{'data-zone':z},'shot-zone-btn')).join('')}
+            <div class="shot-row-3">
+              ${[6,7,8].map(z=>makeButton(`<span class="shot-zone-number">${z}</span>`,{'data-zone':z},'shot-zone-btn')).join('')}
             </div>
             <div class="shot-row-1">
               ${makeButton('<span class="shot-zone-number">9</span>',{'data-zone':'9'},'shot-zone-btn')}
             </div>
           </div>
-          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-gray-400"><div>1 e 5 · curta</div><div>2–4 · curta/média</div><div>6–9 · longa</div></div>
+          <div class="mt-3 grid grid-cols-3 gap-2 text-center text-[11px] text-gray-400"><div>1 e 5 · curta</div><div>2–4 · curta ou média</div><div>6–9 · longa</div></div>
           <div id="selected-shot-zone" class="mt-3 rounded-xl bg-gray-900 border border-gray-700 px-4 py-3 text-center text-sm text-gray-300">Zona selecionada: <strong class="text-white">—</strong></div>
           <button id="seven-meter-toggle" data-distance="7m" type="button" class="shot-ui-btn mt-4 w-full text-left"><span class="block text-lg font-black">🟣 7 metros</span><span class="text-xs text-gray-400">Remate de 7m · não usa a zona de campo 1–9</span></button>
         </section>
@@ -92,12 +94,51 @@ function ensure(){
   modal.querySelector('#shot-close').onclick=close;
   modal.querySelector('#shot-cancel').onclick=close;
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
-  modal.querySelectorAll('[data-zone]').forEach(btn=>btn.onclick=()=>{selection.zone=String(btn.dataset.zone);selection.isSevenMeter=false;update(modal);});
-  modal.querySelector('#seven-meter-toggle').onclick=()=>{selection.zone=null;selection.isSevenMeter=true;update(modal);};
+  modal.querySelectorAll('[data-zone]').forEach(btn=>btn.onclick=()=>selectZone(String(btn.dataset.zone),modal));
+  modal.querySelector('#seven-meter-toggle').onclick=()=>{selection.zone=null;selection.distance=null;selection.isSevenMeter=true;update(modal);};
   modal.querySelectorAll('[data-goal-cell]').forEach(btn=>btn.onclick=()=>{selection.goalCell=String(btn.dataset.goalCell);update(modal);});
   modal.querySelectorAll('[data-result]').forEach(btn=>btn.onclick=()=>{selection.result=btn.dataset.result;update(modal);});
   modal.querySelector('#shot-save').onclick=save;
   return modal;
+}
+
+function selectZone(zone,modal){
+  if(['2','3','4'].includes(zone)){
+    showDistanceChoice(zone,modal);
+    return;
+  }
+  selection.zone=zone;
+  selection.distance=ZONES.find(z=>z.id===zone)?.distance||null;
+  selection.isSevenMeter=false;
+  update(modal);
+}
+
+function showDistanceChoice(zone,modal){
+  const existing=document.getElementById('shot-distance-modal');
+  if(existing)existing.remove();
+
+  const overlay=document.createElement('div');
+  overlay.id='shot-distance-modal';
+  overlay.className='fixed inset-0 z-[10020] flex items-center justify-center bg-black/70 p-4';
+  overlay.innerHTML=`<div class="w-full max-w-md rounded-2xl bg-gray-900 border border-gray-700 shadow-2xl p-5">
+    <div class="text-xl font-bold text-white mb-1">Distância do remate</div>
+    <div class="text-sm text-gray-400 mb-5">Zona ${zone}: o remate foi feito a curta ou média distância?</div>
+    <div class="grid grid-cols-2 gap-3">
+      <button type="button" data-distance-choice="curta" class="shot-ui-btn">📍 Curta</button>
+      <button type="button" data-distance-choice="média" class="shot-ui-btn">📍 Média</button>
+    </div>
+    <button type="button" data-distance-cancel class="w-full mt-3 rounded-xl bg-gray-700 hover:bg-gray-600 text-white font-bold p-3">Cancelar</button>
+  </div>`;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('[data-distance-cancel]').onclick=()=>overlay.remove();
+  overlay.querySelectorAll('[data-distance-choice]').forEach(btn=>btn.onclick=()=>{
+    selection.zone=zone;
+    selection.distance=btn.dataset.distance;
+    selection.isSevenMeter=false;
+    overlay.remove();
+    update(modal);
+  });
 }
 
 function resetVisual(modal){
@@ -117,8 +158,8 @@ function update(modal){
   } else modal.querySelector('#goal-cell-label').textContent='—';
   if(selection.result) modal.querySelector(`[data-result="${selection.result}"]`)?.classList.add('shot-result-selected');
   const zone=selection.zone?ZONES.find(z=>z.id===selection.zone):null;
-  modal.querySelector('#shot-zone-help').textContent=selection.isSevenMeter?'7 metros selecionado — a zona de campo 1–9 fica desativada.':'Escolha a zona de origem do remate.';
-  modal.querySelector('#selected-shot-zone strong').textContent=selection.isSevenMeter?'7 metros':(zone?`Zona ${zone.id} · ${zone.distance}`:'—');
+  modal.querySelector('#shot-zone-help').textContent=selection.isSevenMeter?'7 metros selecionado — a zona de campo 1–9 fica desativada.':(selection.distance?`Zona ${selection.zone} selecionada · ${selection.distance} distância.`:'Escolha a zona de origem do remate.');
+  modal.querySelector('#selected-shot-zone strong').textContent=selection.isSevenMeter?'7 metros':(zone?`Zona ${zone.id} · ${selection.distance||zone.distance}`:'—');
   modal.querySelector('#shot-zone-container').classList.toggle('opacity-40',!!selection.isSevenMeter);
   modal.querySelector('#shot-zone-container').classList.toggle('pointer-events-none',!!selection.isSevenMeter);
   modal.querySelector('#shot-save').disabled=!(selection.goalCell&&selection.result&&(selection.zone||selection.isSevenMeter));
@@ -132,7 +173,7 @@ function save(){
     const cell=Number(selection.goalCell);
     const x=((cell-1)%3+0.5)*33.3333333333;
     const y=(Math.floor((cell-1)/3)+0.5)*33.3333333333;
-    recordAction({side:selection.side,playerId:selection.playerId,action:ACTION_TYPES.SHOT,shotResult:selection.result,goalkeeperId:gk.id??gk.Numero??null,metadata:{shot_type:selection.isSevenMeter?'7M':'FIELD',shot_zone:selection.isSevenMeter?'7M':selection.zone,shot_distance:selection.isSevenMeter?'7m':ZONES.find(z=>z.id===selection.zone)?.distance,goal_location:selection.goalCell,goal_zone_3x3:selection.goalCell,shot_coordinates:{x:x.toFixed(1),y:y.toFixed(1)}}});
+    recordAction({side:selection.side,playerId:selection.playerId,action:ACTION_TYPES.SHOT,shotResult:selection.result,goalkeeperId:gk.id??gk.Numero??null,metadata:{shot_type:selection.isSevenMeter?'7M':'FIELD',shot_zone:selection.isSevenMeter?'7M':selection.zone,shot_distance:selection.isSevenMeter?'7m':selection.distance||ZONES.find(z=>z.id===selection.zone)?.distance,goal_location:selection.goalCell,goal_zone_3x3:selection.goalCell,shot_coordinates:{x:x.toFixed(1),y:y.toFixed(1)}}});
     close();
     window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result:selection.result,side:selection.side,playerId:selection.playerId,shot_type:selection.isSevenMeter?'7M':'FIELD'}}));
   }catch(err){console.error(err);alert(err?.message||'Não foi possível registar o remate.');}
@@ -141,7 +182,7 @@ function save(){
 function open(side,id){
   const p=player(side,id); if(!p)return;
   const modal=ensure();
-  selection={side,playerId:String(id),zone:null,isSevenMeter:false,goalCell:null,result:null};
+  selection={side,playerId:String(id),zone:null,distance:null,isSevenMeter:false,goalCell:null,result:null};
   modal.querySelector('#shot-subtitle').textContent=`${side==='A'?(store.state.teamAName||'Equipa A'):(store.state.teamBName||'Equipa B')} · #${p.Numero} ${p.Nome}`;
   modal.querySelector('#shot-player').textContent=`#${p.Numero} ${p.Nome}`;
   const gk=goalkeeper(side);
