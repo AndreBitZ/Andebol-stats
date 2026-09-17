@@ -13,6 +13,7 @@ export function per5Min(value,minutes){const m=Number(minutes)||0;return m>0?(Nu
 export function possessionEfficiency(goals=0,possessions=0){return safeRate(goals,possessions);}
 const SHOT_RESULTS=['GOAL','SAVED','MISSED','POST','BLOCKED'];
 const TURNOVERS=['TURNOVER','RECEPTION_ERROR','OFFENSIVE_FOUL','PASSIVE_TURNOVER'];
+const DISTANCES=['curta','média','longa'];
 function emptyTeam(){return{possessions:0,goals:0,shots:0,saved:0,missed:0,post:0,blocked:0,saves:0,goals_conceded:0,turnovers:0,steals:0,interceptions:0,recoveries:0,seven_meter_won:0,attack_efficiency:null,shot_efficiency:null,goalkeeper_save_efficiency:null,average_attack_duration_seconds:null,transition_attacks:0};}
 function teamFromId(state,teamId){if(teamId&&teamId===state?.teamAId)return'A';if(teamId&&teamId===state?.teamBId)return'B';return null;}
 function emptyShotBucket(){return{shots:0,goals:0,saved:0,missed:0,post:0,blocked:0,efficiency:null};}
@@ -20,8 +21,8 @@ function addShot(bucket,result){bucket.shots+=1;if(SHOT_RESULTS.includes(result)
 function bucketMap(keys){return Object.fromEntries(keys.map(key=>[String(key),emptyShotBucket()]));}
 export function calculateShotAnalytics(state={},side=null){
  const events=Array.isArray(state.gameEvents)?state.gameEvents:[];const sides=side==='A'||side==='B'?[side]:['A','B'];const result={};
- for(const s of sides)result[s]={by_zone:bucketMap(['1','2','3','4','5','6','7','8','9']),by_distance:bucketMap(['curta','curta/média','média','longa','7m']),by_goal:bucketMap(['1','2','3','4','5','6','7','8','9']),by_zone_distance:{}};
- for(const event of events){if(event.event_type!=='SHOT')continue;const s=teamFromId(state,event.team_id);if(!result[s])continue;const zone=event.shot_zone!=null?String(event.shot_zone):null;const distance=event.shot_distance!=null?String(event.shot_distance):null;const goal=event.goal_zone_3x3!=null?String(event.goal_zone_3x3):event.goal_location!=null?String(event.goal_location):null;if(zone&&result[s].by_zone[zone])addShot(result[s].by_zone[zone],event.shot_result);if(distance&&result[s].by_distance[distance])addShot(result[s].by_distance[distance],event.shot_result);if(goal&&result[s].by_goal[goal])addShot(result[s].by_goal[goal],event.shot_result);if(zone&&distance){const key=`${zone}::${distance}`;if(!result[s].by_zone_distance[key])result[s].by_zone_distance[key]=emptyShotBucket();addShot(result[s].by_zone_distance[key],event.shot_result);}}
+ for(const s of sides)result[s]={by_zone:bucketMap(['1','2','3','4','5','6','7','8','9']),by_distance:bucketMap(DISTANCES),by_goal:bucketMap(['1','2','3','4','5','6','7','8','9']),by_zone_distance:{}};
+ for(const event of events){if(event.event_type!=='SHOT')continue;const s=teamFromId(state,event.team_id);if(!result[s])continue;const zone=event.shot_zone!=null?String(event.shot_zone):null;const distance=event.shot_distance!=null?String(event.shot_distance):null;const goal=event.goal_zone_3x3!=null?String(event.goal_zone_3x3):event.goal_location!=null?String(event.goal_location):null;if(zone&&result[s].by_zone[zone])addShot(result[s].by_zone[zone],event.shot_result);if(distance&&result[s].by_distance[distance])addShot(result[s].by_distance[distance],event.shot_result);if(goal&&result[s].by_goal[goal])addShot(result[s].by_goal[goal],event.shot_result);if(zone&&distance&&DISTANCES.includes(distance)){const key=`${zone}::${distance}`;if(!result[s].by_zone_distance[key])result[s].by_zone_distance[key]=emptyShotBucket();addShot(result[s].by_zone_distance[key],event.shot_result);}}
  return result;
 }
 export function calculateMatchAnalytics(state={}){
