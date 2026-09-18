@@ -6,61 +6,21 @@ import { canRecordLiveAction } from './matchClock.js';
 import { getNumericalContext } from './numericalSituation.js';
 
 export const ACTION_TYPES = Object.freeze({
-  SHOT: 'SHOT', ASSIST: 'ASSIST', PRE_ASSIST: 'PRE_ASSIST', TURNOVER: 'TURNOVER',
-  RECEPTION_ERROR: 'RECEPTION_ERROR', OFFENSIVE_FOUL: 'OFFENSIVE_FOUL', STEAL: 'STEAL',
-  INTERCEPTION: 'INTERCEPTION', RECOVERY: 'RECOVERY', DEFENSIVE_BLOCK: 'DEFENSIVE_BLOCK',
-  SEVEN_METER_WON: 'SEVEN_METER_WON', SEVEN_METER_CONCEDED: 'SEVEN_METER_CONCEDED',
-  TECHNICAL_FAULT: 'TECHNICAL_FAULT', SEVEN_METER_FOUL: 'SEVEN_METER_FOUL',
-  TWO_MIN_RECEIVED: 'TWO_MIN_RECEIVED', TWO_MIN_DRAWN: 'TWO_MIN_DRAWN', PASSIVE_WARNING: 'PASSIVE_WARNING',
-  PASSIVE_TURNOVER: 'PASSIVE_TURNOVER', GOALKEEPER_SAVE: 'GOALKEEPER_SAVE',
-  GOALKEEPER_DISTRIBUTION_SUCCESS: 'GOALKEEPER_DISTRIBUTION_SUCCESS',
-  GOALKEEPER_DISTRIBUTION_ERROR: 'GOALKEEPER_DISTRIBUTION_ERROR', GOALKEEPER_ASSIST: 'GOALKEEPER_ASSIST'
+  SHOT: 'SHOT', ASSIST: 'ASSIST', PRE_ASSIST: 'PRE_ASSIST', TURNOVER: 'TURNOVER', RECEPTION_ERROR: 'RECEPTION_ERROR', OFFENSIVE_FOUL: 'OFFENSIVE_FOUL', STEAL: 'STEAL', INTERCEPTION: 'INTERCEPTION', RECOVERY: 'RECOVERY', DEFENSIVE_BLOCK: 'DEFENSIVE_BLOCK', SEVEN_METER_WON: 'SEVEN_METER_WON', SEVEN_METER_CONCEDED: 'SEVEN_METER_CONCEDED', TECHNICAL_FAULT: 'TECHNICAL_FAULT', SEVEN_METER_FOUL: 'SEVEN_METER_FOUL', TWO_MIN_RECEIVED: 'TWO_MIN_RECEIVED', TWO_MIN_DRAWN: 'TWO_MIN_DRAWN', PASSIVE_WARNING: 'PASSIVE_WARNING', PASSIVE_TURNOVER: 'PASSIVE_TURNOVER', GOALKEEPER_SAVE: 'GOALKEEPER_SAVE', GOALKEEPER_DISTRIBUTION_SUCCESS: 'GOALKEEPER_DISTRIBUTION_SUCCESS', GOALKEEPER_DISTRIBUTION_ERROR: 'GOALKEEPER_DISTRIBUTION_ERROR', GOALKEEPER_ASSIST: 'GOALKEEPER_ASSIST'
 });
-
-function player(side, id) {
-  return (store.state.gameData[side]?.players || []).find(p => String(p.id ?? p.Numero) === String(id) || String(p.Numero) === String(id));
-}
-
+function player(side, id) { return (store.state.gameData[side]?.players || []).find(p => String(p.id ?? p.Numero) === String(id) || String(p.Numero) === String(id)); }
 export function recordAction({ side, playerId, action, shotResult = null, goalkeeperId = null, metadata = {} }) {
-  const s = store.state;
-  const attacking = side === 'B' ? 'B' : 'A';
-  const defending = attacking === 'A' ? 'B' : 'A';
-  const live = canRecordLiveAction(s, attacking, playerId);
-  if (!live.ok) throw new Error(live.reason);
-  const p = player(attacking, playerId);
-  if (!p) throw new Error('Atleta não encontrado.');
+  const s = store.state, attacking = side === 'B' ? 'B' : 'A', defending = attacking === 'A' ? 'B' : 'A';
+  const live = canRecordLiveAction(s, attacking, playerId); if (!live.ok) throw new Error(live.reason);
+  const p = player(attacking, playerId); if (!p) throw new Error('Atleta não encontrado.');
   if (!Object.values(ACTION_TYPES).includes(action)) throw new Error('Ação inválida.');
   const numericalContext = getNumericalContext(s, attacking);
-
   if (action === ACTION_TYPES.SHOT) {
     if (!SHOT_RESULTS.includes(shotResult)) throw new Error('Resultado de remate inválido.');
-    return store.update(next => registerShot(next, {
-      attackingSide: attacking, shooterId: p.id, result: shotResult,
-      goalkeeperId, numerical_context: numericalContext, ...metadata
-    }));
+    const pending = typeof window !== 'undefined' ? (window.__pendingShotAttribution || {}) : {};
+    if (typeof window !== 'undefined') window.__pendingShotAttribution = null;
+    return store.update(next => registerShot(next, { attackingSide: attacking, shooterId: p.id, result: shotResult, goalkeeperId, numerical_context: numericalContext, ...metadata, ...pending }));
   }
-
-  return store.update(next => {
-    const event = createEvent({
-      match_id: next.matchId,
-      timestamp_seconds: next.totalSeconds,
-      team_id: attacking === 'A' ? next.teamAId : next.teamBId,
-      player_id: p.id,
-      event_type: action,
-      score_for_before: next.gameData[attacking]?.stats?.goals || 0,
-      score_against_before: next.gameData[defending]?.stats?.goals || 0,
-      numerical_context: numericalContext,
-      home_away: attacking === 'A' ? 'HOME' : 'AWAY',
-      metadata
-    });
-    next.gameEvents = next.gameEvents || [];
-    next.gameEvents.push(event);
-    p[action] = (p[action] || 0) + 1;
-    return event;
-  });
+  return store.update(next => { const event = createEvent({ match_id: next.matchId, timestamp_seconds: next.totalSeconds, team_id: attacking === 'A' ? next.teamAId : next.teamBId, player_id: p.id, event_type: action, score_for_before: next.gameData[attacking]?.stats?.goals || 0, score_against_before: next.gameData[defending]?.stats?.goals || 0, numerical_context: numericalContext, home_away: attacking === 'A' ? 'HOME' : 'AWAY', metadata }); next.gameEvents = next.gameEvents || []; next.gameEvents.push(event); p[action] = (p[action] || 0) + 1; return event; });
 }
-
-export function currentDefendingGoalkeeper(attackingSide) {
-  const defending = attackingSide === 'A' ? 'B' : 'A';
-  return activeGoalkeeper(store.state.gameData[defending]);
-}
+export function currentDefendingGoalkeeper(attackingSide) { return activeGoalkeeper(store.state.gameData[attackingSide === 'A' ? 'B' : 'A']); }
