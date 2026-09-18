@@ -1,26 +1,11 @@
 import { store } from '../state.js';
-
-const shots = () => (store.state.gameEvents || []).filter(e => e.event_type === 'SHOT');
-const meta = e => e.metadata || e.meta || e;
-const sideOf = e => String(e.team_id ?? e.teamId) === String(store.state.gameData?.A?.teamId ?? store.state.teamAId) || e.home_away === 'HOME' ? 'A' : 'B';
-function renderStats() {
-  const root = document.getElementById('stats-comparison-container'); if (!root) return;
-  const data = { A:{curta:0,média:0,longa:0,'7m':0,total:0}, B:{curta:0,média:0,longa:0,'7m':0,total:0} };
-  shots().forEach(e => { const m=meta(e); const side=sideOf(e); const d=m.shot_distance ?? m.distance ?? e.shot_distance; if (d in data[side]) data[side][d]++; data[side].total++; });
-  let panel=document.getElementById('live-zone-distance-panel');
-  if(!panel){panel=document.createElement('div');panel.id='live-zone-distance-panel';panel.className='mt-6 rounded-xl border border-gray-700 p-4';root.appendChild(panel);}
-  const rows=['curta','média','longa','7m'];
-  panel.innerHTML='<h4 class="text-xl font-bold text-white mb-3">Remates por distância</h4><div class="grid grid-cols-3 gap-2 text-sm font-bold text-gray-300 mb-2"><div>Distância</div><div>Equipa A</div><div>Equipa B</div></div>'+rows.map(r=>`<div class="grid grid-cols-3 gap-2 text-sm border-t border-gray-700 py-2"><div>${r}</div><div>${data.A[r]}</div><div>${data.B[r]}</div></div>`).join('')+`<div class="mt-3 text-xs text-gray-400">Total de remates: ${data.A.total} – ${data.B.total}</div>`;
-}
-function point(svg,e) {
-  const m=meta(e); const c=m.shot_coordinates || m.coordinates; if(!c)return;
-  const x=Number(c.x), y=Number(c.y); if(!Number.isFinite(x)||!Number.isFinite(y))return;
-  const node=document.createElementNS('http://www.w3.org/2000/svg','circle'); node.setAttribute('cx',x*3); node.setAttribute('cy',y*2); node.setAttribute('r','4'); node.setAttribute('fill',e.shot_result==='GOAL'?'#22c55e':e.shot_result==='SAVED'?'#3b82f6':'#ef4444'); svg.appendChild(node);
-}
-function renderHeatmap(){
-  for(const [id,side] of [['heatmap-points-attack','A'],['heatmap-points-defense','B']]){const svg=document.getElementById(id);if(!svg)continue;svg.innerHTML='';shots().filter(e=>sideOf(e)===side).forEach(e=>point(svg,e));}
-}
-function refresh(){renderStats();renderHeatmap();}
-window.addEventListener('bilateral-action-recorded',refresh);
-document.addEventListener('click',e=>{if(e.target.closest('[data-tab="stats"],[data-tab="heatmap"]'))setTimeout(refresh,0);});
-setInterval(refresh,1000);
+const shots=()=> (store.state.gameEvents||[]).filter(e=>e.event_type==='SHOT');
+const val=(e,...keys)=>{for(const k of keys){if(e[k]!==undefined&&e[k]!==null)return e[k];if(e.metadata?.[k]!==undefined&&e.metadata?.[k]!==null)return e.metadata[k];if(e.meta?.[k]!==undefined&&e.meta?.[k]!==null)return e.meta[k];}return null;};
+const sideOf=e=>{const t=String(val(e,'team_id','teamId'));if(t&&t===String(store.state.teamAId||store.state.gameData?.A?.teamId))return'A';if(t&&t===String(store.state.teamBId||store.state.gameData?.B?.teamId))return'B';return val(e,'home_away')==='HOME'?'A':'B';};
+const distance=e=>String(val(e,'shot_distance','distance')||'').toLowerCase().replace('7 metros','7m').replace('7 metros','7m');
+const zone=e=>String(val(e,'shot_zone','zone')||'');
+function renderStats(){const root=document.getElementById('stats-comparison-container');if(!root)return;const d={A:{curta:0,média:0,longa:0,'7m':0,total:0,zones:{}},B:{curta:0,média:0,longa:0,'7m':0,total:0,zones:{}}};shots().forEach(e=>{const s=sideOf(e),di=distance(e),z=zone(e);d[s].total++;if(di in d[s])d[s][di]++;if(z)d[s].zones[z]=(d[s].zones[z]||0)+1;});let p=document.getElementById('live-zone-distance-panel');if(!p){p=document.createElement('div');p.id='live-zone-distance-panel';p.className='mt-6 rounded-xl border border-gray-700 p-4';root.appendChild(p);}p.innerHTML='<h4 class="text-xl font-bold mb-3">Remates por distância</h4>'+['curta','média','longa','7m'].map(r=>`<div class="grid grid-cols-3 gap-2 border-t border-gray-700 py-2"><div>${r}</div><div>${d.A[r]}</div><div>${d.B[r]}</div></div>`).join('')+'<h4 class="text-xl font-bold mt-5 mb-3">Remates por zona</h4>'+Array.from({length:9},(_,i)=>String(i+1)).map(z=>`<div class="grid grid-cols-3 gap-2 border-t border-gray-700 py-2"><div>Z${z}</div><div>${d.A.zones[z]||0}</div><div>${d.B.zones[z]||0}</div></div>`).join('')+`<div class="mt-3 text-xs text-gray-400">Total: ${d.A.total} – ${d.B.total}</div>`;}
+const centers={1:[30,25],2:[90,25],3:[150,25],4:[210,25],5:[270,25],6:[90,100],7:[150,100],8:[210,100],9:[150,165]};
+function point(svg,e){const c=val(e,'shot_coordinates','coordinates');let x=c?.x,y=c?.y;const z=zone(e);if((x===undefined||y===undefined)&&centers[z]){[x,y]=centers[z];}if(x===undefined||y===undefined)return;x=Number(x);y=Number(y);if(x<=100)x=x*3;if(y<=100)y=y*2;const n=document.createElementNS('http://www.w3.org/2000/svg','circle');n.setAttribute('cx',x);n.setAttribute('cy',y);n.setAttribute('r','5');n.setAttribute('fill',val(e,'shot_result','result')==='GOAL'?'#22c55e':val(e,'shot_result','result')==='SAVED'?'#3b82f6':'#ef4444');svg.appendChild(n);}
+function heat(){for(const [id,s] of [['heatmap-points-attack','A'],['heatmap-points-defense','B']]){const svg=document.getElementById(id);if(!svg)continue;svg.innerHTML='';shots().filter(e=>sideOf(e)===s).forEach(e=>point(svg,e));}}
+function refresh(){renderStats();heat();}window.addEventListener('handball:state-updated',refresh);window.addEventListener('bilateral-action-recorded',refresh);document.addEventListener('click',e=>{if(e.target.closest('[data-tab="stats"],[data-tab="heatmap"]'))setTimeout(refresh,0);});setInterval(refresh,1000);
