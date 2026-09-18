@@ -1,3 +1,5 @@
+import './ui/shotAttribution.js';
+
 // Camada de compatibilidade e pequenos ajustes de interface.
 // Mantém o modal profissional intacto e remove ações de assistência do menu
 // genérico, porque passam a ser selecionadas dentro do registo do remate.
