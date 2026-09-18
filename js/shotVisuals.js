@@ -1,4 +1,5 @@
 import './ui/shotAttribution.js';
+import './ui/liveShotAnalytics.js';
 
 // Camada de compatibilidade e pequenos ajustes de interface.
 // Mantém o modal profissional intacto e remove ações de assistência do menu
