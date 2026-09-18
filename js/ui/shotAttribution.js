@@ -1,62 +1,81 @@
 import { store } from '../state.js';
 
-let active = { assist: null, imbalance: null, side: null, shooterId: null };
+let active = { side: null, shooterId: null, assist: null, imbalance: null };
+const modalId = 'shotModal';
 
-function label(p) { return `#${p.Numero ?? p.number ?? ''} ${p.Nome ?? p.name ?? ''}`.trim(); }
-function onCourt(side, shooterId) {
-  return (store.state.gameData?.[side]?.players || []).filter(p => p.onCourt && String(p.id ?? p.Numero) !== String(shooterId));
+const playerId = p => p?.id ?? p?.Numero ?? p?.number;
+const playerName = p => `#${p?.Numero ?? p?.number ?? ''} ${p?.Nome ?? p?.name ?? ''}`.trim();
+const playersOnCourt = () => (store.state.gameData?.[active.side]?.players || []).filter(p => p.onCourt && String(playerId(p)) !== String(active.shooterId));
+const findPlayer = id => playersOnCourt().find(p => String(playerId(p)) === String(id));
+
+function panel(modal) {
+  let root = modal.querySelector('#shot-attribution-panel');
+  if (root) return root;
+  root = document.createElement('section');
+  root.id = 'shot-attribution-panel';
+  root.className = 'mt-4 rounded-xl bg-gray-900 p-3 border border-gray-700 text-left';
+  root.innerHTML = '<h4 class="font-bold text-white mb-3">Construção da jogada</h4><div class="text-sm font-semibold mb-1">Assistência</div><div id="shot-assist-options" class="grid grid-cols-2 gap-2 mb-3"></div><div class="text-sm font-semibold mb-1">Desequilíbrio</div><div id="shot-imbalance-options" class="grid grid-cols-2 gap-2"></div>';
+  const container = modal.querySelector('#shotOutcomeContainer') || modal.querySelector('.bg-gray-800');
+  if (container) container.appendChild(root); else modal.appendChild(root);
+  return root;
 }
-function inject(modal) {
-  if (modal.querySelector('#shot-attribution-panel')) return;
-  const panel = document.createElement('section');
-  panel.id = 'shot-attribution-panel';
-  panel.className = 'rounded-2xl bg-gray-800 p-4 border border-gray-700 mt-5';
-  panel.innerHTML = `<h3 class="text-lg font-bold text-white mb-3">🤝 Construção da jogada</h3>
-    <div class="mb-4"><div class="text-sm font-bold text-white mb-2">Assistência</div><div id="shot-assist-options" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></div>
-    <div><div class="text-sm font-bold text-white mb-2">Desequilíbrio</div><div id="shot-imbalance-options" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div></div>`;
-  const target = modal.querySelector('.shot-panel > div:last-child');
-  (target || modal.querySelector('.shot-panel')).prepend(panel);
-  render(modal);
-}
-function render(modal) {
-  const side = active.side, players = onCourt(side, active.shooterId);
-  for (const [kind, id] of [['assist','shot-assist-options'],['imbalance','shot-imbalance-options']]) {
-    const box = modal.querySelector(`#${id}`); if (!box) continue;
-    box.innerHTML = `<button type="button" data-none="${kind}" class="shot-ui-btn">Nenhum</button>` + players.map(p => `<button type="button" data-${kind}="${p.id ?? p.Numero}" class="shot-ui-btn">${label(p)}</button>`).join('');
-    box.querySelector(`[data-none="${kind}"]`).onclick = () => { active[kind] = null; renderSelection(modal, kind); };
-    box.querySelectorAll(`[data-${kind}]`).forEach(btn => btn.onclick = () => { active[kind] = String(btn.dataset[kind]); if (kind === 'assist' && active.imbalance === active.assist) active.imbalance = null; if (kind === 'imbalance' && active.assist === active.imbalance) active.assist = null; renderSelection(modal, kind); });
+
+function render() {
+  const modal = document.getElementById(modalId);
+  if (!modal || modal.classList.contains('hidden') || !active.side) return;
+  panel(modal);
+  const players = playersOnCourt();
+  for (const kind of ['assist', 'imbalance']) {
+    const box = modal.querySelector(`#shot-${kind}-options`);
+    if (!box) continue;
+    box.innerHTML = '';
+    const none = document.createElement('button');
+    none.type = 'button'; none.textContent = 'Nenhum'; none.className = 'shot-ui-btn';
+    none.onclick = () => { active[kind] = null; render(); };
+    box.appendChild(none);
+    players.forEach(p => {
+      const id = String(playerId(p));
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = playerName(p); b.className = 'shot-ui-btn';
+      if (String(active[kind]) === id) b.classList.add('shot-zone-selected');
+      b.onclick = () => { active[kind] = id; if (active.assist && active.assist === active.imbalance) active[kind] = null; render(); };
+      box.appendChild(b);
+    });
   }
-  renderSelection(modal);
 }
-function renderSelection(modal) {
-  for (const kind of ['assist','imbalance']) {
-    modal.querySelectorAll(`[data-${kind}]`).forEach(b => b.classList.toggle('shot-zone-selected', String(b.dataset[kind]) === String(active[kind])));
+
+function detectSide(id) {
+  for (const side of ['A', 'B']) {
+    if ((store.state.gameData?.[side]?.players || []).some(p => String(playerId(p)) === String(id) || String(p.Numero) === String(id))) return side;
   }
+  return id === 'OPPONENT' ? 'B' : 'A';
 }
-function findPlayer(side, id) { return (store.state.gameData?.[side]?.players || []).find(p => String(p.id ?? p.Numero) === String(id)); }
-function name(side, id) { const p = findPlayer(side, id); return p ? label(p) : null; }
 
-window.addEventListener('bilateral-action-recorded', e => {
-  if (e.detail?.type !== 'SHOT') return;
-  const events = store.state.gameEvents || [];
-  const shot = [...events].reverse().find(x => x.event_type === 'SHOT' && String(x.player_id ?? x.playerId) === String(e.detail.playerId));
-  if (!shot) return;
-  shot.metadata = { ...(shot.metadata || {}), assist_player_id: active.assist, assist_player_name: name(active.side, active.assist), imbalance_player_id: active.imbalance, imbalance_player_name: name(active.side, active.imbalance), construction_label: 'desequilíbrio' };
-  active = { assist: null, imbalance: null, side: null, shooterId: null };
-});
+function capture(side, id) {
+  active = { side: side === 'OPPONENT' ? 'B' : (side || detectSide(id)), shooterId: String(id), assist: null, imbalance: null };
+  setTimeout(render, 0);
+}
 
-const observer = new MutationObserver(() => {
-  const modal = document.getElementById('professional-shot-modal');
-  if (!modal || modal.classList.contains('hidden')) return;
-  if (!active.side) return;
-  inject(modal);
-});
-function hook() {
-  const original = window.openBilateralShot;
-  if (!original || original.__attributionWrapped) return;
-  const wrapped = function(side, id) { active = { assist:null, imbalance:null, side, shooterId:String(id) }; const result = original(side,id); setTimeout(() => { const modal=document.getElementById('professional-shot-modal'); if(modal) inject(modal); }, 0); return result; };
+function wrap(name) {
+  const original = window[name];
+  if (typeof original !== 'function' || original.__attributionWrapped) return;
+  const wrapped = function(side, id, ...rest) { capture(side, id); return original.call(this, side, id, ...rest); };
   wrapped.__attributionWrapped = true;
-  window.openBilateralShot = wrapped;
+  window[name] = wrapped;
 }
-setInterval(hook, 250);
-if (typeof document !== 'undefined') { const observerStart = () => observer.observe(document.body, {childList:true, subtree:true, attributes:true, attributeFilter:['class']}); if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', observerStart, {once:true}); else observerStart(); }
+
+setInterval(() => { wrap('openModal'); wrap('openBilateralShot'); render(); }, 200);
+window.addEventListener('handball:state-updated', () => {
+  const events = store.state.gameEvents || [];
+  const shot = [...events].reverse().find(e => e.event_type === 'SHOT' && !e.attributionApplied);
+  if (!shot || !active.side || String(shot.player_id) !== String(active.shooterId)) return;
+  const assistPlayer = findPlayer(active.assist);
+  const imbalancePlayer = findPlayer(active.imbalance);
+  shot.assist_player_id = active.assist;
+  shot.assist_player_name = assistPlayer ? playerName(assistPlayer) : null;
+  shot.imbalance_player_id = active.imbalance;
+  shot.imbalance_player_name = imbalancePlayer ? playerName(imbalancePlayer) : null;
+  shot.construction_label = 'desequilíbrio';
+  shot.attributionApplied = true;
+  active = { side: null, shooterId: null, assist: null, imbalance: null };
+});
