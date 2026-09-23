@@ -3,12 +3,38 @@ import { store } from './state.js';
 const getId = p => p?.id ?? p?.Numero ?? p?.number;
 const getName = p => `#${p?.Numero ?? p?.number ?? ''} ${p?.Nome ?? p?.name ?? ''}`.trim();
 
+function allPlayers(side) {
+  return store.state?.gameData?.[side]?.players || [];
+}
+
+function activeSide() {
+  const modal = getModal();
+  const text = modal?.querySelector('#shot-player')?.textContent?.trim() || '';
+  for (const side of ['A', 'B']) {
+    const found = allPlayers(side).some(p => {
+      const number = String(p?.Numero ?? p?.number ?? '');
+      const name = String(p?.Nome ?? p?.name ?? '');
+      return (number && text.includes(number)) || (name && text.toLowerCase().includes(name.toLowerCase()));
+    });
+    if (found) return side;
+  }
+  const subtitle = modal?.querySelector('#shot-subtitle')?.textContent?.toLowerCase() || '';
+  if (subtitle.includes('equipa b') || subtitle.includes('team b') || subtitle.includes('advers')) return 'B';
+  return 'A';
+}
+
 function getPlayers() {
-  const state = store.state || {};
-  const teams = [state.gameData?.A?.players || [], state.gameData?.B?.players || []];
-  const all = teams.flat();
-  const onCourt = all.filter(p => p.onCourt === true || p.emCampo === true || p.inCourt === true);
-  return (onCourt.length ? onCourt : all).filter((p, i, arr) => arr.findIndex(x => String(getId(x)) === String(getId(p))) === i);
+  const side = activeSide();
+  const list = allPlayers(side);
+  const modal = getModal();
+  const shooterText = modal?.querySelector('#shot-player')?.textContent?.trim() || '';
+  const onCourt = list.filter(p => p.onCourt === true || p.emCampo === true || p.inCourt === true);
+  const candidates = onCourt.length ? onCourt : list;
+  return candidates.filter(p => {
+    const number = String(p?.Numero ?? p?.number ?? '');
+    const name = String(p?.Nome ?? p?.name ?? '');
+    return !((number && shooterText.includes(number)) || (name && shooterText.toLowerCase().includes(name.toLowerCase())));
+  });
 }
 
 function getModal() {
@@ -43,7 +69,6 @@ function ensureConstructionSection() {
   for (const type of ['assist', 'imbalance']) {
     const box = panel.querySelector(`#shot-${type}-options`);
     if (!box) continue;
-    if (box.dataset.ready === 'true' && box.children.length === players.length + 1) continue;
     box.replaceChildren();
     const options = [['Nenhum', '']].concat(players.map(p => [getName(p), String(getId(p))]));
     options.forEach(([text, value]) => {
