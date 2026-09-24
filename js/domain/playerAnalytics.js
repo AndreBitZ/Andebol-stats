@@ -49,7 +49,7 @@ export function calculatePlayerAnalytics(state = {}, side) {
     ).length;
     const goalkeeperDistributionSuccess = mine.filter(e => e.event_type === 'GOALKEEPER_DISTRIBUTION_SUCCESS').length;
     const goalkeeperDistributionError = mine.filter(e => e.event_type === 'GOALKEEPER_DISTRIBUTION_ERROR').length;
-    const assists = mine.filter(e => e.event_type === 'ASSIST').length;
+    const assists = mine.filter(e => e.event_type === 'ASSIST').length + events.filter(e => e.event_type === 'SHOT' && String(e.metadata?.assist_player_id ?? e.assist_player_id ?? '') === playerKey(player)).length;
     const steals = mine.filter(e => e.event_type === 'STEAL').length;
     const interceptions = mine.filter(e => e.event_type === 'INTERCEPTION').length;
     const recoveries = mine.filter(e => e.event_type === 'RECOVERY').length;
