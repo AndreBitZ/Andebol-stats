@@ -21,6 +21,20 @@ function close(){
   selection=null;
 }
 
+function constructionPlayers(side,shooterId){const list=store.state.gameData?.[side]?.players||[];const court=list.filter(p=>p.onCourt===true||p.emCampo===true||p.inCourt===true);return(court.length?court:list).filter(p=>String(p.id??p.Numero)!==String(shooterId));}
+function renderConstruction(modal){
+ let panel=modal.querySelector('#shot-attribution-panel');
+ if(!panel){panel=document.createElement('section');panel.id='shot-attribution-panel';panel.className='mt-5 rounded-2xl bg-gray-900 p-4 border-2 border-blue-500';panel.innerHTML='<h3 class="text-lg font-bold text-white mb-3">🏗️ Construção da jogada</h3><div class="text-sm font-bold text-white mb-2">Assistência</div><div id="shot-assist-options" class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4"></div><div class="text-sm font-bold text-white mb-2">Desequilíbrio</div><div id="shot-imbalance-options" class="grid grid-cols-2 sm:grid-cols-3 gap-2"></div>';modal.querySelector('.shot-panel > .p-4')?.appendChild(panel);}
+ const players=constructionPlayers(selection.side,selection.playerId);
+ for(const type of ['assist','imbalance']){
+  const box=panel.querySelector('#shot-'+type+'-options');if(!box)continue;box.replaceChildren();
+  [['Nenhum',null],...players.map(p=>['#'+p.Numero+' '+p.Nome,String(p.id??p.Numero)])].forEach(([label,id])=>{
+   const b=document.createElement('button');b.type='button';b.textContent=label;b.className='shot-ui-btn';const ik=type==='assist'?'assist_player_id':'imbalance_player_id',nk=type==='assist'?'assist_player_name':'imbalance_player_name';
+   if(id&&String(window.__pendingShotAttribution?.[ik])===String(id))b.classList.add('shot-zone-selected');
+   b.onclick=()=>{const p=id?players.find(x=>String(x.id??x.Numero)===String(id)):null;const next={...(window.__pendingShotAttribution||{}),[ik]:id,[nk]:p?'#'+p.Numero+' '+p.Nome:null,construction_label:'desequilíbrio'};if(type==='assist'&&id&&String(next.imbalance_player_id)===String(id)){next.imbalance_player_id=null;next.imbalance_player_name=null;}if(type==='imbalance'&&id&&String(next.assist_player_id)===String(id)){next.assist_player_id=null;next.assist_player_name=null;}window.__pendingShotAttribution=next;renderConstruction(modal);};box.appendChild(b);
+  });
+ }
+}
 function makeButton(text, attrs, extra=''){
   const entries=Object.entries(attrs).map(([k,v])=>` ${k}=\"${v}\"`).join('');
   return `<button type=\"button\"${entries} class=\"shot-ui-btn ${extra}\">${text}</button>`;
@@ -135,24 +149,24 @@ function update(modal){
 function save(){
   if(!selection?.side||!selection?.playerId||!selection?.result)return;
   try{
-    const savedSelection={...selection}; const p=player(savedSelection.side,savedSelection.playerId); if(!p)throw new Error('Atleta não encontrado.');
+    const savedSelection={...selection}; const attribution=window.__pendingShotAttribution||{}; const p=player(savedSelection.side,savedSelection.playerId); if(!p)throw new Error('Atleta não encontrado.');
     const gk=goalkeeper(savedSelection.side); if(!gk)throw new Error('Não existe guarda-redes adversário em campo.');
     const cell=Number(savedSelection.goalCell); const x=((cell-1)%3+0.5)*33.3333333333; const y=(Math.floor((cell-1)/3)+0.5)*33.3333333333;
     const distance=savedSelection.isSevenMeter?'7m':savedSelection.distance||ZONES.find(z=>z.id===savedSelection.zone)?.distance||null;
     if(!savedSelection.isSevenMeter&&!distance)throw new Error('Escolha a distância do remate.');
-    recordAction({side:savedSelection.side,playerId:savedSelection.playerId,action:ACTION_TYPES.SHOT,shotResult:savedSelection.result,goalkeeperId:gk.id??gk.Numero??null,metadata:{shot_type:savedSelection.isSevenMeter?'7M':'FIELD',shot_zone:savedSelection.isSevenMeter?'7M':savedSelection.zone,shot_distance:distance,goal_location:savedSelection.goalCell,goal_zone_3x3:savedSelection.goalCell,shot_coordinates:{x:x.toFixed(1),y:y.toFixed(1)}}});
-    window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result:savedSelection.result,side:savedSelection.side,playerId:savedSelection.playerId,shot_type:savedSelection.isSevenMeter?'7M':'FIELD',shot_zone:savedSelection.isSevenMeter?'7M':savedSelection.zone,shot_distance:distance,goal_location:savedSelection.goalCell,goal_zone_3x3:savedSelection.goalCell}}));
+    recordAction({side:savedSelection.side,playerId:savedSelection.playerId,action:ACTION_TYPES.SHOT,shotResult:savedSelection.result,goalkeeperId:gk.id??gk.Numero??null,metadata:{shot_type:savedSelection.isSevenMeter?'7M':'FIELD',shot_zone:savedSelection.isSevenMeter?'7M':savedSelection.zone,shot_distance:distance,goal_location:savedSelection.goalCell,goal_zone_3x3:savedSelection.goalCell,shot_coordinates:{x:x.toFixed(1),y:y.toFixed(1)},...attribution}});
+    window.__pendingShotAttribution=null; window.dispatchEvent(new CustomEvent('bilateral-action-recorded',{detail:{type:'SHOT',result:savedSelection.result,side:savedSelection.side,playerId:savedSelection.playerId,shot_type:savedSelection.isSevenMeter?'7M':'FIELD',shot_zone:savedSelection.isSevenMeter?'7M':savedSelection.zone,shot_distance:distance,goal_location:savedSelection.goalCell,goal_zone_3x3:savedSelection.goalCell}}));
     close();
   }catch(err){console.error(err);alert(err?.message||'Não foi possível registar o remate.');}
 }
 
 function open(side,id){
   const p=player(side,id); if(!p)return; const modal=ensure();
-  selection={side,playerId:String(id),zone:null,distance:null,isSevenMeter:false,goalCell:null,result:null};
+  selection={side,playerId:String(id),zone:null,distance:null,isSevenMeter:false,goalCell:null,result:null}; window.__pendingShotAttribution=null;
   modal.querySelector('#shot-subtitle').textContent=`${side==='A'?(store.state.teamAName||'Equipa A'):(store.state.teamBName||'Equipa B')} · #${p.Numero} ${p.Nome}`;
   modal.querySelector('#shot-player').textContent=`#${p.Numero} ${p.Nome}`;
   const gk=goalkeeper(side); modal.querySelector('#shot-gk').textContent=gk?`#${gk.Numero} ${gk.Nome}`:'Sem GR em campo';
-  update(modal); modal.classList.remove('hidden'); modal.classList.add('flex');
+  update(modal); renderConstruction(modal); modal.classList.remove('hidden'); modal.classList.add('flex');
 }
 
 function install(){window.openBilateralShot=open;setTimeout(()=>window.openBilateralShot=open,0);setTimeout(()=>window.openBilateralShot=open,300);}
