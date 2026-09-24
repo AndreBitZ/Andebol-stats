@@ -19,7 +19,7 @@ export function recordAction({ side, playerId, action, shotResult = null, goalke
     if (!SHOT_RESULTS.includes(shotResult)) throw new Error('Resultado de remate inválido.');
     const pending = typeof window !== 'undefined' ? (window.__pendingShotAttribution || {}) : {};
     if (typeof window !== 'undefined') window.__pendingShotAttribution = null;
-    return store.update(next => registerShot(next, { attackingSide: attacking, shooterId: p.id, result: shotResult, goalkeeperId, numerical_context: numericalContext, ...metadata, ...pending }));
+    const mergedMetadata = { ...(metadata || {}), ...pending }; return store.update(next => registerShot(next, { attackingSide: attacking, shooterId: p.id, result: shotResult, goalkeeperId, numerical_context: numericalContext, metadata: mergedMetadata }));
   }
   return store.update(next => { const event = createEvent({ match_id: next.matchId, timestamp_seconds: next.totalSeconds, team_id: attacking === 'A' ? next.teamAId : next.teamBId, player_id: p.id, event_type: action, score_for_before: next.gameData[attacking]?.stats?.goals || 0, score_against_before: next.gameData[defending]?.stats?.goals || 0, numerical_context: numericalContext, home_away: attacking === 'A' ? 'HOME' : 'AWAY', metadata }); next.gameEvents = next.gameEvents || []; next.gameEvents.push(event); p[action] = (p[action] || 0) + 1; return event; });
 }
